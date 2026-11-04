@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "灵动岛 (Debug + demo)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/DynamicIsland.App/bin/Debug/net10.0-windows/DynamicIsland.exe",
+      "args": ["--demo"],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true,
+      "env": {
+        "DOTNET_ROOT": "${env:LOCALAPPDATA}\\Microsoft\\dotnet"
+      }
+    }
+  ]
+}

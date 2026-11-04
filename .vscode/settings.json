@@ -1,0 +1,21 @@
+{
+  "dotnet.defaultSolution": "DynamicIsland.sln",
+  "files.eol": "\r\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "editor.rulers": [120],
+  "explorer.excludeGitIgnore": false,
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/artifacts": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/artifacts": true
+  },
+  "xmlTools.enableXmlTreeView": false
+}

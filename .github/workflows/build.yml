@@ -1,0 +1,39 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore DynamicIsland.sln
+
+      - name: Build
+        run: dotnet build DynamicIsland.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test DynamicIsland.sln -c Release --no-build
+
+      - name: Publish self-contained
+        run: .\scripts\publish.ps1 -NoZip
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIsland-win-x64
+          path: artifacts/publish/DynamicIsland-0.1.0-win-x64/
+          if-no-files-found: error

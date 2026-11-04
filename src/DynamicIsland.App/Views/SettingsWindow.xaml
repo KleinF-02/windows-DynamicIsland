@@ -1,0 +1,250 @@
+<Window x:Class="DynamicIsland.App.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="灵动岛设置"
+        Width="480"
+        Height="690"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource SettingsBackgroundBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        FontFamily="{StaticResource AppFont}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="62" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="76" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar -->
+        <Grid Grid.Row="0"
+              Background="Transparent"
+              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Width="28" Height="28" Margin="26,0,10,0" VerticalAlignment="Center">
+                <Ellipse Fill="{StaticResource AccentGradientBrush}" />
+                <Ellipse Width="9" Height="9" Fill="#FF081018" />
+            </Grid>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="灵动岛" FontSize="13.5" FontWeight="SemiBold" />
+                <TextBlock Text="Dynamic Island for Windows 11"
+                           FontSize="9.5"
+                           Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+            <Button Grid.Column="2"
+                    Content="✕"
+                    Style="{StaticResource IconButton}"
+                    Margin="0,0,18,0"
+                    VerticalAlignment="Center"
+                    ToolTip="关闭"
+                    Click="Close_Click" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,0,0">
+            <StackPanel Margin="26,4,26,20">
+                <TextBlock Text="让桌面边缘" FontSize="25" FontWeight="SemiBold" />
+                <TextBlock Text="多一点呼吸感。" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                <TextBlock Text="把时间、电量与通知收进一颗胶囊。悬停展开，点击固定。"
+                           Style="{StaticResource CaptionText}"
+                           Margin="0,9,0,16" />
+
+                <TextBlock Text="行为" Style="{StaticResource SectionLabel}" />
+                <Border Style="{StaticResource PanelCard}" Margin="0,8,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,1,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="始终置顶" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="保持在其他窗口之上" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      Style="{StaticResource SwitchCheckBox}"
+                                      IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}"
+                                      AutomationProperties.Name="始终置顶"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <Grid Margin="0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="过渡动画" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="展开与收起使用弹性缓动" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      Style="{StaticResource SwitchCheckBox}"
+                                      IsChecked="{Binding AnimationsEnabled, Mode=TwoWay}"
+                                      AutomationProperties.Name="过渡动画"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <Grid Margin="0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="显示秒数" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="在时钟右侧显示实时秒数" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      Style="{StaticResource SwitchCheckBox}"
+                                      IsChecked="{Binding ShowSeconds, Mode=TwoWay}"
+                                      AutomationProperties.Name="显示秒数"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <Grid Margin="0,10,0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="开机自动启动" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="登录 Windows 后在后台静默启动"
+                                           Style="{StaticResource CaptionText}"
+                                           Margin="0,3,0,0" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      Style="{StaticResource SwitchCheckBox}"
+                                      IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
+                                      AutomationProperties.Name="开机自动启动"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="外观" Style="{StaticResource SectionLabel}" Margin="0,18,0,0" />
+                <Border Style="{StaticResource PanelCard}" Margin="0,8,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="不透明度" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="保留一点桌面透感" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider Width="128"
+                                        Style="{StaticResource SettingsSlider}"
+                                        Minimum="0.60"
+                                        Maximum="1.00"
+                                        SmallChange="0.05"
+                                        LargeChange="0.10"
+                                        TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        AutomationProperties.Name="不透明度"
+                                        Value="{Binding Opacity, Mode=TwoWay}" />
+                                <TextBlock Text="{Binding OpacityLabel}"
+                                           Width="42"
+                                           FontSize="11.5"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           TextAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Typography.NumeralAlignment="Tabular" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Style="{StaticResource Hairline}" Margin="0,12" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="顶部距离" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="胶囊距离工作区顶部的位置" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider Width="128"
+                                        Style="{StaticResource SettingsSlider}"
+                                        Minimum="0"
+                                        Maximum="40"
+                                        SmallChange="1"
+                                        LargeChange="5"
+                                        TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        AutomationProperties.Name="顶部距离"
+                                        Value="{Binding TopMargin, Mode=TwoWay}" />
+                                <TextBlock Text="{Binding TopMarginLabel}"
+                                           Width="48"
+                                           FontSize="11.5"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           TextAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Typography.NumeralAlignment="Tabular" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Grid Margin="2,14,2,0">
+                    <TextBlock Text="{Binding VersionText}"
+                               FontSize="10"
+                               Foreground="{StaticResource TextMutedBrush}" />
+                    <TextBlock Text="设置仅保存在本机 · 无网络请求"
+                               FontSize="10"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Right" />
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Background="#66080A0F"
+                BorderBrush="#12FFFFFF"
+                BorderThickness="0,1,0,0">
+            <Grid Margin="26,0">
+                <TextBlock Text="更改会在保存后立即生效"
+                           FontSize="10"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="取消"
+                            Style="{StaticResource GhostButton}"
+                            Margin="0,0,10,0"
+                            Click="Cancel_Click" />
+                    <Button Content="保存设置"
+                            Style="{StaticResource AccentButton}"
+                            IsDefault="True"
+                            Click="Save_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
