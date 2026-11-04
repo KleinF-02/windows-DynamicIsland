@@ -50,7 +50,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 | 状态 | 内容尺寸 | 外窗尺寸（含阴影留白） |
 | --- | --- | --- |
 | Compact | `248 × 46` | `276 × 74` |
-| Expanded | `424 × 196` | `452 × 224` |
+| Expanded | `424 × 264` | `452 × 292` |
 | Notification | `400 × 118` | `428 × 146` |
 
 外窗四周各留 `14 DIP` 给 WPF 阴影。窗口本身是 `AllowsTransparency=True` 的透明分层窗口，视觉上只有胶囊本体是实心。
@@ -105,11 +105,9 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 ## 6. 系统集成
 
-### 电源 / 系统信息
+### 电源
 
 `GetSystemPowerStatus`（kernel32）读取电池百分比、交流电状态和是否真的存在电池。桌面机显示“交流电 / 已接通电源”，不会假装有电池百分比。
-
-开机时长来自 `Environment.TickCount64`，标签为“已开机”。
 
 ### 托盘
 
@@ -118,6 +116,17 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 托盘菜单项：显示、设置、演示通知、开机启动、退出
 - 自定义暗色 `ProfessionalColorTable`
 - 图标从 `pack://application:,,,/Assets/app.ico` 加载，带 `SystemIcons.Application` 兜底
+
+### 文件暂存
+
+展开态的功能区目前是一个文件架：
+
+- `StagedFileViewModel` 保存路径、显示名、类型徽标、大小和“是否存在”。
+- `IslandViewModel.AddFiles` 只接受真实存在的文件/文件夹；去重（忽略大小写）、最多 12 个、路径规范化。
+- 拖入：`Shell` 开启 `AllowDrop`，`DragEnter/DragOver` 自动展开并高亮；`Drop` 兼容 `FileDrop`、`FileNameW`/`FileName` 以及部分 OLE 源返回的 `MemoryStream`（DROPFILES 结构）。
+- 拖出：条目上按下鼠标后由 **Window 的 `PreviewMouseMove`** 统一判断拖动阈值，避免 `ScrollViewer` 捕获鼠标导致行内 `MouseMove` 丢失；`DoDragDrop` 只允许 `Copy`，因此原文件不会被移动或删除。
+- `ExpandedView` 需要命中测试（文件行、清空、移除按钮），这是它和 Compact/Notification 视图不同的一点。
+- 文件架是**会话内引用**，不持久化，不复制文件到应用目录；应用退出后列表消失，原文件始终不动。
 
 ### 开机启动
 

@@ -16,7 +16,10 @@
         SnapsToDevicePixels="True"
         FontFamily="{StaticResource AppFont}"
         Loaded="Window_Loaded"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        PreviewMouseLeftButtonDown="Window_PreviewMouseLeftButtonDown"
+        PreviewMouseMove="Window_PreviewMouseMove"
+        PreviewMouseLeftButtonUp="Window_PreviewMouseLeftButtonUp">
 
     <Grid x:Name="Root" Margin="14">
         <!-- Shadow is a separate layer so text is not rasterized by the effect. -->
@@ -36,10 +39,14 @@
                 BorderBrush="{StaticResource IslandEdgeBrush}"
                 BorderThickness="1"
                 Cursor="Hand"
-                ToolTip="悬停展开 · 点击固定"
+                AllowDrop="True"
                 MouseEnter="Window_MouseEnter"
                 MouseLeave="Window_MouseLeave"
-                MouseLeftButtonUp="Shell_MouseLeftButtonUp">
+                MouseLeftButtonUp="Shell_MouseLeftButtonUp"
+                DragEnter="Shell_DragEnter"
+                DragOver="Shell_DragOver"
+                DragLeave="Shell_DragLeave"
+                Drop="Shell_Drop">
             <Border.ContextMenu>
                 <ContextMenu Opened="IslandMenu_Opened" Closed="IslandMenu_Closed">
                     <MenuItem Header="打开设置…" Click="Settings_Click" />
@@ -125,7 +132,6 @@
                       Margin="22,14,22,12"
                       Opacity="0"
                       Visibility="Collapsed"
-                      IsHitTestVisible="False"
                       RenderTransformOrigin="0.5,0">
                     <Grid.RenderTransform>
                         <TransformGroup>
@@ -207,67 +213,207 @@
 
                     <Border Grid.Row="1" Height="1" Background="#14FFFFFF" Margin="0,10,0,10" />
 
-                    <Grid Grid.Row="2" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="2" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                        <Border Grid.Column="0"
-                                Background="#0CFFFFFF"
-                                BorderBrush="#10FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Padding="10,8"
-                                Margin="0,0,5,0">
-                            <StackPanel>
-                                <TextBlock Text="屏幕" FontSize="9.5" Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Text="{Binding ScreenText}"
-                                           FontSize="12.5"
-                                           FontWeight="SemiBold"
-                                           Margin="0,3,0,0"
-                                           TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </Border>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="1"
-                                Background="#0CFFFFFF"
-                                BorderBrush="#10FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Padding="10,8"
-                                Margin="5,0">
-                            <StackPanel>
-                                <TextBlock Text="已开机" FontSize="9.5" Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Text="{Binding UptimeText}"
-                                           FontSize="12.5"
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3"
+                                        Height="10"
+                                        CornerRadius="1.5"
+                                        Background="{StaticResource AccentBrush}"
+                                        Margin="0,0,7,0" />
+                                <TextBlock Text="功能区"
+                                           FontSize="9.5"
                                            FontWeight="SemiBold"
-                                           Margin="0,3,0,0"
-                                           TextTrimming="CharacterEllipsis" />
+                                           Foreground="{StaticResource AccentBrush}" />
+                                <TextBlock Text=" / 文件暂存"
+                                           FontSize="9.5"
+                                           Foreground="{StaticResource TextMutedBrush}" />
                             </StackPanel>
-                        </Border>
 
-                        <Border Grid.Column="2"
-                                Background="#0CFFFFFF"
-                                BorderBrush="#10FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Padding="10,8"
-                                Margin="5,0,0,0">
-                            <StackPanel>
-                                <TextBlock Text="窗口" FontSize="9.5" Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Text="{Binding TopmostLabel}"
-                                           FontSize="12.5"
-                                           FontWeight="SemiBold"
-                                           Margin="0,3,0,0"
-                                           TextTrimming="CharacterEllipsis" />
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ShelfCountText}"
+                                           FontSize="9"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0" />
+                                <Button Content="清空"
+                                        Click="ClearShelf_Click"
+                                        ToolTip="清空暂存区">
+                                    <Button.Style>
+                                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
+                                            <Setter Property="Height" Value="20" />
+                                            <Setter Property="Padding" Value="8,2" />
+                                            <Setter Property="FontSize" Value="9" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </StackPanel>
+                        </Grid>
+
+                        <Border x:Name="ShelfDropZone"
+                                Grid.Row="1"
+                                Height="108"
+                                Margin="0,6,0,0"
+                                Background="#08FFFFFF"
+                                BorderBrush="#16FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="6"
+                                AllowDrop="True">
+                            <Grid>
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <Rectangle Stroke="#24FFFFFF"
+                                               StrokeThickness="1"
+                                               StrokeDashArray="3 3"
+                                               RadiusX="9"
+                                               RadiusY="9"
+                                               Fill="Transparent"
+                                               IsHitTestVisible="False" />
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
+                                            <Path Data="M3,6 C3,4.9 3.9,4 5,4 L9.2,4 L11.2,6 L19,6 C20.1,6 21,6.9 21,8 L21,17 C21,18.1 20.1,19 19,19 L5,19 C3.9,19 3,18.1 3,17 Z"
+                                                  Stroke="{StaticResource AccentBrush}"
+                                                  StrokeThickness="1.4"
+                                                  StrokeLineJoin="Round"
+                                                  Fill="Transparent" />
+                                        </Viewbox>
+                                        <TextBlock Text="把文件拖到这里暂存"
+                                                   FontSize="11.5"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,4,0,0" />
+                                        <TextBlock Text="支持文件和文件夹 · 拖出时复制"
+                                                   FontSize="9"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding StagedFiles}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#0BFFFFFF"
+                                                            BorderBrush="#12FFFFFF"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8"
+                                                            Padding="7,4"
+                                                            Margin="0,0,0,4"
+                                                            Cursor="Hand"
+                                                            AllowDrop="True"
+                                                            ToolTip="按住拖出到资源管理器或其他应用（复制）"
+                                                            PreviewMouseLeftButtonDown="StagedFile_MouseLeftButtonDown"
+                                                            MouseLeftButtonUp="StagedFile_MouseLeftButtonUp">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border Width="28"
+                                                                    Height="18"
+                                                                    CornerRadius="4"
+                                                                    Background="#14FFFFFF"
+                                                                    Margin="0,0,7,0">
+                                                                <TextBlock Text="{Binding KindLabel}"
+                                                                           FontSize="8"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center" />
+                                                            </Border>
+
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding Name}"
+                                                                       FontSize="10.5"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       VerticalAlignment="Center" />
+
+                                                            <TextBlock Grid.Column="2"
+                                                                       Text="{Binding SizeText}"
+                                                                       FontSize="9"
+                                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                                       MinWidth="44"
+                                                                       TextAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="8,0,2,0" />
+
+                                                            <Button Grid.Column="3"
+                                                                    Content="×"
+                                                                    Width="20"
+                                                                    Height="20"
+                                                                    FontSize="11"
+                                                                    Padding="0"
+                                                                    Style="{StaticResource IconButton}"
+                                                                    ToolTip="移出暂存"
+                                                                    Click="RemoveStagedFile_Click" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+
+                                <Border x:Name="ShelfHighlight"
+                                        Background="#1F6FE7C8"
+                                        BorderBrush="#666FE7C8"
+                                        BorderThickness="1"
+                                        CornerRadius="11"
+                                        Opacity="0"
+                                        IsHitTestVisible="False" />
+                            </Grid>
                         </Border>
                     </Grid>
 
                     <Grid Grid.Row="3">
-                        <TextBlock Text="悬停展开 · 点击切换固定"
+                        <TextBlock Text="拖入暂存 · 拖出复制 · 原文件保留"
                                    FontSize="9.5"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    VerticalAlignment="Bottom" />

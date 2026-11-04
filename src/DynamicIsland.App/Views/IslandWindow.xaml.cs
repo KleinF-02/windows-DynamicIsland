@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -9,6 +11,13 @@ using DynamicIsland.App.Interop;
 using DynamicIsland.App.ViewModels;
 using DynamicIsland.Core.Layout;
 using DynamicIsland.Core.Models;
+using Button = System.Windows.Controls.Button;
+using DataFormats = System.Windows.DataFormats;
+using DataObject = System.Windows.DataObject;
+using DragDrop = System.Windows.DragDrop;
+using DragDropEffects = System.Windows.DragDropEffects;
+using DragEventArgs = System.Windows.DragEventArgs;
+using IDataObject = System.Windows.IDataObject;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Windows.Point;
 using Screen = System.Windows.Forms.Screen;
@@ -31,6 +40,11 @@ public partial class IslandWindow : Window
     private bool _menuOpen;
     private bool _allowClose;
     private bool _topmostSuppressed;
+    private bool _dragActive;
+    private bool _dragOutActive;
+    private Point _fileDragStart;
+    private StagedFileViewModel? _fileDragCandidate;
+    private DateTime _suppressClickUntil;
 
     public IslandWindow(IslandSettings settings)
     {
@@ -211,6 +225,13 @@ public partial class IslandWindow : Window
             return;
         }
 
+        // A drag/drop ends with a mouse-up; don't treat it as a pin toggle.
+        if (DateTime.UtcNow < _suppressClickUntil)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (_state == IslandVisualState.Notification)
         {
             DismissNotification();
@@ -250,6 +271,263 @@ public partial class IslandWindow : Window
     private void Exit_Click(object sender, RoutedEventArgs e)
         => ExitRequested?.Invoke(this, EventArgs.Empty);
 
+    private void Shell_DragEnter(object sender, DragEventArgs e)
+    {
+        if (!HasFilePayload(e.Data))
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        e.Effects = DragDropEffects.Copy;
+        _dragActive = true;
+        _collapseTimer.Stop();
+        SetShelfHighlight(true);
+
+        if (_state != IslandVisualState.Expanded)
+        {
+            _notificationTimer.Stop();
+            SetState(IslandVisualState.Expanded, animate: true);
+        }
+
+        e.Handled = true;
+    }
+
+    private void Shell_DragOver(object sender, DragEventArgs e)
+    {
+        var acceptsFiles = HasFilePayload(e.Data);
+        e.Effects = acceptsFiles ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+
+        if (!acceptsFiles)
+        {
+            return;
+        }
+
+        _dragActive = true;
+        _collapseTimer.Stop();
+        SetShelfHighlight(true);
+
+        if (_state != IslandVisualState.Expanded)
+        {
+            _notificationTimer.Stop();
+            SetState(IslandVisualState.Expanded, animate: true);
+        }
+    }
+
+    private void Shell_DragLeave(object sender, DragEventArgs e)
+    {
+        _dragActive = false;
+        SetShelfHighlight(false);
+
+        if (!_hovering && !_pinned)
+        {
+            ScheduleCollapse();
+        }
+
+        e.Handled = true;
+    }
+
+    private void Shell_Drop(object sender, DragEventArgs e)
+    {
+        _dragActive = false;
+        _suppressClickUntil = DateTime.UtcNow.AddMilliseconds(300);
+        SetShelfHighlight(false);
+        e.Effects = DragDropEffects.Copy;
+
+        var paths = ExtractDroppedPaths(e.Data);
+        if (paths.Count > 0)
+        {
+            _viewModel.AddFiles(paths);
+            _pinned = true;
+            _viewModel.IsPinned = true;
+
+            if (_state != IslandVisualState.Expanded)
+            {
+                SetState(IslandVisualState.Expanded, animate: true);
+            }
+        }
+
+        e.Handled = true;
+    }
+
+    private void ClearShelf_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ClearFiles();
+        e.Handled = true;
+    }
+
+    private void RemoveStagedFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: StagedFileViewModel file })
+        {
+            _viewModel.RemoveFile(file);
+        }
+
+        e.Handled = true;
+    }
+
+    private void StagedFile_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (FindAncestor<Button>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
+        _fileDragStart = e.GetPosition(this);
+        _fileDragCandidate = (sender as FrameworkElement)?.DataContext as StagedFileViewModel;
+    }
+
+    private void StagedFile_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        _fileDragCandidate = null;
+        e.Handled = true;
+    }
+
+    private void Window_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_fileDragCandidate is null || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var position = e.GetPosition(this);
+        if (Math.Abs(position.X - _fileDragStart.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(position.Y - _fileDragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        var file = _fileDragCandidate;
+        _fileDragCandidate = null;
+
+        if (!file.Exists)
+        {
+            _viewModel.RemoveFile(file);
+            ShowNotification("文件已不在原位置", "已从暂存区移除。", TimeSpan.FromSeconds(3));
+            return;
+        }
+
+        var data = new DataObject();
+        data.SetData(DataFormats.FileDrop, new[] { file.FullPath });
+
+        _dragOutActive = true;
+        _suppressClickUntil = DateTime.UtcNow.AddMilliseconds(300);
+
+        try
+        {
+            DragDrop.DoDragDrop(this, data, DragDropEffects.Copy);
+        }
+        finally
+        {
+            _dragOutActive = false;
+
+            if (!_hovering && !_pinned)
+            {
+                ScheduleCollapse();
+            }
+        }
+    }
+
+    private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _fileDragCandidate = null;
+    }
+
+    private void Window_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        _fileDragCandidate = null;
+    }
+
+    private void SetShelfHighlight(bool active)
+    {
+        ShelfHighlight.Opacity = active ? 1 : 0;
+    }
+
+    private static bool HasFilePayload(IDataObject data)
+        => data.GetDataPresent(DataFormats.FileDrop)
+           || data.GetDataPresent("FileNameW")
+           || data.GetDataPresent("FileName");
+
+    private static IReadOnlyList<string> ExtractDroppedPaths(IDataObject data)
+    {
+        // FileDrop is the normal OLE format. FileNameW/FileName are fallbacks used
+        // by a few drag sources (and by the PowerShell drag helper used in testing).
+        foreach (var format in new[] { DataFormats.FileDrop, "FileNameW", "FileName" })
+        {
+            var paths = ParseDropPayload(data.GetData(format));
+            if (paths.Count > 0)
+            {
+                return paths;
+            }
+        }
+
+        return [];
+    }
+
+    private static IReadOnlyList<string> ParseDropPayload(object? payload)
+    {
+        switch (payload)
+        {
+            case string[] files:
+                return files;
+            case string file:
+                return [file];
+            case MemoryStream stream:
+                return ParseFileList(stream.ToArray());
+            case byte[] bytes:
+                return ParseFileList(bytes);
+            case System.Collections.IEnumerable entries:
+                var paths = new List<string>();
+                foreach (var entry in entries)
+                {
+                    if (entry is string path)
+                    {
+                        paths.Add(path);
+                    }
+                }
+
+                return paths;
+            default:
+                return [];
+        }
+    }
+
+    /// <summary>
+    /// Parses the DROPFILES structure that some OLE drag sources expose as a
+    /// MemoryStream (pFiles offset + fWide flag), or a plain double-null list.
+    /// </summary>
+    private static IReadOnlyList<string> ParseFileList(byte[] bytes)
+    {
+        if (bytes.Length < 2)
+        {
+            return [];
+        }
+
+        var offset = 0;
+        var wide = true;
+
+        if (bytes.Length >= 20)
+        {
+            var declaredOffset = BitConverter.ToInt32(bytes, 0);
+            if (declaredOffset > 0 && declaredOffset < bytes.Length)
+            {
+                offset = declaredOffset;
+                wide = BitConverter.ToInt32(bytes, 16) != 0;
+            }
+        }
+
+        var text = wide
+            ? Encoding.Unicode.GetString(bytes, offset, bytes.Length - offset)
+            : Encoding.UTF8.GetString(bytes, offset, bytes.Length - offset);
+
+        return text.Split('\0')
+            .Select(path => path.Trim())
+            .Where(path => path.Length > 0)
+            .ToArray();
+    }
+
     private void IslandMenu_Opened(object sender, RoutedEventArgs e)
     {
         _menuOpen = true;
@@ -276,7 +554,8 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _menuOpen || _state != IslandVisualState.Expanded)
+        if (_hovering || _pinned || _menuOpen || _dragActive || _dragOutActive
+            || _state != IslandVisualState.Expanded)
         {
             return;
         }
@@ -525,6 +804,23 @@ public partial class IslandWindow : Window
         yield return CompactView;
         yield return ExpandedView;
         yield return NotificationView;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match)
+            {
+                return match;
+            }
+
+            current = current is Visual
+                ? VisualTreeHelper.GetParent(current)
+                : LogicalTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private Screen ResolveScreen()

@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Threading;
 using DynamicIsland.App.Interop;
 using DynamicIsland.App.Services;
@@ -71,6 +73,18 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     /// <summary>The Windows account name displayed on the compact island.</summary>
     public string UserName { get; } = GetWindowsUserName();
+
+    public const int MaxStagedFiles = 12;
+
+    /// <summary>
+    /// Session-scoped file shelf. Items are references to the original paths, so
+    /// dragging them out copies the files instead of moving or deleting them.
+    /// </summary>
+    public ObservableCollection<StagedFileViewModel> StagedFiles { get; } = new();
+
+    public bool HasStagedFiles => StagedFiles.Count > 0;
+
+    public string ShelfCountText => $"{StagedFiles.Count} 个文件";
 
     public bool ShowSeconds => _settings.ShowSeconds;
 
@@ -159,6 +173,87 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     {
         _clockTimer.Stop();
         _powerTimer.Stop();
+    }
+
+    /// <summary>
+    /// Adds existing files or folders to the shelf, ignoring duplicates, missing paths
+    /// and anything beyond <see cref="MaxStagedFiles"/>.
+    /// </summary>
+    public int AddFiles(IEnumerable<string> paths)
+    {
+        var added = 0;
+
+        foreach (var path in paths)
+        {
+            if (StagedFiles.Count >= MaxStagedFiles)
+            {
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+
+            string fullPath;
+            try
+            {
+                fullPath = Path.GetFullPath(path.Trim());
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                continue;
+            }
+
+            var isDirectory = Directory.Exists(fullPath);
+            if (!isDirectory && !File.Exists(fullPath))
+            {
+                continue;
+            }
+
+            if (StagedFiles.Any(item => string.Equals(item.FullPath, fullPath, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            StagedFiles.Add(new StagedFileViewModel(fullPath, isDirectory));
+            added++;
+        }
+
+        if (added > 0)
+        {
+            RaiseShelfChanged();
+        }
+
+        return added;
+    }
+
+    public bool RemoveFile(StagedFileViewModel file)
+    {
+        if (!StagedFiles.Remove(file))
+        {
+            return false;
+        }
+
+        RaiseShelfChanged();
+        return true;
+    }
+
+    public void ClearFiles()
+    {
+        if (StagedFiles.Count == 0)
+        {
+            return;
+        }
+
+        StagedFiles.Clear();
+        RaiseShelfChanged();
+    }
+
+    private void RaiseShelfChanged()
+    {
+        OnPropertyChanged(nameof(HasStagedFiles));
+        OnPropertyChanged(nameof(ShelfCountText));
     }
 
     public void ApplySettings(IslandSettings settings)

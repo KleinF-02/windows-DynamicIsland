@@ -97,20 +97,20 @@ def centered_text(
 
 
 def make_hero() -> None:
-    canvas = backdrop(1400, 720)
+    canvas = backdrop(1400, 760)
 
     centered_text(canvas, "WINDOWS 11   ·   WPF   ·   .NET 10", 92, font(FONT_EN_BOLD, 13), (112, 124, 145, 255))
     centered_text(canvas, "灵动岛", 128, font(FONT_CN_BOLD, 52), (246, 247, 251, 255))
     centered_text(canvas, "桌面顶部的一颗呼吸感胶囊", 200, font(FONT_CN, 17), (156, 164, 181, 255))
 
     island = crop_island(
-        SHOTS / "clean-expanded.png",
-        (678 + SHADOW, 3 + SHADOW, 678 + 565 - SHADOW, 3 + 280 - SHADOW),
+        SHOTS / "shelf-item-final.png",
+        (696, 0, 1225, 330),
         radius=31,
     )
     x = (canvas.width - island.width) // 2
-    y = 306
-    drop_shadow(canvas, (x, y, x + island.width, y + island.height), 29)
+    y = 300
+    drop_shadow(canvas, (x, y, x + island.width, y + island.height), 31)
     ImageDraw.Draw(canvas).rounded_rectangle(
         (x, y, x + island.width, y + island.height), radius=31, fill=(5, 7, 10, 255)
     )
@@ -118,8 +118,8 @@ def make_hero() -> None:
 
     centered_text(
         canvas,
-        "悬停展开  ·  点击固定  ·  右键菜单",
-        650,
+        "拖入暂存  ·  悬停放大  ·  点击固定",
+        690,
         font(FONT_CN, 13),
         (130, 140, 158, 255),
     )
@@ -142,8 +142,8 @@ def make_settings() -> None:
 
 def make_compact() -> None:
     island = crop_island(
-        SHOTS / "clean-compact.png",
-        (788 + SHADOW, 3 + SHADOW, 788 + 345 - SHADOW, 3 + 93 - SHADOW),
+        SHOTS / "username-compact.png",
+        (806, 0, 1115, 58),
         radius=31,
     )
 
