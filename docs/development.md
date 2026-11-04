@@ -105,7 +105,25 @@ artifacts/
 
 发布版内嵌了应用图标，启动不依赖本机 SDK。
 
-## 6. 测试
+## 6. 版本控制
+
+仓库已用 MinGit 初始化在 `main` 分支，并创建了初始提交。当前提交身份是项目内的占位配置：
+
+```powershell
+git config user.name "DynamicIsland Dev"
+git config user.email "dev@dynamic-island.local"
+```
+
+改成自己的身份：
+
+```powershell
+git config user.name "你的名字"
+git config user.email "you@example.com"
+```
+
+MinGit 的 `git.exe` 位于 `%LOCALAPPDATA%\Programs\MinGit\cmd`，已加入用户 `PATH`。只使用 `git.exe` 即可，不需要 Git Bash。
+
+## 7. 测试
 
 ```powershell
 dotnet test DynamicIsland.sln
@@ -123,7 +141,7 @@ dotnet test DynamicIsland.sln
 
 后续可以补充：窗口状态机测试、UI Automation 冒烟测试、发布产物启动测试。
 
-## 7. 常见问题
+## 8. 常见问题
 
 ### `dotnet` 不是可识别的命令
 
@@ -174,7 +192,7 @@ Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name Dyn
 
 开发阶段该值会指向 `bin\Debug\net10.0-windows\DynamicIsland.exe`。正式使用前请先发布，再从发布目录启动并重新开启开机启动，让注册表指向稳定的安装路径。
 
-## 8. 代码约定
+## 9. 代码约定
 
 - 命名空间：`DynamicIsland.App` / `DynamicIsland.Core`
 - Core 不引用 WPF 或 WinForms，便于测试和未来复用
