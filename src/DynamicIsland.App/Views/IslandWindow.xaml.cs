@@ -35,6 +35,13 @@ public partial class IslandWindow : Window
 {
     private readonly IslandViewModel _viewModel;
     private readonly DispatcherTimer _collapseTimer;
+    private readonly DispatcherTimer _heightSyncTimer;
+    private int _boundsAnimationId;
+    private DateTime _nativeHeightStart;
+    private double _nativeHeightFrom;
+    private double _nativeHeightTo;
+    private TimeSpan _nativeHeightDuration;
+    private EasingFunctionBase? _nativeHeightEase;
     private readonly DispatcherTimer _notificationTimer;
 
     private IslandSettings _settings;
@@ -44,6 +51,7 @@ public partial class IslandWindow : Window
     private bool _loaded;
     private bool _hovering;
     private bool _pinned;
+    private bool _editingTodo;
     private bool _menuOpen;
     private bool _allowClose;
     private bool _topmostSuppressed;
@@ -51,7 +59,6 @@ public partial class IslandWindow : Window
     private bool _dragOutActive;
     private Point _fileDragStart;
     private StagedFileViewModel? _fileDragCandidate;
-    private DateTime _suppressClickUntil;
     private readonly HashSet<string> _completingTodoIds = new(StringComparer.Ordinal);
 
     public IslandWindow(IslandSettings settings)
@@ -68,9 +75,15 @@ public partial class IslandWindow : Window
 
         _collapseTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
-            Interval = TimeSpan.FromMilliseconds(280)
+            Interval = TimeSpan.FromMilliseconds(320)
         };
         _collapseTimer.Tick += CollapseTimer_Tick;
+
+        _heightSyncTimer = new DispatcherTimer(DispatcherPriority.Render)
+        {
+            Interval = TimeSpan.FromMilliseconds(16)
+        };
+        _heightSyncTimer.Tick += (_, _) => ApplyNativeHeight();
 
         _notificationTimer = new DispatcherTimer(DispatcherPriority.Background);
         _notificationTimer.Tick += NotificationTimer_Tick;
@@ -113,6 +126,7 @@ public partial class IslandWindow : Window
         _viewModel.NotificationTitle = title;
         _viewModel.NotificationMessage = message;
         _pinned = false;
+        _editingTodo = false;
         _viewModel.IsPinned = false;
 
         SetState(IslandVisualState.Notification, animate: true);
@@ -128,9 +142,20 @@ public partial class IslandWindow : Window
             return;
         }
 
-        _pinned = true;
-        _viewModel.IsPinned = true;
+        _pinned = false;
+        _viewModel.IsPinned = false;
         SetState(IslandVisualState.Expanded, animate: true);
+    }
+
+    private void Window_Deactivated(object? sender, EventArgs e)
+    {
+        _editingTodo = false;
+
+        if (_state == IslandVisualState.Expanded && !_pinned && !_hovering
+            && !_menuOpen && !_dragActive && !_dragOutActive)
+        {
+            ScheduleCollapse();
+        }
     }
 
     public void ShowFromTray()
@@ -151,6 +176,7 @@ public partial class IslandWindow : Window
         _notificationTimer.Stop();
         _collapseTimer.Stop();
         _pinned = false;
+        _editingTodo = false;
         _viewModel.IsPinned = false;
         SetState(IslandVisualState.Compact, animate: false);
         _viewModel.Stop();
@@ -201,6 +227,7 @@ public partial class IslandWindow : Window
     private void Window_Closed(object? sender, EventArgs e)
     {
         _collapseTimer.Stop();
+        _heightSyncTimer.Stop();
         _notificationTimer.Stop();
         _viewModel.Dispose();
         _hwndSource?.RemoveHook(WindowProc);
@@ -222,7 +249,7 @@ public partial class IslandWindow : Window
     {
         _hovering = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned)
+        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo)
         {
             ScheduleCollapse();
         }
@@ -235,13 +262,6 @@ public partial class IslandWindow : Window
             return;
         }
 
-        // A drag/drop ends with a mouse-up; don't treat it as a pin toggle.
-        if (DateTime.UtcNow < _suppressClickUntil)
-        {
-            e.Handled = true;
-            return;
-        }
-
         if (_state == IslandVisualState.Notification)
         {
             DismissNotification();
@@ -249,19 +269,37 @@ public partial class IslandWindow : Window
             return;
         }
 
-        // The first click pins the island open; the next click releases it.
-        _pinned = !_pinned;
-        _viewModel.IsPinned = _pinned;
-
+        // Pin/Unpin is intentionally only available from the dedicated footer
+        // button. Clicking the compact pill merely expands it.
         if (_state == IslandVisualState.Compact)
         {
-            _pinned = true;
-            _viewModel.IsPinned = true;
+            SetState(IslandVisualState.Expanded, animate: true);
+            e.Handled = true;
+            return;
+        }
+
+        e.Handled = true;
+    }
+
+    private void PinButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_state == IslandVisualState.Compact)
+        {
             SetState(IslandVisualState.Expanded, animate: true);
         }
-        else if (!_pinned && !_hovering)
+        else
         {
-            ScheduleCollapse();
+            _pinned = !_pinned;
+            _viewModel.IsPinned = _pinned;
+
+            if (_pinned)
+            {
+                _collapseTimer.Stop();
+            }
+            else if (!_hovering && !_editingTodo)
+            {
+                ScheduleCollapse();
+            }
         }
 
         e.Handled = true;
@@ -332,7 +370,7 @@ public partial class IslandWindow : Window
         _dragActive = false;
         SetShelfHighlight(false);
 
-        if (!_hovering && !_pinned)
+        if (!_hovering && !_pinned && !_editingTodo)
         {
             ScheduleCollapse();
         }
@@ -343,7 +381,6 @@ public partial class IslandWindow : Window
     private void Shell_Drop(object sender, DragEventArgs e)
     {
         _dragActive = false;
-        _suppressClickUntil = DateTime.UtcNow.AddMilliseconds(300);
         SetShelfHighlight(false);
         e.Effects = DragDropEffects.Copy;
 
@@ -352,8 +389,6 @@ public partial class IslandWindow : Window
         {
             _viewModel.SelectFunction(FunctionTab.FileShelf);
             _viewModel.AddFiles(paths);
-            _pinned = true;
-            _viewModel.IsPinned = true;
 
             if (_state != IslandVisualState.Expanded)
             {
@@ -382,13 +417,6 @@ public partial class IslandWindow : Window
         e.Handled = true;
     }
 
-    private void TodoArea_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        // Keep clicks inside the interactive todo area from toggling the pin state
-        // in Shell_MouseLeftButtonUp. Text boxes pin the island on focus instead.
-        e.Handled = true;
-    }
-
     private void AddTodo_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.AddTodo();
@@ -410,10 +438,9 @@ public partial class IslandWindow : Window
 
     private void TodoText_GotFocus(object sender, RoutedEventArgs e)
     {
-        // Typing implies a deliberate interaction; keep the island open while the
-        // user edits even if the pointer leaves the window.
-        _pinned = true;
-        _viewModel.IsPinned = true;
+        // Editing keeps the island open temporarily, but does not change the
+        // explicit pin state. The dedicated footer button owns pinning now.
+        _editingTodo = true;
         _collapseTimer.Stop();
     }
 
@@ -439,6 +466,25 @@ public partial class IslandWindow : Window
         {
             _viewModel.NormalizeTodoText(item);
         }
+
+        // Focus can move between the input and a row; only leave editing mode
+        // after focus has actually left the whole todo panel.
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Input,
+            new Action(() =>
+            {
+                if (TodoPanel.IsKeyboardFocusWithin)
+                {
+                    return;
+                }
+
+                _editingTodo = false;
+
+                if (!_pinned && !_hovering && _state == IslandVisualState.Expanded)
+                {
+                    ScheduleCollapse();
+                }
+            }));
     }
 
     private void TodoCheck_Checked(object sender, RoutedEventArgs e)
@@ -673,7 +719,6 @@ public partial class IslandWindow : Window
         data.SetData(DataFormats.FileDrop, new[] { file.FullPath });
 
         _dragOutActive = true;
-        _suppressClickUntil = DateTime.UtcNow.AddMilliseconds(300);
 
         try
         {
@@ -683,7 +728,7 @@ public partial class IslandWindow : Window
         {
             _dragOutActive = false;
 
-            if (!_hovering && !_pinned)
+            if (!_hovering && !_pinned && !_editingTodo)
             {
                 ScheduleCollapse();
             }
@@ -798,7 +843,7 @@ public partial class IslandWindow : Window
     {
         _menuOpen = false;
 
-        if (!_hovering && !_pinned && _state == IslandVisualState.Expanded)
+        if (!_hovering && !_pinned && !_editingTodo && _state == IslandVisualState.Expanded)
         {
             ScheduleCollapse();
         }
@@ -814,7 +859,7 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _menuOpen || _dragActive || _dragOutActive
+        if (_hovering || _pinned || _editingTodo || _menuOpen || _dragActive || _dragOutActive
             || _state != IslandVisualState.Expanded)
         {
             return;
@@ -845,6 +890,11 @@ public partial class IslandWindow : Window
     {
         var changed = _state != state;
         _state = state;
+
+        if (state != IslandVisualState.Expanded)
+        {
+            _editingTodo = false;
+        }
 
         _viewModel.IsExpanded = state == IslandVisualState.Expanded;
         _viewModel.IsNotification = state == IslandVisualState.Notification;
@@ -891,6 +941,9 @@ public partial class IslandWindow : Window
 
         if (!animate || !_loaded)
         {
+            _boundsAnimationId++;
+            _heightSyncTimer.Stop();
+            _nativeHeightEase = null;
             BeginAnimation(WidthProperty, null);
             BeginAnimation(HeightProperty, null);
             BeginAnimation(LeftProperty, null);
@@ -898,6 +951,7 @@ public partial class IslandWindow : Window
             Height = height;
             Left = left;
             Top = top;
+            ApplyNativeHeight();
             return;
         }
 
@@ -914,8 +968,21 @@ public partial class IslandWindow : Window
         Left = left;
         Top = top;
 
-        var ease = new QuinticEase { EasingMode = EasingMode.EaseOut };
-        var duration = TimeSpan.FromMilliseconds(300);
+        var animationId = ++_boundsAnimationId;
+        var collapsing = height < fromHeight - 1;
+        EasingFunctionBase ease = collapsing
+            ? new CubicEase { EasingMode = EasingMode.EaseInOut }
+            : new QuinticEase { EasingMode = EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(collapsing ? 360 : 300);
+
+        // The native HWND height does not follow Window.Height reliably while
+        // that property is animated on a transparent window, so drive the
+        // native height from the same timing curve explicitly.
+        _nativeHeightStart = DateTime.UtcNow;
+        _nativeHeightFrom = fromHeight;
+        _nativeHeightTo = height;
+        _nativeHeightDuration = duration;
+        _nativeHeightEase = ease;
 
         BeginAnimation(
             WidthProperty,
@@ -925,13 +992,27 @@ public partial class IslandWindow : Window
                 FillBehavior = FillBehavior.Stop
             });
 
-        BeginAnimation(
-            HeightProperty,
-            new DoubleAnimation(fromHeight, height, duration)
+        var heightAnimation = new DoubleAnimation(fromHeight, height, duration)
+        {
+            EasingFunction = ease,
+            FillBehavior = FillBehavior.Stop
+        };
+        heightAnimation.Completed += (_, _) =>
+        {
+            if (animationId != _boundsAnimationId)
             {
-                EasingFunction = ease,
-                FillBehavior = FillBehavior.Stop
-            });
+                return;
+            }
+
+            _heightSyncTimer.Stop();
+            _nativeHeightEase = null;
+            BeginAnimation(HeightProperty, null);
+            Height = height;
+            ApplyNativeHeight();
+        };
+
+        BeginAnimation(HeightProperty, heightAnimation);
+        _heightSyncTimer.Start();
 
         BeginAnimation(
             LeftProperty,
@@ -940,6 +1021,55 @@ public partial class IslandWindow : Window
                 EasingFunction = ease,
                 FillBehavior = FillBehavior.Stop
             });
+    }
+
+    /// <summary>
+    /// WPF can defer the native height update while Window.Height is animated.
+    /// Keep the HWND height in sync with the animated DIP value so the visual
+    /// collapse is smooth instead of snapping at the end.
+    /// </summary>
+    private void ApplyNativeHeight()
+    {
+        if (_hwndSource is null)
+        {
+            return;
+        }
+
+        var height = Height;
+        if (_nativeHeightEase is not null)
+        {
+            var progress = Math.Clamp(
+                (DateTime.UtcNow - _nativeHeightStart).TotalMilliseconds
+                / _nativeHeightDuration.TotalMilliseconds,
+                0.0,
+                1.0);
+            var eased = _nativeHeightEase.Ease(progress);
+            height = _nativeHeightFrom + ((_nativeHeightTo - _nativeHeightFrom) * eased);
+        }
+
+        if (!double.IsFinite(height))
+        {
+            return;
+        }
+
+        var handle = _hwndSource.Handle;
+        if (!NativeMethods.GetWindowRect(handle, out var rect))
+        {
+            return;
+        }
+
+        var scale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M22 ?? 1.0;
+        var nativeHeight = Math.Max(1, (int)Math.Round(height * scale));
+        var nativeWidth = Math.Max(1, rect.Right - rect.Left);
+
+        NativeMethods.SetWindowPos(
+            handle,
+            IntPtr.Zero,
+            0,
+            0,
+            nativeWidth,
+            nativeHeight,
+            NativeMethods.SwpNoMove | NativeMethods.SwpNoZOrder | NativeMethods.SwpNoActivate);
     }
 
     private void SwitchContent(IslandVisualState state, bool animate)
@@ -952,6 +1082,8 @@ public partial class IslandWindow : Window
 
         var previous = _activeView;
         _activeView = target;
+        var collapsing = state == IslandVisualState.Compact
+                         && ReferenceEquals(previous, ExpandedView);
 
         target.BeginAnimation(OpacityProperty, null);
         target.Visibility = Visibility.Visible;
@@ -965,32 +1097,47 @@ public partial class IslandWindow : Window
             target.Opacity = 0;
             target.BeginAnimation(
                 OpacityProperty,
-                new DoubleAnimation(1, TimeSpan.FromMilliseconds(190))
+                new DoubleAnimation(1, TimeSpan.FromMilliseconds(collapsing ? 110 : 190))
                 {
-                    BeginTime = TimeSpan.FromMilliseconds(40),
+                    // Wait for the expanded content to finish fading before the
+                    // compact clock appears; otherwise both layouts overlap.
+                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 250 : 40),
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 });
 
             // Zoom out of the top edge: the island grows from the screen edge
-            // instead of merely re-laying out at the new size.
-            var scaleFrom = ReferenceEquals(target, ExpandedView) ? 0.92 : 0.95;
+            // instead of merely re-laying out at the new size. On collapse the
+            // compact content arrives a little later so the expanded content
+            // has time to fade instead of being clipped abruptly.
+            var scaleFrom = ReferenceEquals(target, ExpandedView)
+                ? 0.92
+                : collapsing ? 0.94 : 0.95;
             var scaleEase = new QuinticEase { EasingMode = EasingMode.EaseOut };
-            var scaleDuration = TimeSpan.FromMilliseconds(300);
+            var scaleDuration = TimeSpan.FromMilliseconds(collapsing ? 120 : 300);
 
             scale.ScaleX = 1;
             scale.ScaleY = 1;
             scale.BeginAnimation(
                 ScaleTransform.ScaleXProperty,
-                new DoubleAnimation(scaleFrom, 1, scaleDuration) { EasingFunction = scaleEase });
+                new DoubleAnimation(scaleFrom, 1, scaleDuration)
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
+                    EasingFunction = scaleEase
+                });
             scale.BeginAnimation(
                 ScaleTransform.ScaleYProperty,
-                new DoubleAnimation(scaleFrom, 1, scaleDuration) { EasingFunction = scaleEase });
+                new DoubleAnimation(scaleFrom, 1, scaleDuration)
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
+                    EasingFunction = scaleEase
+                });
 
-            transform.Y = 6;
+            transform.Y = collapsing ? 4 : 6;
             transform.BeginAnimation(
                 TranslateTransform.YProperty,
-                new DoubleAnimation(0, TimeSpan.FromMilliseconds(240))
+                new DoubleAnimation(0, TimeSpan.FromMilliseconds(collapsing ? 140 : 240))
                 {
+                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
                     EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
                 });
         }
@@ -1017,8 +1164,26 @@ public partial class IslandWindow : Window
                 continue;
             }
 
-            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(140))
+            if (collapsing)
             {
+                var (previousScale, previousTranslate) = GetContentTransforms(view);
+                var exitDuration = TimeSpan.FromMilliseconds(220);
+                var exitEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+
+                previousScale.BeginAnimation(
+                    ScaleTransform.ScaleXProperty,
+                    new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
+                previousScale.BeginAnimation(
+                    ScaleTransform.ScaleYProperty,
+                    new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
+                previousTranslate.BeginAnimation(
+                    TranslateTransform.YProperty,
+                    new DoubleAnimation(0, -4, exitDuration) { EasingFunction = exitEase });
+            }
+
+            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(collapsing ? 230 : 140))
+            {
+                BeginTime = TimeSpan.FromMilliseconds(collapsing ? 10 : 0),
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
             };
 

@@ -118,7 +118,7 @@ def make_hero() -> None:
 
     centered_text(
         canvas,
-        "拖入暂存  ·  悬停放大  ·  点击固定",
+        "拖入暂存  ·  悬停放大  ·  右下角固定",
         690,
         font(FONT_CN, 13),
         (130, 140, 158, 255),
@@ -151,7 +151,7 @@ def make_todo() -> None:
     centered_text(canvas, "待办事项", 54, font(FONT_CN_BOLD, 34), (246, 247, 251, 255))
     centered_text(
         canvas,
-        "在功能区直接输入  ·  打勾后粒子消失",
+        "在标签页直接输入  ·  打勾后粒子消失",
         112,
         font(FONT_CN, 14),
         (156, 164, 181, 255),

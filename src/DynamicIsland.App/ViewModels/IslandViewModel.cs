@@ -223,7 +223,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref _isPinned, value))
             {
-                OnPropertyChanged(nameof(PinHint));
+                OnPropertyChanged(nameof(PinButtonText));
             }
         }
     }
@@ -234,7 +234,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _isNotification, value);
     }
 
-    public string PinHint => IsPinned ? "已固定 · 点击取消" : "点击固定";
+    public string PinButtonText => IsPinned ? "取消固定" : "固定窗口";
 
     public string NotificationTitle
     {

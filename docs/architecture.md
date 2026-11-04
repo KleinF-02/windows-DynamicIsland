@@ -80,26 +80,31 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
              MouseEnter
    Compact ───────────────▶ Expanded
       ▲                        │
-      │  MouseLeave + 280ms    │
+      │  MouseLeave + 320ms    │
       └────────────────────────┘
 
-   Compact/Expanded ──Click──▶ pinned
-   pinned ──Click────────────▶ unpinned
+   Compact ──Click──────────▶ Expanded（不固定）
+   PinButton ──Click────────▶ pinned
+   pinned ──PinButton───────▶ unpinned
 
    Any ──ShowNotification───▶ Notification
    Notification ──4.5s / click──▶ Expanded（鼠标在岛上）或 Compact
 ```
 
-- `_pinned` 与 `IslandViewModel.IsPinned` 同步；固定时只改变提示文案和收起条件。
+- 固定只能通过展开态右下角的 `PinButton` 切换，点击胶囊、添加待办或拖入文件都不会隐式固定。
+- `_pinned` 与 `IslandViewModel.IsPinned` 同步；固定时只改变按钮文案和收起条件。
+- 待办输入使用独立的 `_editingTodo` 状态：编辑期间鼠标移开不收起，但不会把窗口标记为固定。
 - 右键菜单打开期间暂停收起计时，菜单关闭后重新判断。
 - 通知态优先于普通展开；通知可直接复用 `ShowNotification`，后续媒体 / 日程只需新增调用方。
 
 ## 5. 动画
 
-- 窗口 `Width`、`Height`、`Left` 同时使用 `QuinticEase(EaseOut)` 插值，`300ms`。
+- 展开：`Width`、`Height`、`Left` 使用 `QuinticEase(EaseOut)`，`300ms`。
+- 收起：使用 `CubicEase(EaseInOut)`，`360ms`；鼠标离开后延迟 `320ms` 再开始，避免边缘误触。
+- 透明分层窗口的 `Height` 在动画期间通过 `16ms` 原生 `SetWindowPos` 同步，避免 WPF 只在动画结束时才更新 HWND 高度、造成中段卡住或末尾跳动。
 - 宽度和左边同时按相同缓动变化，视觉中心保持不动；顶部保持贴屏，因此展开只向下生长。
 - 内容视图额外带 `ScaleTransform`：展开态从 `0.92` 放大到 `1.0`，`RenderTransformOrigin="0.5,0"` 让缩放从顶部中心发生。
-- 三个内容视图使用独立的 `Opacity` + `TranslateTransform` 交叉淡入；旧视图在 `140ms` 后折叠。
+- 收起时旧内容先缩小、上移并淡出（`220ms`），紧凑内容延迟 `95ms` 再淡入；窗口尺寸动画尚未结束时不会突然切换视图。
 - `AnimationsEnabled=false` 时跳过所有动画，直接切到目标尺寸和内容。
 - 窗口动画通过 `BeginAnimation` 临时覆盖基础值，`FillBehavior.Stop` 后落到目标基础值，避免重复点击导致动画叠加。
 
@@ -146,7 +151,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 打勾通过 `IsCompleting` 两向绑定触发 `TodoCheck_Checked`：代码后置在列表上方的 `Canvas` 中生成 24 个椭圆粒子和一个扩散圆环，同时让整行在 300 ms 内淡出并缩小；340 ms 后 `CompleteTodo` 从集合和 `todos.json` 删除。
 - 粒子是 `TranslateTransform` + `DoubleAnimation`（CubicEase），完成后从 Canvas 移除；`ClipToBounds=True` 防止溢出标签区域。
 - `TodoStore` 使用 `%LOCALAPPDATA%\DynamicIsland\todos.json` 原子写入，最多 20 条，损坏文件回退为空。
-- 输入框获得焦点时把胶囊标记为固定，避免鼠标移出后编辑中的列表收起。
+- 输入框获得焦点时只设置 `_editingTodo`，避免鼠标移出后编辑中的列表收起；不会改变固定状态。焦点离开、窗口失活或切换到紧凑态时清除该状态，再按固定/悬停条件决定是否收起。
 
 ### Calendar
 
