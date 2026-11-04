@@ -372,6 +372,12 @@ public partial class IslandWindow : Window
         e.Handled = true;
     }
 
+    private void OpenSettingsFromCalendar_Click(object sender, RoutedEventArgs e)
+    {
+        SettingsRequested?.Invoke(this, EventArgs.Empty);
+        e.Handled = true;
+    }
+
     private void ClearShelf_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.ClearFiles();

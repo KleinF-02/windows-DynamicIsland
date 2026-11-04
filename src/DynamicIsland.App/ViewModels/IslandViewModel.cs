@@ -369,7 +369,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
         try
         {
-            var loadTask = _calendarService.LoadTodayAsync();
+            var loadTask = _calendarService.LoadTodayAsync(_settings.WebCalendarUrl);
             var completed = await Task.WhenAny(loadTask, Task.Delay(TimeSpan.FromSeconds(15)));
 
             if (request != _calendarRequestId)
@@ -441,12 +441,35 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public void ApplySettings(IslandSettings settings)
     {
+        var previousCalendarUrl = _settings.WebCalendarUrl;
         _settings = settings.Clone();
         OnPropertyChanged(nameof(ShowSeconds));
         OnPropertyChanged(nameof(AlwaysOnTop));
         OnPropertyChanged(nameof(TopmostLabel));
         OnPropertyChanged(nameof(SecondsDisplay));
         OnPropertyChanged(nameof(ExpandedSeconds));
+
+        if (!string.Equals(previousCalendarUrl, _settings.WebCalendarUrl, StringComparison.Ordinal))
+        {
+            _calendarRequestId++;
+            _calendarLoading = false;
+            _calendarLoaded = false;
+            _calendarError = false;
+            CalendarEvents.Clear();
+            CalendarErrorTitle = string.Empty;
+            CalendarErrorMessage = string.Empty;
+            CalendarStatusText = "今日";
+
+            OnPropertyChanged(nameof(IsCalendarLoading));
+            OnPropertyChanged(nameof(HasCalendarError));
+            OnPropertyChanged(nameof(HasCalendarEvents));
+            OnPropertyChanged(nameof(IsCalendarEmpty));
+
+            if (IsCalendarActive)
+            {
+                _ = RefreshCalendarAsync(force: true);
+            }
+        }
     }
 
     private void RefreshClock()

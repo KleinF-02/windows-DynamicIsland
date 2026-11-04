@@ -129,7 +129,7 @@ def make_hero() -> None:
 
 
 def make_settings() -> None:
-    source = Image.open(SHOTS / "clean-settings4.png").convert("RGBA")
+    source = Image.open(SHOTS / "settings-final.png").convert("RGBA")
     window = source.crop((663, 89, 1257, 938))
     window.putalpha(rounded_mask(window.size, 11))
 

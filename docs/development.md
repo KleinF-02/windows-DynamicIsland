@@ -11,7 +11,8 @@
 | Visual Studio Code | `1.143.1` | 用户级安装 |
 | C# / C# Dev Kit | `2.160.4` / `3.40.215` | VS Code 扩展，用于 IntelliSense 和调试 |
 | MinGit | `2.56.0` | `%LOCALAPPDATA%\Programs\MinGit\cmd`，可选版本控制 |
-| Outlook 桌面版 | 未安装 | 本机没有 Outlook；日历 COM 读取需在安装并登录 x64 Outlook 的机器上做真实数据验收 |
+| Outlook 桌面版 | 未安装 | 桌面 COM 回退需在安装并登录 x64 Outlook 的机器上验收 |
+| Outlook 网页日历 | 本地 HTTP ICS | 已用示例 ICS 验证获取与解析；真实 Microsoft 365 发布链接需用实际账号联调 |
 
 环境脚本会自动处理以下变量：
 
@@ -152,15 +153,29 @@ dotnet test DynamicIsland.sln
 
 ### Outlook 日历手工验收
 
-在有桌面版 Outlook 的 x64 Windows 上：
+**Microsoft 365 网页版（推荐）**
 
-1. 打开 Outlook，确认已登录并能在“日历”里看到今天的日程。
-2. 启动灵动岛，展开后点击功能区底部的第二个圆点。
-3. 确认标题变为“功能区 / Outlook 日历”，列表显示今天的“时间 · 主题 · 地点”。
-4. 点击右上角“刷新”，确认重新读取。
-5. 断网或退出 Outlook 账号后再刷新，确认出现可读的错误状态，而不是崩溃。
+1. 在 Outlook 网页版发布日历：设置 → 日历 → 共享日历 → 发布日历，复制 ICS 链接。
+2. 打开灵动岛设置 → 日历，粘贴 ICS 链接并保存。
+3. 展开灵动岛，点功能区底部的第二个圆点，确认显示今天的“时间 · 主题 · 地点”。
+4. 在示例 ICS 里放一条重复日程和一条全天日程，确认重复实例被展开、全天显示“全天”。
+5. 把链接改成无效链接后刷新，确认出现可读错误而不是崩溃。
 
-本机（开发环境）未安装 Outlook，因此只能验收“未检测到 Outlook”提示；真实日历读取需要在安装 Outlook 的机器上复测。
+离线验证可以启动一个本地 HTTP 服务，把 ICS 文件放在目录里：
+
+```powershell
+python -m http.server 8765 --bind 127.0.0.1 --directory .\artifacts\ics-test
+```
+
+然后把 `http://127.0.0.1:8765/calendar.ics` 填入设置。
+
+**桌面版 Outlook 回退（可选）**
+
+1. 清空网页日历链接，确认本机安装了 x64 桌面版 Outlook 并已登录。
+2. 切换日历页并刷新，确认读取默认日历。
+3. 不安装 Outlook 时，确认显示“未配置日历来源”。
+
+本机（开发环境）没有桌面版 Outlook；已用本地 HTTP ICS 源完成网页日历的获取、重复日程、全天日程、已取消事件过滤和 UI 验收。
 
 ## 8. 常见问题
 
@@ -199,16 +214,20 @@ Get-Process DynamicIsland -ErrorAction SilentlyContinue | Stop-Process
 3. 查看 `%LOCALAPPDATA%\DynamicIsland\logs\app.log`。
 4. 确认没有残留进程：`Get-Process DynamicIsland`。
 
-### Outlook 日历显示“未检测到 Outlook”
+### 日历显示“未配置日历来源”
 
-按顺序检查：
+这是网页链接为空、且本机没有桌面版 Outlook 时的正常提示。
 
-1. `Get-ItemProperty 'Registry::HKEY_CLASSES_ROOT\Outlook.Application\CLSID'` 是否存在。
-2. Outlook 是否为 x64，且与 `DynamicIsland` 的 x64 发布版一致。
-3. 打开 Outlook，确认已完成配置并登录。
-4. 点击日历页的“刷新”重新尝试。
+- 使用 Microsoft 365 网页版：在设置 → 日历粘贴 Outlook 发布的 ICS 链接。
+- 使用桌面版 Outlook：安装并登录 x64 Outlook，或在设置里清空 ICS 链接后回退 COM。
+- 检查 `Get-ItemProperty 'Registry::HKEY_CLASSES_ROOT\Outlook.Application\CLSID'` 是否存在，以及 Office 位数。
 
-如果使用 Microsoft 365 网页版而不是桌面版 Outlook，当前 COM 方案不会读取网页日历；需要后续接入 Microsoft Graph。
+### 日历链接刷新失败
+
+1. 在浏览器打开 ICS 链接，确认下载的是 `.ics` 而不是登录页/错误页。
+2. 重新在 Outlook 网页版执行“发布日历”，旧链接可能已失效。
+3. 检查组织是否禁用了“发布日历”；若禁用，需要改用 Microsoft Graph + OAuth。
+4. 本地开发可用 `http.server` + 示例 `.ics` 排除网络问题。
 
 ### 设置改了但没生效
 

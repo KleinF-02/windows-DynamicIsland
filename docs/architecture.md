@@ -139,16 +139,24 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 ### Outlook 日历
 
-`OutlookCalendarService` 使用 Outlook COM Automation：
+`OutlookCalendarService` 优先读取 **Microsoft 365 网页版发布的 ICS 链接**，未配置链接时才回退桌面 COM。
 
-1. 先检查 `Outlook.Application` ProgID；不存在时返回“未检测到 Outlook”，不启动任何进程。
-2. 在**专用 STA 线程**创建 `Outlook.Application`，避免 Office COM 阻塞 WPF UI 线程。
-3. 通过 `GetNamespace("MAPI").GetDefaultFolder(9)`（olFolderCalendar）读取默认日历。
-4. 开启 `IncludeRecurrences`，按 `[Start]` 排序，用当天 `[Start]` 区间 `Restrict` 查询；如果当前 Outlook 不接受日期过滤表达式，则退回遍历并按托管代码过滤。
-5. 将 `Subject / Start / End / AllDayEvent / Location` 映射成 `CalendarEventItem`，按开始时间排序。
-6. 每次读取最多 200 条，UI 侧 15 秒超时；失败时区分“未安装”和“读取失败”，并提供重试。
+**网页 ICS 路径**
 
-日历页不常驻定时器：首次切到该标签时读取，之后 2 分钟内复用结果，手动“刷新”会强制重新读取。当前只支持今日日程和桌面版 Outlook，不包含 Microsoft Graph / 网页版日历。
+1. `IslandSettings.WebCalendarUrl` 非空时走网页路径；支持 `https://`、`webcal://`、`http(s)` 和本地 `.ics` 文件。
+2. 通过静态 `HttpClient` 下载，20 秒超时、自动重定向/解压，内容上限 8 MB；如果返回 HTML 登录页则给出“链接可能已过期”的可读错误。
+3. 使用 `Ical.Net.Calendar.Load` 解析 RFC 5545，并用 `GetOccurrences(today, tomorrow)` 展开重复日程。
+4. 跳过 `STATUS:CANCELLED`，将 `Summary / Start / End / IsAllDay / Location` 映射为 `CalendarEventItem`。
+5. ICS 链接包含私人令牌，只保存在本机设置里，不写入日志；不请求链接以外的服务。
+
+**桌面 COM 回退**
+
+1. 未配置网页链接时检查 `Outlook.Application` ProgID；不存在时返回“未配置日历来源”。
+2. 在专用 STA 线程创建 `Outlook.Application`，通过 `GetNamespace("MAPI").GetDefaultFolder(9)` 读取默认日历。
+3. 开启 `IncludeRecurrences`，按 `[Start]` 排序并用日期区间 `Restrict` 查询；如果当前 Outlook 不接受过滤表达式，则退回遍历并按托管代码过滤。
+4. 每次读取最多 200 条；UI 侧 15 秒超时。失败时区分“未配置”“读取失败”并提供重试。
+
+两条路径最终都返回同一套 `CalendarLoadResult`/`CalendarEventItem`，因此 UI 不区分来源。日历页不常驻定时器：首次切到该标签时读取，之后 2 分钟内复用结果，手动“刷新”会强制重新读取；修改设置里的 URL 会清空缓存并按需重新加载。
 
 ### 开机启动
 

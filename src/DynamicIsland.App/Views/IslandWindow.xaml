@@ -535,17 +535,29 @@
                                                    TextAlignment="Center"
                                                    MaxHeight="34"
                                                    Margin="0,3,0,4" />
-                                        <Button Content="重试"
-                                                Click="RefreshCalendar_Click"
-                                                HorizontalAlignment="Center">
-                                            <Button.Style>
-                                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
-                                                    <Setter Property="Height" Value="20" />
-                                                    <Setter Property="Padding" Value="9,2" />
-                                                    <Setter Property="FontSize" Value="9" />
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Content="重试"
+                                                    Click="RefreshCalendar_Click"
+                                                    Margin="0,0,6,0">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
+                                                        <Setter Property="Height" Value="20" />
+                                                        <Setter Property="Padding" Value="9,2" />
+                                                        <Setter Property="FontSize" Value="9" />
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Content="设置"
+                                                    Click="OpenSettingsFromCalendar_Click">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
+                                                        <Setter Property="Height" Value="20" />
+                                                        <Setter Property="Padding" Value="9,2" />
+                                                        <Setter Property="FontSize" Value="9" />
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Grid>
 

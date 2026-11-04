@@ -146,6 +146,32 @@
                     </StackPanel>
                 </Border>
 
+                <TextBlock Text="日历" Style="{StaticResource SectionLabel}" Margin="0,18,0,0" />
+                <Border Style="{StaticResource PanelCard}" Margin="0,8,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Outlook 网页日历" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock Text="适用于 Microsoft 365 网页版。在 Outlook 网页版依次打开：设置 → 日历 → 共享日历 → 发布日历，复制生成的 ICS 链接。"
+                                   Style="{StaticResource CaptionText}"
+                                   Margin="0,3,0,0" />
+                        <Border Background="#0BFFFFFF"
+                                BorderBrush="#22FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="32"
+                                Padding="10,0"
+                                Margin="0,10,0,0">
+                            <TextBox Text="{Binding WebCalendarUrl, Mode=TwoWay}"
+                                     Style="{StaticResource SettingsTextBox}"
+                                     AutomationProperties.Name="Outlook 网页日历 ICS 链接" />
+                        </Border>
+                        <TextBlock Text="留空则尝试桌面版 Outlook。链接包含访问令牌，仅保存在本机设置中。"
+                                   FontSize="9"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
                 <TextBlock Text="外观" Style="{StaticResource SectionLabel}" Margin="0,18,0,0" />
                 <Border Style="{StaticResource PanelCard}" Margin="0,8,0,0">
                     <StackPanel>
@@ -219,7 +245,7 @@
                     <TextBlock Text="{Binding VersionText}"
                                FontSize="10"
                                Foreground="{StaticResource TextMutedBrush}" />
-                    <TextBlock Text="设置仅保存在本机 · 无网络请求"
+                    <TextBlock Text="设置仅保存在本机 · 网页日历需联网"
                                FontSize="10"
                                Foreground="{StaticResource TextMutedBrush}"
                                HorizontalAlignment="Right" />

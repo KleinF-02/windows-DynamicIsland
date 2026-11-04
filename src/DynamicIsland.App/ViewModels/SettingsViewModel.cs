@@ -110,6 +110,21 @@ public sealed class SettingsViewModel : ObservableObject
 
     public string TopMarginLabel => _draft.TopMargin <= 0.01 ? "贴顶" : $"{_draft.TopMargin:0} DIP";
 
+    public string WebCalendarUrl
+    {
+        get => _draft.WebCalendarUrl;
+        set
+        {
+            if (string.Equals(_draft.WebCalendarUrl, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.WebCalendarUrl = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
     public string VersionText
     {
         get

@@ -78,7 +78,8 @@ public sealed class SettingsStoreTests : IDisposable
             ShowSeconds = false,
             Opacity = 0.82,
             TopMargin = 17,
-            PreferredScreen = @"\\.\DISPLAY2"
+            PreferredScreen = @"\\.\DISPLAY2",
+            WebCalendarUrl = "https://outlook.office365.com/owa/calendar/example/calendar.ics"
         };
 
         Assert.True(store.TrySave(settings, out var error), error);
@@ -91,6 +92,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(0.82, loaded.Opacity, 3);
         Assert.Equal(17, loaded.TopMargin, 3);
         Assert.Equal(@"\\.\DISPLAY2", loaded.PreferredScreen);
+        Assert.Equal("https://outlook.office365.com/owa/calendar/example/calendar.ics", loaded.WebCalendarUrl);
     }
 
     [Fact]

@@ -25,6 +25,12 @@ public sealed class IslandSettings
     public double TopMargin { get; set; } = 0.0;
 
     /// <summary>
+    /// Published Outlook web calendar (ICS) URL. Empty means "try desktop Outlook".
+    /// The URL contains a private access token; it is stored only in local settings.
+    /// </summary>
+    public string WebCalendarUrl { get; set; } = string.Empty;
+
+    /// <summary>
     /// Device name of the preferred monitor (for example <c>\\.\DISPLAY1</c>).
     /// Empty means the primary monitor.
     /// </summary>
@@ -53,5 +59,10 @@ public sealed class IslandSettings
 
         TopMargin = Math.Clamp(TopMargin, 0.0, 80.0);
         PreferredScreen ??= string.Empty;
+        WebCalendarUrl = (WebCalendarUrl ?? string.Empty).Trim();
+        if (WebCalendarUrl.Length > 4096)
+        {
+            WebCalendarUrl = WebCalendarUrl[..4096];
+        }
     }
 }
