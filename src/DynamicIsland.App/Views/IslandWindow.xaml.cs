@@ -11,7 +11,14 @@ using DynamicIsland.App.Interop;
 using DynamicIsland.App.ViewModels;
 using DynamicIsland.Core.Layout;
 using DynamicIsland.Core.Models;
+using Border = System.Windows.Controls.Border;
+using Brush = System.Windows.Media.Brush;
 using Button = System.Windows.Controls.Button;
+using Canvas = System.Windows.Controls.Canvas;
+using CheckBox = System.Windows.Controls.CheckBox;
+using Ellipse = System.Windows.Shapes.Ellipse;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using TextBox = System.Windows.Controls.TextBox;
 using DataFormats = System.Windows.DataFormats;
 using DataObject = System.Windows.DataObject;
 using DragDrop = System.Windows.DragDrop;
@@ -45,6 +52,7 @@ public partial class IslandWindow : Window
     private Point _fileDragStart;
     private StagedFileViewModel? _fileDragCandidate;
     private DateTime _suppressClickUntil;
+    private readonly HashSet<string> _completingTodoIds = new(StringComparer.Ordinal);
 
     public IslandWindow(IslandSettings settings)
     {
@@ -162,7 +170,9 @@ public partial class IslandWindow : Window
 
         var handle = new WindowInteropHelper(this).Handle;
         var extendedStyle = NativeMethods.GetWindowLongPtr(handle, NativeMethods.GwlExStyle).ToInt64();
-        extendedStyle |= NativeMethods.WsExToolWindow | NativeMethods.WsExNoActivate;
+        // Keep it out of Alt+Tab, but allow activation when the user clicks a todo
+        // input. ShowActivated=False still prevents stealing focus on hover/show.
+        extendedStyle |= NativeMethods.WsExToolWindow;
         NativeMethods.SetWindowLongPtr(handle, NativeMethods.GwlExStyle, new IntPtr(extendedStyle));
 
         _hwndSource = HwndSource.FromHwnd(handle);
@@ -364,6 +374,230 @@ public partial class IslandWindow : Window
     {
         _viewModel.SelectFunction(FunctionTab.Calendar);
         e.Handled = true;
+    }
+
+    private void TodoTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.SelectFunction(FunctionTab.Todo);
+        e.Handled = true;
+    }
+
+    private void TodoArea_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        // Keep clicks inside the interactive todo area from toggling the pin state
+        // in Shell_MouseLeftButtonUp. Text boxes pin the island on focus instead.
+        e.Handled = true;
+    }
+
+    private void AddTodo_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.AddTodo();
+        TodoInput.Focus();
+        e.Handled = true;
+    }
+
+    private void TodoInput_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        _viewModel.AddTodo();
+        TodoInput.Focus();
+        e.Handled = true;
+    }
+
+    private void TodoText_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Typing implies a deliberate interaction; keep the island open while the
+        // user edits even if the pointer leaves the window.
+        _pinned = true;
+        _viewModel.IsPinned = true;
+        _collapseTimer.Stop();
+    }
+
+    private void TodoText_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        if (sender is TextBox { DataContext: TodoItemViewModel item })
+        {
+            _viewModel.NormalizeTodoText(item);
+        }
+
+        TodoInput.Focus();
+        e.Handled = true;
+    }
+
+    private void TodoText_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox { DataContext: TodoItemViewModel item })
+        {
+            _viewModel.NormalizeTodoText(item);
+        }
+    }
+
+    private void TodoCheck_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox check
+            || check.DataContext is not TodoItemViewModel item
+            || !_completingTodoIds.Add(item.Id))
+        {
+            return;
+        }
+
+        item.IsCompleting = true;
+        var origin = new Point(18, 18);
+
+        try
+        {
+            origin = check.TransformToVisual(TodoParticleCanvas)
+                .Transform(new Point(check.ActualWidth / 2, check.ActualHeight / 2));
+        }
+        catch (InvalidOperationException)
+        {
+            // Use the fallback origin if the row is already being detached.
+        }
+
+        SpawnTodoParticles(origin);
+        AnimateTodoRowOut(check);
+
+        var timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(340)
+        };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            _viewModel.CompleteTodo(item);
+            _completingTodoIds.Remove(item.Id);
+        };
+        timer.Start();
+    }
+
+    private void SpawnTodoParticles(Point origin)
+    {
+        var palette = new[]
+        {
+            (Brush)FindResource("AccentBrush"),
+            (Brush)FindResource("AccentBlueBrush"),
+            (Brush)FindResource("TextPrimaryBrush")
+        };
+
+        for (var i = 0; i < 24; i++)
+        {
+            var size = 2.5 + (Random.Shared.NextDouble() * 3.5);
+            var dot = new Ellipse
+            {
+                Width = size,
+                Height = size,
+                Fill = palette[i % palette.Length],
+                Opacity = 1
+            };
+
+            var angle = Random.Shared.NextDouble() * Math.PI * 2;
+            var startRadius = i < 8 ? 5 + (Random.Shared.NextDouble() * 12) : 0;
+            var translate = new TranslateTransform();
+            dot.RenderTransform = translate;
+            Canvas.SetLeft(dot, origin.X + (Math.Cos(angle) * startRadius) - (size / 2));
+            Canvas.SetTop(dot, origin.Y + (Math.Sin(angle) * startRadius) - (size / 2));
+            TodoParticleCanvas.Children.Add(dot);
+
+            var distance = 32 + (Random.Shared.NextDouble() * 58);
+            var dx = Math.Cos(angle) * distance;
+            var dy = (Math.Sin(angle) * distance) - 24;
+            var duration = TimeSpan.FromMilliseconds(460 + Random.Shared.Next(320));
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+            translate.BeginAnimation(
+                TranslateTransform.XProperty,
+                new DoubleAnimation(0, dx, duration) { EasingFunction = ease });
+            translate.BeginAnimation(
+                TranslateTransform.YProperty,
+                new DoubleAnimation(0, dy, duration) { EasingFunction = ease });
+
+            var fade = new DoubleAnimation(1, 0, duration)
+            {
+                BeginTime = TimeSpan.FromMilliseconds(50)
+            };
+            fade.Completed += (_, _) => TodoParticleCanvas.Children.Remove(dot);
+            dot.BeginAnimation(OpacityProperty, fade);
+        }
+
+        var ring = new Ellipse
+        {
+            Width = 22,
+            Height = 22,
+            Stroke = (Brush)FindResource("AccentBrush"),
+            StrokeThickness = 1.5,
+            Opacity = 0.9,
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
+        var ringScale = new ScaleTransform(0.5, 0.5);
+        ring.RenderTransform = ringScale;
+        Canvas.SetLeft(ring, origin.X - 11);
+        Canvas.SetTop(ring, origin.Y - 11);
+        TodoParticleCanvas.Children.Add(ring);
+
+        var ringDuration = TimeSpan.FromMilliseconds(420);
+        var ringEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+        ringScale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(1, 2.8, ringDuration) { EasingFunction = ringEase });
+        ringScale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(1, 2.8, ringDuration) { EasingFunction = ringEase });
+
+        var ringFade = new DoubleAnimation(0.9, 0, ringDuration);
+        ringFade.Completed += (_, _) => TodoParticleCanvas.Children.Remove(ring);
+        ring.BeginAnimation(OpacityProperty, ringFade);
+    }
+
+    private void AnimateTodoRowOut(CheckBox check)
+    {
+        var row = FindTodoRow(check);
+        if (row is null)
+        {
+            return;
+        }
+
+        var scale = new ScaleTransform(1, 1);
+        row.RenderTransformOrigin = new Point(0, 0.5);
+        row.RenderTransform = scale;
+
+        var duration = TimeSpan.FromMilliseconds(300);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+
+        row.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(1, 0, duration) { EasingFunction = ease });
+        scale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(1, 0.92, duration) { EasingFunction = ease });
+        scale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(1, 0.92, duration) { EasingFunction = ease });
+    }
+
+    private static Border? FindTodoRow(DependencyObject? current)
+    {
+        while (current is not null)
+        {
+            if (current is Border { Tag: "TodoRow" } row)
+            {
+                return row;
+            }
+
+            current = current is Visual
+                ? VisualTreeHelper.GetParent(current)
+                : LogicalTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private void RefreshCalendar_Click(object sender, RoutedEventArgs e)

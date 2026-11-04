@@ -17,6 +17,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _powerTimer;
     private readonly OutlookCalendarService _calendarService = new();
+    private readonly TodoStore _todoStore = new();
     private IslandSettings _settings;
 
     private DateTime _now = DateTime.Now;
@@ -40,6 +41,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private string _calendarErrorMessage = string.Empty;
     private DateTime _calendarLoadedAt;
     private int _calendarRequestId;
+    private string _newTodoText = string.Empty;
 
     public IslandViewModel(IslandSettings settings)
     {
@@ -60,6 +62,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         RefreshClock();
         RefreshPower();
         RefreshScreen();
+        LoadTodos();
     }
 
     public string TimeText => _now.ToString("HH:mm");
@@ -96,17 +99,51 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public string ShelfCountText => $"{StagedFiles.Count} 个文件";
 
+    public ObservableCollection<TodoItemViewModel> Todos { get; } = new();
+
+    public bool HasTodos => Todos.Count > 0;
+
+    public bool IsTodoEmpty => Todos.Count == 0;
+
+    public string TodoCountText => $"{Todos.Count} 个待办";
+
+    public string NewTodoText
+    {
+        get => _newTodoText;
+        set
+        {
+            if (SetProperty(ref _newTodoText, value ?? string.Empty))
+            {
+                OnPropertyChanged(nameof(IsTodoInputEmpty));
+            }
+        }
+    }
+
+    public bool IsTodoInputEmpty => string.IsNullOrWhiteSpace(NewTodoText);
+
     public FunctionTab ActiveFunction => _activeFunction;
 
     public bool IsFileShelfActive => _activeFunction == FunctionTab.FileShelf;
 
     public bool IsCalendarActive => _activeFunction == FunctionTab.Calendar;
 
-    public string ActiveFunctionTitle => IsFileShelfActive ? "文件暂存" : "Outlook 日历";
+    public bool IsTodoActive => _activeFunction == FunctionTab.Todo;
 
-    public string FooterHint => IsFileShelfActive
-        ? "拖入暂存 · 拖出复制 · 原文件保留"
-        : "今日日程 · 点击圆点切换功能区";
+    public string ActiveFunctionTitle => _activeFunction switch
+    {
+        FunctionTab.FileShelf => "文件暂存",
+        FunctionTab.Calendar => "Outlook 日历",
+        FunctionTab.Todo => "待办事项",
+        _ => "功能区"
+    };
+
+    public string FooterHint => _activeFunction switch
+    {
+        FunctionTab.FileShelf => "拖入暂存 · 拖出复制 · 原文件保留",
+        FunctionTab.Calendar => "今日日程 · 点击圆点切换功能区",
+        FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
+        _ => "点击圆点切换功能区"
+    };
 
     public ObservableCollection<CalendarEventItem> CalendarEvents { get; } = new();
 
@@ -307,6 +344,92 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShelfCountText));
     }
 
+    private void LoadTodos()
+    {
+        foreach (var record in _todoStore.Load())
+        {
+            Todos.Add(new TodoItemViewModel(record.Id, record.Text, record.CreatedAt));
+        }
+
+        RaiseTodosChanged();
+    }
+
+    public bool AddTodo()
+    {
+        var text = NewTodoText.Trim();
+        if (string.IsNullOrWhiteSpace(text) || Todos.Count >= 20)
+        {
+            return false;
+        }
+
+        if (text.Length > 120)
+        {
+            text = text[..120];
+        }
+
+        Todos.Add(new TodoItemViewModel(
+            Guid.NewGuid().ToString("N"),
+            text,
+            DateTime.Now));
+        NewTodoText = string.Empty;
+        RaiseTodosChanged();
+        SaveTodos();
+        return true;
+    }
+
+    public void NormalizeTodoText(TodoItemViewModel item)
+    {
+        item.Text = (item.Text ?? string.Empty).Trim();
+        if (item.Text.Length > 120)
+        {
+            item.Text = item.Text[..120];
+        }
+
+        if (string.IsNullOrWhiteSpace(item.Text))
+        {
+            if (Todos.Remove(item))
+            {
+                RaiseTodosChanged();
+                SaveTodos();
+            }
+
+            return;
+        }
+
+        SaveTodos();
+    }
+
+    public void CompleteTodo(TodoItemViewModel item)
+    {
+        if (Todos.Remove(item))
+        {
+            RaiseTodosChanged();
+            SaveTodos();
+        }
+    }
+
+    private void RaiseTodosChanged()
+    {
+        OnPropertyChanged(nameof(HasTodos));
+        OnPropertyChanged(nameof(IsTodoEmpty));
+        OnPropertyChanged(nameof(TodoCountText));
+    }
+
+    private void SaveTodos()
+    {
+        var records = Todos.Select(item => new TodoRecord
+        {
+            Id = item.Id,
+            Text = item.Text,
+            CreatedAt = item.CreatedAt
+        });
+
+        if (!_todoStore.TrySave(records, out var error))
+        {
+            AppLogger.Error($"Unable to save todos: {error}");
+        }
+    }
+
     public void SelectFunction(FunctionTab function)
     {
         if (_activeFunction != function)
@@ -315,6 +438,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(ActiveFunction));
             OnPropertyChanged(nameof(IsFileShelfActive));
             OnPropertyChanged(nameof(IsCalendarActive));
+            OnPropertyChanged(nameof(IsTodoActive));
             OnPropertyChanged(nameof(ActiveFunctionTitle));
             OnPropertyChanged(nameof(FooterHint));
         }

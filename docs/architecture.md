@@ -39,7 +39,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 5. `IslandWindow.Show()`；按参数进入 `--demo` / `--settings` / 首次运行欢迎通知。
 6. 托盘“退出”或右键菜单“退出”才调用 `Shutdown()`。
 
-`IslandWindow` 不显示在任务栏，使用 `WS_EX_TOOLWINDOW` 和 `WS_EX_NOACTIVATE`，因此点击胶囊不会抢走当前应用焦点，托盘和设置窗口仍可正常交互。
+`IslandWindow` 不显示在任务栏，使用 `WS_EX_TOOLWINDOW` 和 `ShowActivated=False`。启动、托盘唤出和悬停展开都不会抢焦点；点击胶囊后窗口才会激活，这是待办行内输入所必需的。设置窗口仍是普通可激活窗口。
 
 ## 3. 窗口与几何
 
@@ -119,12 +119,13 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 ### 功能区标签
 
-展开态功能区有两个标签页，由底部的两个圆点按钮切换：
+展开态功能区有三个标签页，由底部的三个圆点按钮切换：
 
 - `FunctionTab.FileShelf`：文件暂存
 - `FunctionTab.Calendar`：Outlook 日历
+- `FunctionTab.Todo`：待办事项
 
-`IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsFileShelfActive`、`IsCalendarActive`、`ActiveFunctionTitle` 和 `FooterHint`。两个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
+`IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsFileShelfActive`、`IsCalendarActive`、`IsTodoActive`、`ActiveFunctionTitle` 和 `FooterHint`。三个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
 
 ### 文件暂存
 
@@ -136,6 +137,16 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 拖出：条目上按下鼠标后由 **Window 的 `PreviewMouseMove`** 统一判断拖动阈值，避免 `ScrollViewer` 捕获鼠标导致行内 `MouseMove` 丢失；`DoDragDrop` 只允许 `Copy`，因此原文件不会被移动或删除。
 - `ExpandedView` 需要命中测试（文件行、清空、移除按钮），这是它和 Compact/Notification 视图不同的一点。
 - 文件架是**会话内引用**，不持久化，不复制文件到应用目录；应用退出后列表消失，原文件始终不动。
+
+### 待办事项
+
+- `TodoItemViewModel` 保存 `Id / Text / CreatedAt / IsCompleting`；`IslandViewModel.Todos` 是 `ObservableCollection`。
+- 顶部输入框绑定 `NewTodoText`，`Enter` 或 `+` 调用 `AddTodo`；回车使用 `PreviewKeyDown`，避免被 TextBox 的默认键盘处理吞掉。
+- 每一行的文字本身是透明 TextBox，可直接点击修改；失焦或回车时 `NormalizeTodoText` 去空格、限制 120 字并保存。清空文字会删除该行。
+- 打勾通过 `IsCompleting` 两向绑定触发 `TodoCheck_Checked`：代码后置在列表上方的 `Canvas` 中生成 24 个椭圆粒子和一个扩散圆环，同时让整行在 300 ms 内淡出并缩小；340 ms 后 `CompleteTodo` 从集合和 `todos.json` 删除。
+- 粒子是 `TranslateTransform` + `DoubleAnimation`（CubicEase），完成后从 Canvas 移除；`ClipToBounds=True` 防止溢出功能区。
+- `TodoStore` 使用 `%LOCALAPPDATA%\DynamicIsland\todos.json` 原子写入，最多 20 条，损坏文件回退为空。
+- 输入框获得焦点时把胶囊标记为固定，避免鼠标移出后编辑中的列表收起。
 
 ### Outlook 日历
 
@@ -182,6 +193,8 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Run
 - 先写 `.tmp`，再 `File.Move(..., overwrite: true)`，避免半写文件
 - 反序列化异常 / IO 异常 → 默认配置，绝不阻止启动
 - `IslandSettings.Normalize()` 负责范围修复：`Opacity [0.60, 1.00]`，`TopMargin [0, 80]`
+
+待办：`%LOCALAPPDATA%\DynamicIsland\todos.json`，由 `TodoStore` 原子写入；与设置文件分开，损坏时只丢待办，不影响启动。
 
 日志：`%LOCALAPPDATA%\DynamicIsland\logs\app.log`，只记录启动、异常和关键系统错误，不记录鼠标轨迹。
 

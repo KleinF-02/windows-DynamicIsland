@@ -4,7 +4,7 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**当前状态：`0.1.0` 可运行开发骨架。** 窗口、动画、托盘、设置、开机启动、通知胶囊和文件暂存都已在本机实机跑通；Outlook 日历支持 **Microsoft 365 网页版 ICS 链接**，也保留桌面版 Outlook COM 回退。本机通过本地 HTTP ICS 源实测了获取、重复日程展开、全天日程和列表 UI，未使用真实 Microsoft 365 账号链接测试。
+**当前状态：`0.1.0` 可运行开发骨架。** 窗口、动画、托盘、设置、开机启动、通知胶囊、文件暂存和待办事项都已在本机实机跑通；Outlook 日历支持 **Microsoft 365 网页版 ICS 链接**，也保留桌面版 Outlook COM 回退。本机通过本地 HTTP ICS 源实测了获取、重复日程展开、全天日程和列表 UI，未使用真实 Microsoft 365 账号链接测试。
 
 ## 现在能做什么
 
@@ -13,10 +13,11 @@
 - 悬停自动放大展开，移开自动收起；点击固定 / 取消固定
 - `300ms` 弹性尺寸动画 + 顶部中心缩放 + 内容交叉淡入
 - 实时时钟、日期、秒数、电池 / 充电状态
-- **两个功能区用圆点按钮切换**：文件暂存 / Outlook 日历
+- **三个功能区用圆点按钮切换**：文件暂存 / Outlook 日历 / 待办事项
 - **文件暂存**：文件或文件夹拖入后保留引用，按住条目可拖出复制，支持移除和清空，最多 12 个
 - **Outlook 日历**：支持 Microsoft 365 网页版发布的 ICS 链接，读取今日日程（时间、主题、地点、全天、重复事件）；也回退桌面版 Outlook COM
 - 日历支持加载中、无日程、链接失效、未配置来源、重试和手动刷新
+- **待办事项**：在功能区直接输入或修改，打勾后粒子散开、整行淡出并从列表删除；待办持久化到本机
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
 - 深色设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（默认 `0` = 贴顶）
 - 系统托盘图标与右键菜单
@@ -40,6 +41,12 @@
 ### 设置页
 
 ![设置页](docs/images/settings.png)
+
+### 待办事项
+
+![待办事项](docs/images/todo.png)
+
+在功能区顶部输入后按回车，或点 `+` 添加。每条待办的文字可以直接点击修改；点左侧圆圈打勾，粒子会从勾选处散开，整行淡出后从列表和本地文件中删除。待办会保存在本机，重启后仍在。
 
 ## 配置 Microsoft 365 网页版日历
 
@@ -159,7 +166,7 @@ dynamic-island/
 │  │  └─ Services/SettingsStore.cs
 │  └─ DynamicIsland.App/            # WPF 宿主
 │     ├─ Interop/NativeMethods.cs
-│     ├─ Services/                  # 托盘、开机启动、日志
+│     ├─ Services/                  # 托盘、开机启动、日志、日历、待办存储
 │     ├─ ViewModels/
 │     ├─ Views/IslandWindow.*
 │     ├─ Views/SettingsWindow.*
@@ -176,6 +183,7 @@ dynamic-island/
 | 内容 | 路径 |
 | --- | --- |
 | 设置 | `%LOCALAPPDATA%\DynamicIsland\settings.json` |
+| 待办 | `%LOCALAPPDATA%\DynamicIsland\todos.json` |
 | 日志 | `%LOCALAPPDATA%\DynamicIsland\logs\app.log` |
 | 开机启动 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DynamicIsland` |
 
@@ -184,6 +192,8 @@ dynamic-island/
 ## 当前限制
 
 - 文件暂存是当前运行期间的引用列表，重启后清空；不会复制或移动原文件，拖出时交给目标应用的是原路径的副本操作。
+- 待办最多 20 条、每条 120 字；打勾即删除，没有“已完成历史”。待办保存在本机，不上传。
+- 胶囊启动、托盘唤出和悬停展开不抢焦点；点击胶囊（尤其是待办输入框）会激活窗口，这是键盘输入所必需的。
 - Outlook 网页日历通过**发布 ICS 链接**接入，不支持需要登录态的私有网页抓取；未使用 Microsoft Graph/OAuth。若组织禁用发布日历，需要额外做 Azure 应用注册和 Graph 授权。
 - ICS 链接以明文保存在本机设置中，包含访问令牌；请勿分享设置文件。桌面版 Outlook COM 仅在未配置 ICS 链接时作为回退。
 - 多显示器：Core 已预留 `PreferredScreen`，当前设置页未开放显示器选择，默认使用主屏。
@@ -208,4 +218,5 @@ dynamic-island/
 - MinGit `2.56.0`（可选，用于版本控制）
 - 本机未安装 Outlook；网页日历已用本地 HTTP ICS 源实测（含全天、重复日程、已取消事件过滤）
 - 真实 Microsoft 365 发布链接需要你自己的账号链接做最终联调；桌面版 Outlook COM 未在本机实测
+- 待办已实测键盘输入、行内修改、打勾删除、粒子动画和重启持久化
 - `dotnet build` 0 警告 0 错误；`dotnet test` 10/10 通过

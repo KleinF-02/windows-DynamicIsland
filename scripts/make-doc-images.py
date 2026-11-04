@@ -104,7 +104,7 @@ def make_hero() -> None:
     centered_text(canvas, "桌面顶部的一颗呼吸感胶囊", 200, font(FONT_CN, 17), (156, 164, 181, 255))
 
     island = crop_island(
-        SHOTS / "tabs-file-full.png",
+        SHOTS / "tabs-file-3dots.png",
         (696, 0, 1225, 355),
         radius=31,
     )
@@ -140,6 +140,41 @@ def make_settings() -> None:
     canvas.convert("RGB").save(OUT / "settings.png", optimize=True)
 
 
+def make_todo() -> None:
+    island = crop_island(
+        SHOTS / "todo-persisted.png",
+        (340, 0, 864, 348),
+        radius=31,
+    )
+
+    canvas = backdrop(900, 620)
+    centered_text(canvas, "待办事项", 54, font(FONT_CN_BOLD, 34), (246, 247, 251, 255))
+    centered_text(
+        canvas,
+        "在功能区直接输入  ·  打勾后粒子消失",
+        112,
+        font(FONT_CN, 14),
+        (156, 164, 181, 255),
+    )
+
+    x = (canvas.width - island.width) // 2
+    y = 158
+    drop_shadow(canvas, (x, y, x + island.width, y + island.height), 31)
+    ImageDraw.Draw(canvas).rounded_rectangle(
+        (x, y, x + island.width, y + island.height), radius=31, fill=(5, 7, 10, 255)
+    )
+    canvas.alpha_composite(island, (x, y))
+
+    centered_text(
+        canvas,
+        "本地保存  ·  回车添加  ·  点击文字直接修改",
+        578,
+        font(FONT_CN, 12),
+        (130, 140, 158, 255),
+    )
+    canvas.convert("RGB").save(OUT / "todo.png", optimize=True)
+
+
 def make_compact() -> None:
     island = crop_island(
         SHOTS / "username-compact.png",
@@ -159,5 +194,6 @@ def make_compact() -> None:
 if __name__ == "__main__":
     make_hero()
     make_settings()
+    make_todo()
     make_compact()
     print(f"Wrote documentation images to {OUT}")

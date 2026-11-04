@@ -11,7 +11,6 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
-        Focusable="False"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         FontFamily="{StaticResource AppFont}"
@@ -312,6 +311,26 @@
                                         </Style>
                                     </Button.Style>
                                 </Button>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <StackPanel.Style>
+                                    <Style TargetType="{x:Type StackPanel}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsTodoActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="{Binding TodoCountText}"
+                                           FontSize="9"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
@@ -654,6 +673,174 @@
                                 </Grid>
                             </Grid>
                         </Border>
+
+                        <Border Grid.Row="1"
+                                Height="108"
+                                Margin="0,6,0,0"
+                                Background="#08FFFFFF"
+                                BorderBrush="#16FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="6"
+                                MouseLeftButtonUp="TodoArea_MouseLeftButtonUp">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsTodoActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Background="#0BFFFFFF"
+                                            BorderBrush="#18FFFFFF"
+                                            BorderThickness="1"
+                                            CornerRadius="7"
+                                            Padding="8,0">
+                                        <Grid>
+                                            <TextBox x:Name="TodoInput"
+                                                     Style="{StaticResource SettingsTextBox}"
+                                                     Height="26"
+                                                     MaxLength="120"
+                                                     Text="{Binding NewTodoText, UpdateSourceTrigger=PropertyChanged}"
+                                                     PreviewKeyDown="TodoInput_KeyDown"
+                                                     GotFocus="TodoText_GotFocus"
+                                                     AutomationProperties.Name="添加待办" />
+                                            <TextBlock Text="添加待办，回车保存"
+                                                       FontSize="9.5"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       IsHitTestVisible="False"
+                                                       VerticalAlignment="Center"
+                                                       Margin="1,0,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding IsTodoInputEmpty}" Value="True" />
+                                                                    <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=TodoInput}" Value="False" />
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <Button Grid.Column="1"
+                                            Content="+"
+                                            Width="26"
+                                            Height="26"
+                                            FontSize="16"
+                                            Padding="0"
+                                            Margin="5,0,0,0"
+                                            Style="{StaticResource IconButton}"
+                                            Foreground="{StaticResource AccentBrush}"
+                                            ToolTip="添加待办"
+                                            AutomationProperties.Name="添加待办按钮"
+                                            Click="AddTodo_Click" />
+                                </Grid>
+
+                                <Grid Grid.Row="1" Margin="0,5,0,0">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ScrollViewer.Style>
+                                            <Style TargetType="{x:Type ScrollViewer}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasTodos}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ScrollViewer.Style>
+                                        <ItemsControl ItemsSource="{Binding Todos}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Tag="TodoRow"
+                                                            Background="#0BFFFFFF"
+                                                            BorderBrush="#12FFFFFF"
+                                                            BorderThickness="1"
+                                                            CornerRadius="7"
+                                                            Padding="6,3"
+                                                            Margin="0,0,0,3">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox Style="{StaticResource TodoCheckBox}"
+                                                                      IsChecked="{Binding IsCompleting, Mode=TwoWay}"
+                                                                      Checked="TodoCheck_Checked"
+                                                                      AutomationProperties.Name="完成待办"
+                                                                      VerticalAlignment="Center"
+                                                                      Margin="0,0,7,0" />
+                                                            <TextBox Grid.Column="1"
+                                                                     Style="{StaticResource SettingsTextBox}"
+                                                                     Height="22"
+                                                                     MaxLength="120"
+                                                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                                                     LostFocus="TodoText_LostFocus"
+                                                                     PreviewKeyDown="TodoText_KeyDown"
+                                                                     GotFocus="TodoText_GotFocus"
+                                                                     VerticalContentAlignment="Center" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                        <StackPanel.Style>
+                                            <Style TargetType="{x:Type StackPanel}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsTodoEmpty}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock Text="还没有待办"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="输入后回车或点 + 添加"
+                                                   FontSize="9"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+
+                                    <Canvas x:Name="TodoParticleCanvas"
+                                            Panel.ZIndex="10"
+                                            IsHitTestVisible="False"
+                                            ClipToBounds="True"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch" />
+                                </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
                     <StackPanel Grid.Row="3"
@@ -682,6 +869,20 @@
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsCalendarActive}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Click="TodoTab_Click"
+                                Tag="{Binding IsTodoActive}"
+                                ToolTip="待办事项"
+                                AutomationProperties.Name="待办事项">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsTodoActive}" Value="True">
                                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
