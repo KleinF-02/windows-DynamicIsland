@@ -18,8 +18,11 @@ public sealed class IslandSettings
     /// <summary>Window opacity in the range 0.60 - 1.00.</summary>
     public double Opacity { get; set; } = 1.0;
 
-    /// <summary>Gap between the working area top and the island window, in DIPs.</summary>
-    public double TopMargin { get; set; } = 2.0;
+    /// <summary>
+    /// Gap between the working-area top and the visible capsule, in DIPs.
+    /// Zero means the capsule is flush with the top edge.
+    /// </summary>
+    public double TopMargin { get; set; } = 0.0;
 
     /// <summary>
     /// Device name of the preferred monitor (for example <c>\\.\DISPLAY1</c>).
@@ -45,7 +48,7 @@ public sealed class IslandSettings
 
         if (!double.IsFinite(TopMargin))
         {
-            TopMargin = 2.0;
+            TopMargin = 0.0;
         }
 
         TopMargin = Math.Clamp(TopMargin, 0.0, 80.0);

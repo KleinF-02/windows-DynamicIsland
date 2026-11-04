@@ -334,9 +334,13 @@ public partial class IslandWindow : Window
             topLeft.Y,
             bottomRight.X - topLeft.X,
             outer.Width,
-            _settings.TopMargin);
+            topMargin: 0);
 
-        AnimateBounds(outer, placement.Left, placement.Top, animate);
+        // TopMargin is measured to the visible capsule, not to the transparent
+        // window. Pull the window upward by the shadow padding so 0 means flush.
+        var windowTop = placement.Top + _settings.TopMargin - IslandMetrics.ShadowPadding;
+
+        AnimateBounds(outer, placement.Left, windowTop, animate);
     }
 
     private void AnimateBounds(IslandSize target, double targetLeft, double targetTop, bool animate)
@@ -413,12 +417,9 @@ public partial class IslandWindow : Window
         target.BeginAnimation(OpacityProperty, null);
         target.Visibility = Visibility.Visible;
 
-        var transform = target.RenderTransform as TranslateTransform;
-        if (transform is null)
-        {
-            transform = new TranslateTransform();
-            target.RenderTransform = transform;
-        }
+        var (scale, transform) = GetContentTransforms(target);
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
 
         if (animate)
         {
@@ -431,6 +432,21 @@ public partial class IslandWindow : Window
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 });
 
+            // Zoom out of the top edge: the island grows from the screen edge
+            // instead of merely re-laying out at the new size.
+            var scaleFrom = ReferenceEquals(target, ExpandedView) ? 0.92 : 0.95;
+            var scaleEase = new QuinticEase { EasingMode = EasingMode.EaseOut };
+            var scaleDuration = TimeSpan.FromMilliseconds(300);
+
+            scale.ScaleX = 1;
+            scale.ScaleY = 1;
+            scale.BeginAnimation(
+                ScaleTransform.ScaleXProperty,
+                new DoubleAnimation(scaleFrom, 1, scaleDuration) { EasingFunction = scaleEase });
+            scale.BeginAnimation(
+                ScaleTransform.ScaleYProperty,
+                new DoubleAnimation(scaleFrom, 1, scaleDuration) { EasingFunction = scaleEase });
+
             transform.Y = 6;
             transform.BeginAnimation(
                 TranslateTransform.YProperty,
@@ -442,6 +458,8 @@ public partial class IslandWindow : Window
         else
         {
             target.Opacity = 1;
+            scale.ScaleX = 1;
+            scale.ScaleY = 1;
             transform.Y = 0;
         }
 
@@ -486,6 +504,21 @@ public partial class IslandWindow : Window
         IslandVisualState.Notification => NotificationView,
         _ => CompactView
     };
+
+    private (ScaleTransform Scale, TranslateTransform Translate) GetContentTransforms(FrameworkElement view)
+    {
+        if (ReferenceEquals(view, CompactView))
+        {
+            return (CompactScale, CompactTranslate);
+        }
+
+        if (ReferenceEquals(view, ExpandedView))
+        {
+            return (ExpandedScale, ExpandedTranslate);
+        }
+
+        return (NotificationScale, NotificationTranslate);
+    }
 
     private IEnumerable<FrameworkElement> ContentViews()
     {

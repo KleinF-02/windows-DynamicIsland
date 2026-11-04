@@ -188,7 +188,9 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="顶部距离" FontSize="13" FontWeight="SemiBold" />
-                                <TextBlock Text="胶囊距离工作区顶部的位置" Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                                <TextBlock Text="0 表示紧贴屏幕顶端，向右可留出间隙"
+                                           Style="{StaticResource CaptionText}"
+                                           Margin="0,3,0,0" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Slider Width="128"

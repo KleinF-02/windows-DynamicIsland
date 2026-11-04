@@ -112,7 +112,7 @@ public sealed class SettingsStoreTests : IDisposable
     {
         var settings = new SettingsStore(Path.Combine(_directory, "missing.json")).Load();
         Assert.False(settings.StartWithWindows);
-        Assert.Equal(2.0, settings.TopMargin, 3);
+        Assert.Equal(0.0, settings.TopMargin, 3);
     }
 
     public void Dispose()

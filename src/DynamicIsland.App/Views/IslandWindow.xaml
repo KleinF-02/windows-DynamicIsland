@@ -52,7 +52,16 @@
 
             <Grid>
                 <!-- Compact -->
-                <Grid x:Name="CompactView" Margin="18,0" IsHitTestVisible="False">
+                <Grid x:Name="CompactView"
+                      Margin="18,0"
+                      IsHitTestVisible="False"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="CompactScale" ScaleX="1" ScaleY="1" />
+                            <TranslateTransform x:Name="CompactTranslate" />
+                        </TransformGroup>
+                    </Grid.RenderTransform>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -111,7 +120,14 @@
                       Margin="22,14,22,12"
                       Opacity="0"
                       Visibility="Collapsed"
-                      IsHitTestVisible="False">
+                      IsHitTestVisible="False"
+                      RenderTransformOrigin="0.5,0">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="ExpandedScale" ScaleX="1" ScaleY="1" />
+                            <TranslateTransform x:Name="ExpandedTranslate" />
+                        </TransformGroup>
+                    </Grid.RenderTransform>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -266,7 +282,14 @@
                       Margin="20,18"
                       Opacity="0"
                       Visibility="Collapsed"
-                      IsHitTestVisible="False">
+                      IsHitTestVisible="False"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="NotificationScale" ScaleX="1" ScaleY="1" />
+                            <TranslateTransform x:Name="NotificationTranslate" />
+                        </TransformGroup>
+                    </Grid.RenderTransform>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />

@@ -57,7 +57,11 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 ### 定位
 
-`IslandPlacement.TopCenter` 根据显示器工作区（`Screen.WorkingArea`）计算水平居中位置和顶部间距。通过 `CompositionTarget.TransformFromDevice` 把物理像素转换成 DIP，兼容 Per-Monitor V2。
+`IslandPlacement.TopCenter` 根据显示器工作区（`Screen.WorkingArea`）计算水平居中位置。通过 `CompositionTarget.TransformFromDevice` 把物理像素转换成 DIP，兼容 Per-Monitor V2。
+
+窗口顶部有 14 DIP 的透明阴影留白。`IslandWindow.PositionWindow` 会把窗口整体上移这段留白，因此 `TopMargin = 0` 时**胶囊视觉顶边正好贴住工作区顶部**，窗口的 `Top` 会是 `-14` 左右，顶部阴影被屏幕边缘裁掉。这是有意为之；否则会出现一条 14px 的视觉缝隙。
+
+`TopMargin` 的语义是“到胶囊可见顶边的距离”，默认 `0`。设置页可调到 `0–40 DIP`，向右拉才会出现缝隙。
 
 当前默认使用主屏。`IslandSettings.PreferredScreen` 已经存在，`ResolveScreen()` 也已按设备名匹配，只差设置页中的显示器下拉框。
 
@@ -93,7 +97,8 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 ## 5. 动画
 
 - 窗口 `Width`、`Height`、`Left` 同时使用 `QuinticEase(EaseOut)` 插值，`300ms`。
-- 宽度和左边同时按相同缓动变化，视觉中心保持不动。
+- 宽度和左边同时按相同缓动变化，视觉中心保持不动；顶部保持贴屏，因此展开只向下生长。
+- 内容视图额外带 `ScaleTransform`：展开态从 `0.92` 放大到 `1.0`，`RenderTransformOrigin="0.5,0"` 让缩放从顶部中心发生。
 - 三个内容视图使用独立的 `Opacity` + `TranslateTransform` 交叉淡入；旧视图在 `140ms` 后折叠。
 - `AnimationsEnabled=false` 时跳过所有动画，直接切到目标尺寸和内容。
 - 窗口动画通过 `BeginAnimation` 临时覆盖基础值，`FillBehavior.Stop` 后落到目标基础值，避免重复点击导致动画叠加。

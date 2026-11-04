@@ -108,7 +108,7 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    public string TopMarginLabel => $"{_draft.TopMargin:0} DIP";
+    public string TopMarginLabel => _draft.TopMargin <= 0.01 ? "贴顶" : $"{_draft.TopMargin:0} DIP";
 
     public string VersionText
     {
