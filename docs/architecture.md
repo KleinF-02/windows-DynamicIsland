@@ -9,7 +9,7 @@
 │  App.xaml.cs ── lifecycle / single instance / wiring        │
 │      │                                                      │
 │      ├── IslandWindow ────── animation, hit testing, menus  │
-│      │      └── IslandViewModel ── clock, power, state       │
+│      │      └── IslandViewModel ── clock, power, user, state  │
 │      │                                                      │
 │      ├── SettingsWindow ── SettingsViewModel                 │
 │      ├── TrayIconService ─ NotifyIcon + context menu         │

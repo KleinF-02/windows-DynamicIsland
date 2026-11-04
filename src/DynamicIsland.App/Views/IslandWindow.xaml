@@ -85,7 +85,12 @@
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center"
                                 Margin="9,0,0,0">
-                        <TextBlock Text="灵动岛" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding UserName}"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   MaxWidth="64"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding UserName}" />
                         <Border Width="1" Height="10" Background="#1FFFFFFF" Margin="9,0" />
                         <TextBlock Text="{Binding Greeting}"
                                    FontSize="11.5"

@@ -69,6 +69,9 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         _ => "夜深了"
     };
 
+    /// <summary>The Windows account name displayed on the compact island.</summary>
+    public string UserName { get; } = GetWindowsUserName();
+
     public bool ShowSeconds => _settings.ShowSeconds;
 
     public bool AlwaysOnTop => _settings.AlwaysOnTop;
@@ -225,6 +228,20 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         {
             AppLogger.Error("Unable to read the primary screen size.", ex);
             ScreenText = "—";
+        }
+    }
+
+    private static string GetWindowsUserName()
+    {
+        try
+        {
+            var userName = Environment.UserName?.Trim();
+            return string.IsNullOrWhiteSpace(userName) ? "用户" : userName;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Unable to read the Windows user name.", ex);
+            return "用户";
         }
     }
 
