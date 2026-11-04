@@ -143,7 +143,7 @@ def make_settings() -> None:
 def make_todo() -> None:
     island = crop_island(
         SHOTS / "todo-persisted.png",
-        (340, 0, 864, 348),
+        (696, 0, 1225, 355),
         radius=31,
     )
 

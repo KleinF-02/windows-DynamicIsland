@@ -371,7 +371,7 @@ public sealed class OutlookCalendarService
     {
         var message = exception is COMException
             ? "请确认 Outlook 已安装并登录，且 Office 位数与本应用一致（x64）。"
-            : "读取 Outlook 日历时发生异常。";
+            : "读取 Calendar 时发生异常。";
 
         var detail = exception.Message?.Trim();
         if (!string.IsNullOrWhiteSpace(detail))
@@ -384,7 +384,7 @@ public sealed class OutlookCalendarService
             message = $"{message}\n{detail}";
         }
 
-        return CalendarLoadResult.Failure("无法读取 Outlook 日历", message);
+        return CalendarLoadResult.Failure("无法读取 Calendar", message);
     }
 
     private static void Release(object? comObject)

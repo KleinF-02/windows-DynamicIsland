@@ -132,17 +132,17 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     public string ActiveFunctionTitle => _activeFunction switch
     {
         FunctionTab.FileShelf => "文件暂存",
-        FunctionTab.Calendar => "Outlook 日历",
+        FunctionTab.Calendar => "Calendar",
         FunctionTab.Todo => "待办事项",
-        _ => "功能区"
+        _ => "功能"
     };
 
     public string FooterHint => _activeFunction switch
     {
         FunctionTab.FileShelf => "拖入暂存 · 拖出复制 · 原文件保留",
-        FunctionTab.Calendar => "今日日程 · 点击圆点切换功能区",
+        FunctionTab.Calendar => "今日日程 · 点击圆点切换",
         FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
-        _ => "点击圆点切换功能区"
+        _ => "点击圆点切换"
     };
 
     public ObservableCollection<CalendarEventItem> CalendarEvents { get; } = new();
@@ -516,7 +516,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             if (result.HasError)
             {
                 SetCalendarError(
-                    result.ErrorTitle ?? "无法读取 Outlook 日历",
+                    result.ErrorTitle ?? "无法读取 Calendar",
                     result.ErrorMessage ?? "请确认 Outlook 已安装并登录。");
                 return;
             }
@@ -537,7 +537,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            SetCalendarError("无法读取 Outlook 日历", ex.Message);
+            SetCalendarError("无法读取 Calendar", ex.Message);
         }
         finally
         {

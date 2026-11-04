@@ -117,12 +117,12 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 自定义暗色 `ProfessionalColorTable`
 - 图标从 `pack://application:,,,/Assets/app.ico` 加载，带 `SystemIcons.Application` 兜底
 
-### 功能区标签
+### 标签页
 
-展开态功能区有三个标签页，由底部的三个圆点按钮切换：
+展开态有三个标签页，由底部的三个圆点按钮切换：
 
 - `FunctionTab.FileShelf`：文件暂存
-- `FunctionTab.Calendar`：Outlook 日历
+- `FunctionTab.Calendar`：Calendar
 - `FunctionTab.Todo`：待办事项
 
 `IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsFileShelfActive`、`IsCalendarActive`、`IsTodoActive`、`ActiveFunctionTitle` 和 `FooterHint`。三个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
@@ -144,11 +144,11 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 顶部输入框绑定 `NewTodoText`，`Enter` 或 `+` 调用 `AddTodo`；回车使用 `PreviewKeyDown`，避免被 TextBox 的默认键盘处理吞掉。
 - 每一行的文字本身是透明 TextBox，可直接点击修改；失焦或回车时 `NormalizeTodoText` 去空格、限制 120 字并保存。清空文字会删除该行。
 - 打勾通过 `IsCompleting` 两向绑定触发 `TodoCheck_Checked`：代码后置在列表上方的 `Canvas` 中生成 24 个椭圆粒子和一个扩散圆环，同时让整行在 300 ms 内淡出并缩小；340 ms 后 `CompleteTodo` 从集合和 `todos.json` 删除。
-- 粒子是 `TranslateTransform` + `DoubleAnimation`（CubicEase），完成后从 Canvas 移除；`ClipToBounds=True` 防止溢出功能区。
+- 粒子是 `TranslateTransform` + `DoubleAnimation`（CubicEase），完成后从 Canvas 移除；`ClipToBounds=True` 防止溢出标签区域。
 - `TodoStore` 使用 `%LOCALAPPDATA%\DynamicIsland\todos.json` 原子写入，最多 20 条，损坏文件回退为空。
 - 输入框获得焦点时把胶囊标记为固定，避免鼠标移出后编辑中的列表收起。
 
-### Outlook 日历
+### Calendar
 
 `OutlookCalendarService` 优先读取 **Microsoft 365 网页版发布的 ICS 链接**，未配置链接时才回退桌面 COM。
 

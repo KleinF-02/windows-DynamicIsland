@@ -231,16 +231,10 @@
                                         CornerRadius="1.5"
                                         Background="{StaticResource AccentBrush}"
                                         Margin="0,0,7,0" />
-                                <TextBlock Text="功能区"
+                                <TextBlock Text="{Binding ActiveFunctionTitle}"
                                            FontSize="9.5"
                                            FontWeight="SemiBold"
                                            Foreground="{StaticResource AccentBrush}" />
-                                <TextBlock Text=" / "
-                                           FontSize="9.5"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Text="{Binding ActiveFunctionTitle}"
-                                           FontSize="9.5"
-                                           Foreground="{StaticResource TextMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1"
@@ -302,7 +296,7 @@
                                            Margin="0,0,8,0" />
                                 <Button Content="刷新"
                                         Click="RefreshCalendar_Click"
-                                        ToolTip="刷新 Outlook 日历">
+                                        ToolTip="刷新 Calendar">
                                     <Button.Style>
                                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
                                             <Setter Property="Height" Value="20" />
@@ -518,7 +512,7 @@
                                         </Style>
                                     </Grid.Style>
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="正在读取 Outlook 日历…"
+                                        <TextBlock Text="正在读取 Calendar…"
                                                    FontSize="10.5"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    HorizontalAlignment="Center" />
@@ -604,7 +598,7 @@
                                                    FontWeight="SemiBold"
                                                    HorizontalAlignment="Center"
                                                    Margin="0,4,0,0" />
-                                        <TextBlock Text="Outlook 日历已连接"
+                                        <TextBlock Text="Calendar 已连接"
                                                    FontSize="9"
                                                    Foreground="{StaticResource TextMutedBrush}"
                                                    HorizontalAlignment="Center"
@@ -863,8 +857,8 @@
                         </Button>
                         <Button Click="CalendarTab_Click"
                                 Tag="{Binding IsCalendarActive}"
-                                ToolTip="Outlook 日历"
-                                AutomationProperties.Name="Outlook 日历">
+                                ToolTip="Calendar"
+                                AutomationProperties.Name="Calendar">
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
