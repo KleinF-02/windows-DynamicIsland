@@ -104,8 +104,8 @@ def make_hero() -> None:
     centered_text(canvas, "桌面顶部的一颗呼吸感胶囊", 200, font(FONT_CN, 17), (156, 164, 181, 255))
 
     island = crop_island(
-        SHOTS / "shelf-item-final.png",
-        (696, 0, 1225, 330),
+        SHOTS / "tabs-file-full.png",
+        (696, 0, 1225, 355),
         radius=31,
     )
     x = (canvas.width - island.width) // 2

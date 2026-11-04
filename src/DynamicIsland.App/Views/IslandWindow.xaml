@@ -143,6 +143,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="20" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -235,7 +236,10 @@
                                            FontSize="9.5"
                                            FontWeight="SemiBold"
                                            Foreground="{StaticResource AccentBrush}" />
-                                <TextBlock Text=" / 文件暂存"
+                                <TextBlock Text=" / "
+                                           FontSize="9.5"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding ActiveFunctionTitle}"
                                            FontSize="9.5"
                                            Foreground="{StaticResource TextMutedBrush}" />
                             </StackPanel>
@@ -244,6 +248,16 @@
                                         Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Center">
+                                <StackPanel.Style>
+                                    <Style TargetType="{x:Type StackPanel}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
                                 <TextBlock Text="{Binding ShelfCountText}"
                                            FontSize="9"
                                            Foreground="{StaticResource TextMutedBrush}"
@@ -267,6 +281,38 @@
                                     </Button.Style>
                                 </Button>
                             </StackPanel>
+
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <StackPanel.Style>
+                                    <Style TargetType="{x:Type StackPanel}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCalendarActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="{Binding CalendarStatusText}"
+                                           FontSize="9"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0" />
+                                <Button Content="刷新"
+                                        Click="RefreshCalendar_Click"
+                                        ToolTip="刷新 Outlook 日历">
+                                    <Button.Style>
+                                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
+                                            <Setter Property="Height" Value="20" />
+                                            <Setter Property="Padding" Value="8,2" />
+                                            <Setter Property="FontSize" Value="9" />
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
                         </Grid>
 
                         <Border x:Name="ShelfDropZone"
@@ -279,6 +325,16 @@
                                 CornerRadius="12"
                                 Padding="6"
                                 AllowDrop="True">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <Grid>
                                 <Grid>
                                     <Grid.Style>
@@ -410,10 +466,220 @@
                                         IsHitTestVisible="False" />
                             </Grid>
                         </Border>
+
+                        <Border Grid.Row="1"
+                                Height="108"
+                                Margin="0,6,0,0"
+                                Background="#08FFFFFF"
+                                BorderBrush="#16FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="6">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCalendarActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <Grid>
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCalendarLoading}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="正在读取 Outlook 日历…"
+                                                   FontSize="10.5"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="首次连接可能需要几秒"
+                                                   FontSize="9"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCalendarError}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="340">
+                                        <TextBlock Text="{Binding CalendarErrorTitle}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding CalendarErrorMessage}"
+                                                   FontSize="9.5"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   TextWrapping="Wrap"
+                                                   TextAlignment="Center"
+                                                   MaxHeight="34"
+                                                   Margin="0,3,0,4" />
+                                        <Button Content="重试"
+                                                Click="RefreshCalendar_Click"
+                                                HorizontalAlignment="Center">
+                                            <Button.Style>
+                                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
+                                                    <Setter Property="Height" Value="20" />
+                                                    <Setter Property="Padding" Value="9,2" />
+                                                    <Setter Property="FontSize" Value="9" />
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCalendarEmpty}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
+                                            <Path Data="M4,6 C4,4.9 4.9,4 6,4 L18,4 C19.1,4 20,4.9 20,6 L20,18 C20,19.1 19.1,20 18,20 L6,20 C4.9,20 4,19.1 4,18 Z M4,9 L20,9 M8,2 L8,6 M16,2 L16,6"
+                                                  Stroke="{StaticResource AccentBrush}"
+                                                  StrokeThickness="1.4"
+                                                  StrokeLineJoin="Round"
+                                                  Fill="Transparent" />
+                                        </Viewbox>
+                                        <TextBlock Text="今天没有日程"
+                                                   FontSize="11.5"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,4,0,0" />
+                                        <TextBlock Text="Outlook 日历已连接"
+                                                   FontSize="9"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCalendarEvents}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding CalendarEvents}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#0BFFFFFF"
+                                                            BorderBrush="#12FFFFFF"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8"
+                                                            Padding="7,4"
+                                                            Margin="0,0,0,4">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="72" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding TimeText}"
+                                                                       FontSize="8.8"
+                                                                       Foreground="{StaticResource AccentBrush}"
+                                                                       VerticalAlignment="Center" />
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="{Binding Subject}"
+                                                                           FontSize="10.5"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Text="{Binding LocationText}"
+                                                                           FontSize="8.5"
+                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           Margin="0,1,0,0">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="{x:Type TextBlock}">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasLocation}" Value="True">
+                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
-                    <Grid Grid.Row="3">
-                        <TextBlock Text="拖入暂存 · 拖出复制 · 原文件保留"
+                    <StackPanel Grid.Row="3"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <Button Click="FileTab_Click"
+                                Tag="{Binding IsFileShelfActive}"
+                                ToolTip="文件暂存"
+                                AutomationProperties.Name="文件暂存">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Click="CalendarTab_Click"
+                                Tag="{Binding IsCalendarActive}"
+                                ToolTip="Outlook 日历"
+                                AutomationProperties.Name="Outlook 日历">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCalendarActive}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+
+                    <Grid Grid.Row="4">
+                        <TextBlock Text="{Binding FooterHint}"
                                    FontSize="9.5"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    VerticalAlignment="Bottom" />

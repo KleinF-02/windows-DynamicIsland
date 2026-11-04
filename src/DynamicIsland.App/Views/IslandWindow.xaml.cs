@@ -281,6 +281,7 @@ public partial class IslandWindow : Window
         }
 
         e.Effects = DragDropEffects.Copy;
+        _viewModel.SelectFunction(FunctionTab.FileShelf);
         _dragActive = true;
         _collapseTimer.Stop();
         SetShelfHighlight(true);
@@ -339,6 +340,7 @@ public partial class IslandWindow : Window
         var paths = ExtractDroppedPaths(e.Data);
         if (paths.Count > 0)
         {
+            _viewModel.SelectFunction(FunctionTab.FileShelf);
             _viewModel.AddFiles(paths);
             _pinned = true;
             _viewModel.IsPinned = true;
@@ -349,6 +351,24 @@ public partial class IslandWindow : Window
             }
         }
 
+        e.Handled = true;
+    }
+
+    private void FileTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.SelectFunction(FunctionTab.FileShelf);
+        e.Handled = true;
+    }
+
+    private void CalendarTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.SelectFunction(FunctionTab.Calendar);
+        e.Handled = true;
+    }
+
+    private void RefreshCalendar_Click(object sender, RoutedEventArgs e)
+    {
+        _ = _viewModel.RefreshCalendarAsync(force: true);
         e.Handled = true;
     }
 

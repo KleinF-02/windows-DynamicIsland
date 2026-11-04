@@ -50,7 +50,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 | 状态 | 内容尺寸 | 外窗尺寸（含阴影留白） |
 | --- | --- | --- |
 | Compact | `248 × 46` | `276 × 74` |
-| Expanded | `424 × 264` | `452 × 292` |
+| Expanded | `424 × 284` | `452 × 312` |
 | Notification | `400 × 118` | `428 × 146` |
 
 外窗四周各留 `14 DIP` 给 WPF 阴影。窗口本身是 `AllowsTransparency=True` 的透明分层窗口，视觉上只有胶囊本体是实心。
@@ -117,9 +117,18 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 自定义暗色 `ProfessionalColorTable`
 - 图标从 `pack://application:,,,/Assets/app.ico` 加载，带 `SystemIcons.Application` 兜底
 
+### 功能区标签
+
+展开态功能区有两个标签页，由底部的两个圆点按钮切换：
+
+- `FunctionTab.FileShelf`：文件暂存
+- `FunctionTab.Calendar`：Outlook 日历
+
+`IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsFileShelfActive`、`IsCalendarActive`、`ActiveFunctionTitle` 和 `FooterHint`。两个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
+
 ### 文件暂存
 
-展开态的功能区目前是一个文件架：
+文件暂存标签是一个文件架：
 
 - `StagedFileViewModel` 保存路径、显示名、类型徽标、大小和“是否存在”。
 - `IslandViewModel.AddFiles` 只接受真实存在的文件/文件夹；去重（忽略大小写）、最多 12 个、路径规范化。
@@ -127,6 +136,19 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 拖出：条目上按下鼠标后由 **Window 的 `PreviewMouseMove`** 统一判断拖动阈值，避免 `ScrollViewer` 捕获鼠标导致行内 `MouseMove` 丢失；`DoDragDrop` 只允许 `Copy`，因此原文件不会被移动或删除。
 - `ExpandedView` 需要命中测试（文件行、清空、移除按钮），这是它和 Compact/Notification 视图不同的一点。
 - 文件架是**会话内引用**，不持久化，不复制文件到应用目录；应用退出后列表消失，原文件始终不动。
+
+### Outlook 日历
+
+`OutlookCalendarService` 使用 Outlook COM Automation：
+
+1. 先检查 `Outlook.Application` ProgID；不存在时返回“未检测到 Outlook”，不启动任何进程。
+2. 在**专用 STA 线程**创建 `Outlook.Application`，避免 Office COM 阻塞 WPF UI 线程。
+3. 通过 `GetNamespace("MAPI").GetDefaultFolder(9)`（olFolderCalendar）读取默认日历。
+4. 开启 `IncludeRecurrences`，按 `[Start]` 排序，用当天 `[Start]` 区间 `Restrict` 查询；如果当前 Outlook 不接受日期过滤表达式，则退回遍历并按托管代码过滤。
+5. 将 `Subject / Start / End / AllDayEvent / Location` 映射成 `CalendarEventItem`，按开始时间排序。
+6. 每次读取最多 200 条，UI 侧 15 秒超时；失败时区分“未安装”和“读取失败”，并提供重试。
+
+日历页不常驻定时器：首次切到该标签时读取，之后 2 分钟内复用结果，手动“刷新”会强制重新读取。当前只支持今日日程和桌面版 Outlook，不包含 Microsoft Graph / 网页版日历。
 
 ### 开机启动
 

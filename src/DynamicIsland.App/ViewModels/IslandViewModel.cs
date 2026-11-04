@@ -16,6 +16,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 {
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _powerTimer;
+    private readonly OutlookCalendarService _calendarService = new();
     private IslandSettings _settings;
 
     private DateTime _now = DateTime.Now;
@@ -30,6 +31,15 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private bool _isNotification;
     private string _notificationTitle = string.Empty;
     private string _notificationMessage = string.Empty;
+    private FunctionTab _activeFunction = FunctionTab.FileShelf;
+    private bool _calendarLoading;
+    private bool _calendarLoaded;
+    private bool _calendarError;
+    private string _calendarStatusText = "今日";
+    private string _calendarErrorTitle = string.Empty;
+    private string _calendarErrorMessage = string.Empty;
+    private DateTime _calendarLoadedAt;
+    private int _calendarRequestId;
 
     public IslandViewModel(IslandSettings settings)
     {
@@ -85,6 +95,47 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     public bool HasStagedFiles => StagedFiles.Count > 0;
 
     public string ShelfCountText => $"{StagedFiles.Count} 个文件";
+
+    public FunctionTab ActiveFunction => _activeFunction;
+
+    public bool IsFileShelfActive => _activeFunction == FunctionTab.FileShelf;
+
+    public bool IsCalendarActive => _activeFunction == FunctionTab.Calendar;
+
+    public string ActiveFunctionTitle => IsFileShelfActive ? "文件暂存" : "Outlook 日历";
+
+    public string FooterHint => IsFileShelfActive
+        ? "拖入暂存 · 拖出复制 · 原文件保留"
+        : "今日日程 · 点击圆点切换功能区";
+
+    public ObservableCollection<CalendarEventItem> CalendarEvents { get; } = new();
+
+    public bool IsCalendarLoading => _calendarLoading;
+
+    public bool HasCalendarError => _calendarError;
+
+    public bool HasCalendarEvents => CalendarEvents.Count > 0;
+
+    public bool IsCalendarEmpty => _calendarLoaded && !_calendarLoading && !_calendarError
+                                   && CalendarEvents.Count == 0;
+
+    public string CalendarStatusText
+    {
+        get => _calendarStatusText;
+        private set => SetProperty(ref _calendarStatusText, value);
+    }
+
+    public string CalendarErrorTitle
+    {
+        get => _calendarErrorTitle;
+        private set => SetProperty(ref _calendarErrorTitle, value);
+    }
+
+    public string CalendarErrorMessage
+    {
+        get => _calendarErrorMessage;
+        private set => SetProperty(ref _calendarErrorMessage, value);
+    }
 
     public bool ShowSeconds => _settings.ShowSeconds;
 
@@ -254,6 +305,138 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(HasStagedFiles));
         OnPropertyChanged(nameof(ShelfCountText));
+    }
+
+    public void SelectFunction(FunctionTab function)
+    {
+        if (_activeFunction != function)
+        {
+            _activeFunction = function;
+            OnPropertyChanged(nameof(ActiveFunction));
+            OnPropertyChanged(nameof(IsFileShelfActive));
+            OnPropertyChanged(nameof(IsCalendarActive));
+            OnPropertyChanged(nameof(ActiveFunctionTitle));
+            OnPropertyChanged(nameof(FooterHint));
+        }
+
+        if (function == FunctionTab.Calendar)
+        {
+            _ = EnsureCalendarLoadedAsync();
+        }
+    }
+
+    public Task EnsureCalendarLoadedAsync()
+    {
+        if (_calendarLoading)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (_calendarLoaded && DateTime.Now - _calendarLoadedAt < TimeSpan.FromMinutes(2))
+        {
+            return Task.CompletedTask;
+        }
+
+        return RefreshCalendarAsync(force: false);
+    }
+
+    public async Task RefreshCalendarAsync(bool force = true)
+    {
+        if (_calendarLoading)
+        {
+            return;
+        }
+
+        if (!force && _calendarLoaded
+            && DateTime.Now - _calendarLoadedAt < TimeSpan.FromMinutes(2))
+        {
+            return;
+        }
+
+        var request = ++_calendarRequestId;
+        _calendarLoading = true;
+        _calendarLoaded = false;
+        _calendarError = false;
+        CalendarEvents.Clear();
+        CalendarErrorTitle = string.Empty;
+        CalendarErrorMessage = string.Empty;
+        CalendarStatusText = "正在读取…";
+
+        OnPropertyChanged(nameof(IsCalendarLoading));
+        OnPropertyChanged(nameof(HasCalendarError));
+        OnPropertyChanged(nameof(HasCalendarEvents));
+        OnPropertyChanged(nameof(IsCalendarEmpty));
+
+        try
+        {
+            var loadTask = _calendarService.LoadTodayAsync();
+            var completed = await Task.WhenAny(loadTask, Task.Delay(TimeSpan.FromSeconds(15)));
+
+            if (request != _calendarRequestId)
+            {
+                return;
+            }
+
+            if (!ReferenceEquals(completed, loadTask))
+            {
+                SetCalendarError("Outlook 未响应", "读取超时，请稍后点击刷新重试。");
+                return;
+            }
+
+            var result = await loadTask;
+            if (request != _calendarRequestId)
+            {
+                return;
+            }
+
+            if (result.HasError)
+            {
+                SetCalendarError(
+                    result.ErrorTitle ?? "无法读取 Outlook 日历",
+                    result.ErrorMessage ?? "请确认 Outlook 已安装并登录。");
+                return;
+            }
+
+            foreach (var calendarEvent in result.Events)
+            {
+                CalendarEvents.Add(calendarEvent);
+            }
+
+            _calendarLoaded = true;
+            _calendarLoadedAt = DateTime.Now;
+            CalendarStatusText = CalendarEvents.Count == 0
+                ? "今天没有日程"
+                : $"{CalendarEvents.Count} 个日程";
+
+            OnPropertyChanged(nameof(HasCalendarEvents));
+            OnPropertyChanged(nameof(IsCalendarEmpty));
+        }
+        catch (Exception ex)
+        {
+            SetCalendarError("无法读取 Outlook 日历", ex.Message);
+        }
+        finally
+        {
+            if (request == _calendarRequestId)
+            {
+                _calendarLoading = false;
+                OnPropertyChanged(nameof(IsCalendarLoading));
+                OnPropertyChanged(nameof(IsCalendarEmpty));
+            }
+        }
+    }
+
+    private void SetCalendarError(string title, string message)
+    {
+        _calendarLoaded = true;
+        _calendarLoadedAt = DateTime.Now;
+        _calendarError = true;
+        CalendarErrorTitle = title;
+        CalendarErrorMessage = message;
+        CalendarStatusText = "未连接";
+
+        OnPropertyChanged(nameof(HasCalendarError));
+        OnPropertyChanged(nameof(IsCalendarEmpty));
     }
 
     public void ApplySettings(IslandSettings settings)

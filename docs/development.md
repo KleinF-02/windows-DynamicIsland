@@ -11,6 +11,7 @@
 | Visual Studio Code | `1.143.1` | 用户级安装 |
 | C# / C# Dev Kit | `2.160.4` / `3.40.215` | VS Code 扩展，用于 IntelliSense 和调试 |
 | MinGit | `2.56.0` | `%LOCALAPPDATA%\Programs\MinGit\cmd`，可选版本控制 |
+| Outlook 桌面版 | 未安装 | 本机没有 Outlook；日历 COM 读取需在安装并登录 x64 Outlook 的机器上做真实数据验收 |
 
 环境脚本会自动处理以下变量：
 
@@ -149,6 +150,18 @@ dotnet test DynamicIsland.sln
 4. 点条目右侧 `×` 移除；点“清空”清空全部。
 5. 重启应用，确认暂存区为空（当前为会话内暂存）。
 
+### Outlook 日历手工验收
+
+在有桌面版 Outlook 的 x64 Windows 上：
+
+1. 打开 Outlook，确认已登录并能在“日历”里看到今天的日程。
+2. 启动灵动岛，展开后点击功能区底部的第二个圆点。
+3. 确认标题变为“功能区 / Outlook 日历”，列表显示今天的“时间 · 主题 · 地点”。
+4. 点击右上角“刷新”，确认重新读取。
+5. 断网或退出 Outlook 账号后再刷新，确认出现可读的错误状态，而不是崩溃。
+
+本机（开发环境）未安装 Outlook，因此只能验收“未检测到 Outlook”提示；真实日历读取需要在安装 Outlook 的机器上复测。
+
 ## 8. 常见问题
 
 ### `dotnet` 不是可识别的命令
@@ -185,6 +198,17 @@ Get-Process DynamicIsland -ErrorAction SilentlyContinue | Stop-Process
 2. 双击托盘图标或运行 `.\scripts\run.ps1 -Demo`。
 3. 查看 `%LOCALAPPDATA%\DynamicIsland\logs\app.log`。
 4. 确认没有残留进程：`Get-Process DynamicIsland`。
+
+### Outlook 日历显示“未检测到 Outlook”
+
+按顺序检查：
+
+1. `Get-ItemProperty 'Registry::HKEY_CLASSES_ROOT\Outlook.Application\CLSID'` 是否存在。
+2. Outlook 是否为 x64，且与 `DynamicIsland` 的 x64 发布版一致。
+3. 打开 Outlook，确认已完成配置并登录。
+4. 点击日历页的“刷新”重新尝试。
+
+如果使用 Microsoft 365 网页版而不是桌面版 Outlook，当前 COM 方案不会读取网页日历；需要后续接入 Microsoft Graph。
 
 ### 设置改了但没生效
 

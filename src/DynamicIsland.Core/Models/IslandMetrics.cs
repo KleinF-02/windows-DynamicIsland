@@ -14,7 +14,7 @@ public static class IslandMetrics
     public static IslandSize Content(IslandVisualState state) => state switch
     {
         IslandVisualState.Compact => new IslandSize(248, 46),
-        IslandVisualState.Expanded => new IslandSize(424, 264),
+        IslandVisualState.Expanded => new IslandSize(424, 284),
         IslandVisualState.Notification => new IslandSize(400, 118),
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
     };
