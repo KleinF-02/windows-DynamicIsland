@@ -88,16 +88,20 @@ git checkout v0.1.0-dev.5
 
 `artifacts/` 已被 `.gitignore` 忽略；发布二进制只通过 GitHub Releases 分发，不提交到源码仓库。
 
-## 首次上传 GitHub
+## GitHub 仓库
 
-当前仓库没有配置 remote。请先在 GitHub 创建一个空仓库（不要勾选 README / .gitignore / license），然后：
+当前仓库已发布到：
+
+<https://github.com/KleinF-02/windows-DynamicIsland>
+
+发布页：
+
+<https://github.com/KleinF-02/windows-DynamicIsland/releases>
+
+首次上传时保留了 GitHub 自动生成的初始化提交，并通过 merge commit 合并到本地历史；没有使用强推。remote 配置：
 
 ```powershell
-# 方式一：辅助脚本
-.\scripts\publish-github.ps1 -RepositoryUrl "https://github.com/<account>/dynamic-island.git" -PushTags
-
-# 方式二：手动
-git remote add origin https://github.com/<account>/dynamic-island.git
+git remote add origin https://github.com/KleinF-02/windows-DynamicIsland.git
 git push -u origin main
 git push origin --tags
 ```
@@ -105,7 +109,7 @@ git push origin --tags
 如果使用 SSH：
 
 ```powershell
-git remote add origin git@github.com:<account>/dynamic-island.git
+git remote set-url origin git@github.com:KleinF-02/windows-DynamicIsland.git
 ```
 
 > 不要把 `%LOCALAPPDATA%\DynamicIsland` 下的设置、日历链接、快捷方式或个人日志提交到仓库；它们不在 Git 工作树中。
