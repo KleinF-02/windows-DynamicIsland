@@ -104,7 +104,7 @@ def make_hero() -> None:
     centered_text(canvas, "桌面顶部的一颗呼吸感胶囊", 200, font(FONT_CN, 17), (156, 164, 181, 255))
 
     island = crop_island(
-        SHOTS / "tabs-file-3dots.png",
+        SHOTS / "shortcuts-hero.png",
         (696, 0, 1225, 355),
         radius=31,
     )
@@ -118,7 +118,7 @@ def make_hero() -> None:
 
     centered_text(
         canvas,
-        "拖入暂存  ·  悬停放大  ·  右下角固定",
+        "拖入快捷方式  ·  悬停选择  ·  单击打开",
         690,
         font(FONT_CN, 13),
         (130, 140, 158, 255),

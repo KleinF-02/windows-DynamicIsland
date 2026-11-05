@@ -126,22 +126,21 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 展开态有三个标签页，由底部的三个圆点按钮切换：
 
-- `FunctionTab.FileShelf`：文件暂存
+- `FunctionTab.Shortcuts`：常用软件
 - `FunctionTab.Calendar`：Calendar
 - `FunctionTab.Todo`：待办事项
 
-`IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsFileShelfActive`、`IsCalendarActive`、`IsTodoActive`、`ActiveFunctionTitle` 和 `FooterHint`。三个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
+`IslandViewModel.ActiveFunction` 保存当前标签，派生出 `IsShortcutsActive`、`IsCalendarActive`、`IsTodoActive`、`ActiveFunctionTitle` 和 `FooterHint`。三个标签的内容使用同一块固定高度区域，圆点只切换可见性，不改变窗口尺寸。
 
-### 文件暂存
+### 常用软件
 
-文件暂存标签是一个文件架：
-
-- `StagedFileViewModel` 保存路径、显示名、类型徽标、大小和“是否存在”。
-- `IslandViewModel.AddFiles` 只接受真实存在的文件/文件夹；去重（忽略大小写）、最多 12 个、路径规范化。
-- 拖入：`Shell` 开启 `AllowDrop`，`DragEnter/DragOver` 自动展开并高亮；`Drop` 兼容 `FileDrop`、`FileNameW`/`FileName` 以及部分 OLE 源返回的 `MemoryStream`（DROPFILES 结构）。
-- 拖出：条目上按下鼠标后由 **Window 的 `PreviewMouseMove`** 统一判断拖动阈值，避免 `ScrollViewer` 捕获鼠标导致行内 `MouseMove` 丢失；`DoDragDrop` 只允许 `Copy`，因此原文件不会被移动或删除。
-- `ExpandedView` 需要命中测试（文件行、清空、移除按钮），这是它和 Compact/Notification 视图不同的一点。
-- 文件架是**会话内引用**，不持久化，不复制文件到应用目录；应用退出后列表消失，原文件始终不动。
+- 固定 6 个 `ShortcutSlotViewModel`，每个保存路径、显示名、`ImageSource` 图标和空位状态。
+- `ShortcutPath` 只接受 `.lnk`、`.exe`、`.url`、`.appref-ms`；`ShortcutStore` 把 6 个路径（含空位 null）原子写入 `shortcuts.json`。
+- 图标通过 `SHGetFileInfo(SHGFI_ICON | SHGFI_LARGEICON)` 获取，再由 `Imaging.CreateBitmapSourceFromHIcon` 转成 WPF 图像；结束后 `DestroyIcon` 释放句柄。
+- 拖入：每个格子 `AllowDrop=True`。拖到空位填入该格，拖到已有格子替换；多文件依次填满剩余空位。`Shell_Drop` 作为岛内空白区域的兜底。
+- 悬停：分数用 `BackEase` 放大到 `1.16`，卡片左移，黑胶唱片从卡片后方滑出并持续旋转；离场时收回。`EnsureMutableTransform` 会克隆 WPF 冻结的变换再动画。
+- 单击快捷方式通过 `UseShellExecute` 启动；悬停后右上角 `×` 移除。右键仍保留全局菜单。
+- 快捷方式路径保存在本机，不复制软件本身；不读取或上传快捷方式内容。
 
 ### 待办事项
 
@@ -198,6 +197,8 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Run
 - 先写 `.tmp`，再 `File.Move(..., overwrite: true)`，避免半写文件
 - 反序列化异常 / IO 异常 → 默认配置，绝不阻止启动
 - `IslandSettings.Normalize()` 负责范围修复：`Opacity [0.60, 1.00]`，`TopMargin [0, 80]`
+
+快捷方式：`%LOCALAPPDATA%\DynamicIsland\shortcuts.json`，由 `ShortcutStore` 原子写入；空位保存为 null，最多 6 项。
 
 待办：`%LOCALAPPDATA%\DynamicIsland\todos.json`，由 `TodoStore` 原子写入；与设置文件分开，损坏时只丢待办，不影响启动。
 

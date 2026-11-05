@@ -2,7 +2,7 @@ namespace DynamicIsland.App.ViewModels;
 
 public enum FunctionTab
 {
-    FileShelf,
+    Shortcuts,
     Calendar,
     Todo
 }

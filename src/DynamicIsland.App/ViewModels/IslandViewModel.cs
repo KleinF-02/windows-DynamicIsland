@@ -18,6 +18,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _powerTimer;
     private readonly OutlookCalendarService _calendarService = new();
     private readonly TodoStore _todoStore = new();
+    private readonly ShortcutStore _shortcutStore = new();
     private IslandSettings _settings;
 
     private DateTime _now = DateTime.Now;
@@ -32,7 +33,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private bool _isNotification;
     private string _notificationTitle = string.Empty;
     private string _notificationMessage = string.Empty;
-    private FunctionTab _activeFunction = FunctionTab.FileShelf;
+    private FunctionTab _activeFunction = FunctionTab.Shortcuts;
     private bool _calendarLoading;
     private bool _calendarLoaded;
     private bool _calendarError;
@@ -62,6 +63,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         RefreshClock();
         RefreshPower();
         RefreshScreen();
+        LoadShortcuts();
         LoadTodos();
     }
 
@@ -99,6 +101,12 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public string ShelfCountText => $"{StagedFiles.Count} 个文件";
 
+    public ObservableCollection<ShortcutSlotViewModel> ShortcutSlots { get; } = new(
+        Enumerable.Range(0, ShortcutStore.SlotCount).Select(_ => new ShortcutSlotViewModel()));
+
+    public string ShortcutCountText =>
+        $"{ShortcutSlots.Count(slot => slot.HasShortcut)} / {ShortcutStore.SlotCount}";
+
     public ObservableCollection<TodoItemViewModel> Todos { get; } = new();
 
     public bool HasTodos => Todos.Count > 0;
@@ -123,7 +131,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public FunctionTab ActiveFunction => _activeFunction;
 
-    public bool IsFileShelfActive => _activeFunction == FunctionTab.FileShelf;
+    public bool IsShortcutsActive => _activeFunction == FunctionTab.Shortcuts;
 
     public bool IsCalendarActive => _activeFunction == FunctionTab.Calendar;
 
@@ -131,7 +139,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public string ActiveFunctionTitle => _activeFunction switch
     {
-        FunctionTab.FileShelf => "文件暂存",
+        FunctionTab.Shortcuts => "常用软件",
         FunctionTab.Calendar => "Calendar",
         FunctionTab.Todo => "待办事项",
         _ => "功能"
@@ -139,7 +147,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public string FooterHint => _activeFunction switch
     {
-        FunctionTab.FileShelf => "拖入暂存 · 拖出复制 · 原文件保留",
+        FunctionTab.Shortcuts => "拖入快捷方式 · 悬停选择 · 单击打开",
         FunctionTab.Calendar => "今日日程 · 点击圆点切换",
         FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
         _ => "点击圆点切换"
@@ -344,6 +352,88 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShelfCountText));
     }
 
+    private void LoadShortcuts()
+    {
+        var saved = _shortcutStore.Load();
+        for (var i = 0; i < ShortcutSlots.Count && i < saved.Count; i++)
+        {
+            if (saved[i] is { } path)
+            {
+                ShortcutSlots[i].TrySetShortcut(path);
+            }
+        }
+
+        RaiseShortcutsChanged();
+    }
+
+    /// <summary>
+    /// Pins one or more shortcuts. A drop on an occupied slot replaces that slot;
+    /// remaining paths fill the first empty slots.
+    /// </summary>
+    public int PinShortcuts(
+        IEnumerable<string> candidates,
+        ShortcutSlotViewModel? preferredSlot = null)
+    {
+        var paths = new List<string>();
+        foreach (var candidate in candidates)
+        {
+            if (ShortcutPath.TryNormalize(candidate, out var path)
+                && !paths.Contains(path, StringComparer.OrdinalIgnoreCase))
+            {
+                paths.Add(path);
+            }
+        }
+
+        if (paths.Count == 0)
+        {
+            return 0;
+        }
+
+        var pinned = 0;
+        foreach (var path in paths)
+        {
+            var slot = preferredSlot ?? ShortcutSlots.FirstOrDefault(item => item.IsEmpty);
+            if (slot is null)
+            {
+                break;
+            }
+
+            if (slot.TrySetShortcut(path))
+            {
+                pinned++;
+                preferredSlot = null;
+            }
+        }
+
+        if (pinned > 0)
+        {
+            RaiseShortcutsChanged();
+            SaveShortcuts();
+        }
+
+        return pinned;
+    }
+
+    public void RemoveShortcut(ShortcutSlotViewModel slot)
+    {
+        slot.Clear();
+        RaiseShortcutsChanged();
+        SaveShortcuts();
+    }
+
+    private void RaiseShortcutsChanged()
+    {
+        OnPropertyChanged(nameof(ShortcutCountText));
+    }
+
+    private void SaveShortcuts()
+    {
+        if (!_shortcutStore.TrySave(ShortcutSlots.Select(slot => slot.Path), out var error))
+        {
+            AppLogger.Error($"Unable to save shortcuts: {error}");
+        }
+    }
+
     private void LoadTodos()
     {
         foreach (var record in _todoStore.Load())
@@ -436,7 +526,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         {
             _activeFunction = function;
             OnPropertyChanged(nameof(ActiveFunction));
-            OnPropertyChanged(nameof(IsFileShelfActive));
+            OnPropertyChanged(nameof(IsShortcutsActive));
             OnPropertyChanged(nameof(IsCalendarActive));
             OnPropertyChanged(nameof(IsTodoActive));
             OnPropertyChanged(nameof(ActiveFunctionTitle));

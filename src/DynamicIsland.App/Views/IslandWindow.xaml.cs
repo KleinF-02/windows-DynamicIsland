@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DynamicIsland.App.Interop;
+using DynamicIsland.App.Services;
 using DynamicIsland.App.ViewModels;
 using DynamicIsland.Core.Layout;
 using DynamicIsland.Core.Models;
@@ -17,6 +19,7 @@ using Button = System.Windows.Controls.Button;
 using Canvas = System.Windows.Controls.Canvas;
 using CheckBox = System.Windows.Controls.CheckBox;
 using Ellipse = System.Windows.Shapes.Ellipse;
+using Grid = System.Windows.Controls.Grid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using TextBox = System.Windows.Controls.TextBox;
 using DataFormats = System.Windows.DataFormats;
@@ -329,10 +332,9 @@ public partial class IslandWindow : Window
         }
 
         e.Effects = DragDropEffects.Copy;
-        _viewModel.SelectFunction(FunctionTab.FileShelf);
+        _viewModel.SelectFunction(FunctionTab.Shortcuts);
         _dragActive = true;
         _collapseTimer.Stop();
-        SetShelfHighlight(true);
 
         if (_state != IslandVisualState.Expanded)
         {
@@ -356,7 +358,6 @@ public partial class IslandWindow : Window
 
         _dragActive = true;
         _collapseTimer.Stop();
-        SetShelfHighlight(true);
 
         if (_state != IslandVisualState.Expanded)
         {
@@ -368,7 +369,6 @@ public partial class IslandWindow : Window
     private void Shell_DragLeave(object sender, DragEventArgs e)
     {
         _dragActive = false;
-        SetShelfHighlight(false);
 
         if (!_hovering && !_pinned && !_editingTodo)
         {
@@ -381,14 +381,20 @@ public partial class IslandWindow : Window
     private void Shell_Drop(object sender, DragEventArgs e)
     {
         _dragActive = false;
-        SetShelfHighlight(false);
         e.Effects = DragDropEffects.Copy;
 
         var paths = ExtractDroppedPaths(e.Data);
         if (paths.Count > 0)
         {
-            _viewModel.SelectFunction(FunctionTab.FileShelf);
-            _viewModel.AddFiles(paths);
+            _viewModel.SelectFunction(FunctionTab.Shortcuts);
+            var pinned = _viewModel.PinShortcuts(paths);
+            if (pinned == 0)
+            {
+                ShowNotification(
+                    "没有可添加的快捷方式",
+                    "请拖入 .lnk、.exe、.url 或 .appref-ms 文件。",
+                    TimeSpan.FromSeconds(4));
+            }
 
             if (_state != IslandVisualState.Expanded)
             {
@@ -399,10 +405,315 @@ public partial class IslandWindow : Window
         e.Handled = true;
     }
 
-    private void FileTab_Click(object sender, RoutedEventArgs e)
+    private void ShortcutsTab_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.SelectFunction(FunctionTab.FileShelf);
+        _viewModel.SelectFunction(FunctionTab.Shortcuts);
         e.Handled = true;
+    }
+
+    private void ShortcutTile_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is not FrameworkElement root
+            || root.DataContext is not ShortcutSlotViewModel { HasShortcut: true })
+        {
+            return;
+        }
+
+        System.Windows.Controls.Panel.SetZIndex(root, 20);
+        if (FindNamed<Button>(root, "ShortcutRemove") is { } remove)
+        {
+            remove.Visibility = Visibility.Visible;
+        }
+
+        var scale = EnsureMutableTransform<ScaleTransform>(root);
+        var ease = new BackEase { Amplitude = 0.35, EasingMode = EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(220);
+        scale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(1.16, duration) { EasingFunction = ease });
+        scale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(1.16, duration) { EasingFunction = ease });
+
+        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
+        {
+            var cardTransform = EnsureMutableTransform<TranslateTransform>(card);
+            cardTransform.BeginAnimation(
+                TranslateTransform.XProperty,
+                new DoubleAnimation(-5, TimeSpan.FromMilliseconds(180))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
+        {
+            vinylHost.BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation(1, TimeSpan.FromMilliseconds(120)));
+
+            var vinylTranslate = EnsureMutableTransform<TranslateTransform>(vinylHost);
+            vinylTranslate.BeginAnimation(
+                TranslateTransform.XProperty,
+                new DoubleAnimation(22, TimeSpan.FromMilliseconds(240))
+                {
+                    EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
+                });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
+        {
+            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
+            rotate.BeginAnimation(
+                RotateTransform.AngleProperty,
+                new DoubleAnimation(0, 360, TimeSpan.FromMilliseconds(1400))
+                {
+                    RepeatBehavior = RepeatBehavior.Forever
+                });
+        }
+    }
+
+    private void ShortcutTile_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is not FrameworkElement root
+            || root.DataContext is not ShortcutSlotViewModel { HasShortcut: true })
+        {
+            return;
+        }
+
+        System.Windows.Controls.Panel.SetZIndex(root, 0);
+        if (FindNamed<Button>(root, "ShortcutRemove") is { } remove)
+        {
+            remove.Visibility = Visibility.Collapsed;
+        }
+
+        var scale = EnsureMutableTransform<ScaleTransform>(root);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(180);
+        scale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(1, duration) { EasingFunction = ease });
+        scale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(1, duration) { EasingFunction = ease });
+
+        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
+        {
+            var cardTransform = EnsureMutableTransform<TranslateTransform>(card);
+            cardTransform.BeginAnimation(
+                TranslateTransform.XProperty,
+                new DoubleAnimation(0, TimeSpan.FromMilliseconds(160))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
+        {
+            vinylHost.BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation(0, TimeSpan.FromMilliseconds(120)));
+
+            var vinylTranslate = EnsureMutableTransform<TranslateTransform>(vinylHost);
+            vinylTranslate.BeginAnimation(
+                TranslateTransform.XProperty,
+                new DoubleAnimation(4, TimeSpan.FromMilliseconds(160))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
+        {
+            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
+            rotate.BeginAnimation(RotateTransform.AngleProperty, null);
+            rotate.Angle = 0;
+        }
+    }
+
+    private void ShortcutTile_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (FindAncestor<Button>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement root
+            && root.DataContext is ShortcutSlotViewModel { HasShortcut: true } slot)
+        {
+            LaunchShortcut(slot);
+            e.Handled = true;
+        }
+    }
+
+    private void RemoveShortcutButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ShortcutSlotViewModel slot })
+        {
+            _viewModel.RemoveShortcut(slot);
+
+            if (FindAncestor<Grid>(sender as DependencyObject) is { } root)
+            {
+                ResetShortcutTile(root);
+            }
+        }
+
+        e.Handled = true;
+    }
+
+    private void ResetShortcutTile(FrameworkElement root)
+    {
+        System.Windows.Controls.Panel.SetZIndex(root, 0);
+
+        var scale = EnsureMutableTransform<ScaleTransform>(root);
+        var duration = TimeSpan.FromMilliseconds(160);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        scale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(1, duration) { EasingFunction = ease });
+        scale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(1, duration) { EasingFunction = ease });
+
+        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
+        {
+            EnsureMutableTransform<TranslateTransform>(card)
+                .BeginAnimation(
+                    TranslateTransform.XProperty,
+                    new DoubleAnimation(0, duration) { EasingFunction = ease });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
+        {
+            vinylHost.BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation(0, TimeSpan.FromMilliseconds(120)));
+            EnsureMutableTransform<TranslateTransform>(vinylHost)
+                .BeginAnimation(
+                    TranslateTransform.XProperty,
+                    new DoubleAnimation(4, duration) { EasingFunction = ease });
+        }
+
+        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
+        {
+            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
+            rotate.BeginAnimation(RotateTransform.AngleProperty, null);
+            rotate.Angle = 0;
+        }
+
+        if (FindNamed<Button>(root, "ShortcutRemove") is { } remove)
+        {
+            remove.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void ShortcutTile_DragOver(object sender, DragEventArgs e)
+    {
+        _dragActive = true;
+        _collapseTimer.Stop();
+        e.Effects = HasFilePayload(e.Data) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void ShortcutTile_DragLeave(object sender, DragEventArgs e)
+    {
+        _dragActive = false;
+
+        if (!_hovering && !_pinned && !_editingTodo)
+        {
+            ScheduleCollapse();
+        }
+
+        e.Handled = true;
+    }
+
+    private void ShortcutTile_Drop(object sender, DragEventArgs e)
+    {
+        _dragActive = false;
+        var slot = (sender as FrameworkElement)?.DataContext as ShortcutSlotViewModel;
+        var node = slot is null ? string.Empty : $"「{slot.DisplayName}」";
+        var paths = ExtractDroppedPaths(e.Data);
+        var pinned = _viewModel.PinShortcuts(paths, slot);
+
+        if (pinned == 0)
+        {
+            ShowNotification(
+                "没有可添加的快捷方式",
+                $"请拖入 .lnk、.exe、.url 或 .appref-ms 文件{node}。",
+                TimeSpan.FromSeconds(4));
+        }
+
+        e.Handled = true;
+    }
+
+    private void OpenShortcutMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.MenuItem)?.DataContext is ShortcutSlotViewModel { HasShortcut: true } slot)
+        {
+            LaunchShortcut(slot);
+        }
+
+        e.Handled = true;
+    }
+
+    private void RemoveShortcutMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.MenuItem)?.DataContext is ShortcutSlotViewModel slot)
+        {
+            _viewModel.RemoveShortcut(slot);
+        }
+
+        e.Handled = true;
+    }
+
+    private void LaunchShortcut(ShortcutSlotViewModel slot)
+    {
+        try
+        {
+            ShortcutLauncher.Launch(slot.Path!);
+        }
+        catch (Exception ex)
+        {
+            ShowNotification(
+                "无法打开快捷方式",
+                $"{slot.DisplayName}\n{ex.Message}",
+                TimeSpan.FromSeconds(4));
+        }
+    }
+
+    private static T EnsureMutableTransform<T>(FrameworkElement element)
+        where T : Transform, new()
+    {
+        if (element.RenderTransform is T current && !current.IsFrozen)
+        {
+            return current;
+        }
+
+        var mutable = element.RenderTransform is T frozen
+            ? (T)frozen.Clone()
+            : new T();
+        element.RenderTransform = mutable;
+        return mutable;
+    }
+
+    private static T? FindNamed<T>(DependencyObject root, string name)
+        where T : FrameworkElement
+    {
+        if (root is T element && string.Equals(element.Name, name, StringComparison.Ordinal))
+        {
+            return element;
+        }
+
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var found = FindNamed<T>(VisualTreeHelper.GetChild(root, i), name);
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private void CalendarTab_Click(object sender, RoutedEventArgs e)
@@ -743,11 +1054,6 @@ public partial class IslandWindow : Window
     private void Window_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         _fileDragCandidate = null;
-    }
-
-    private void SetShelfHighlight(bool active)
-    {
-        ShelfHighlight.Opacity = active ? 1 : 0;
     }
 
     private static bool HasFilePayload(IDataObject data)

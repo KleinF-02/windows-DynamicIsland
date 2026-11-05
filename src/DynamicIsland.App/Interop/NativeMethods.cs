@@ -18,6 +18,9 @@ internal static class NativeMethods
     internal const uint SwpNoZOrder = 0x0004;
     internal const uint SwpNoActivate = 0x0010;
 
+    internal const uint ShgfiIcon = 0x000000100;
+    internal const uint ShgfiLargeIcon = 0x000000000;
+
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
     private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
@@ -57,6 +60,18 @@ internal static class NativeMethods
         int height,
         uint flags);
 
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    internal static extern IntPtr SHGetFileInfo(
+        string path,
+        uint fileAttributes,
+        ref ShFileInfo fileInfo,
+        uint fileInfoSize,
+        uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool DestroyIcon(IntPtr hIcon);
+
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(IntPtr hWnd, int attribute, ref int value, int size);
 
@@ -78,6 +93,20 @@ internal static class NativeMethods
         internal int Top;
         internal int Right;
         internal int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct ShFileInfo
+    {
+        internal IntPtr IconHandle;
+        internal int IconIndex;
+        internal uint Attributes;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        internal string DisplayName;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+        internal string TypeName;
     }
 
     [StructLayout(LayoutKind.Sequential)]

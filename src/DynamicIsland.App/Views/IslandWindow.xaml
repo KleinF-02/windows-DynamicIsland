@@ -247,34 +247,16 @@
                                     <Style TargetType="{x:Type StackPanel}">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                            <DataTrigger Binding="{Binding IsShortcutsActive}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </StackPanel.Style>
-                                <TextBlock Text="{Binding ShelfCountText}"
+                                <TextBlock Text="{Binding ShortcutCountText}"
                                            FontSize="9"
                                            Foreground="{StaticResource TextMutedBrush}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,0" />
-                                <Button Content="清空"
-                                        Click="ClearShelf_Click"
-                                        ToolTip="清空暂存区">
-                                    <Button.Style>
-                                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
-                                            <Setter Property="Height" Value="20" />
-                                            <Setter Property="Padding" Value="8,2" />
-                                            <Setter Property="FontSize" Value="9" />
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
+                                           VerticalAlignment="Center" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1"
@@ -330,158 +312,181 @@
                             </StackPanel>
                         </Grid>
 
-                        <Border x:Name="ShelfDropZone"
-                                Grid.Row="1"
+                        <Border Grid.Row="1"
                                 Height="108"
                                 Margin="0,6,0,0"
                                 Background="#08FFFFFF"
                                 BorderBrush="#16FFFFFF"
                                 BorderThickness="1"
                                 CornerRadius="12"
-                                Padding="6"
-                                AllowDrop="True">
+                                Padding="4">
                             <Border.Style>
                                 <Style TargetType="{x:Type Border}">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                        <DataTrigger Binding="{Binding IsShortcutsActive}" Value="True">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Grid>
-                                <Grid>
-                                    <Grid.Style>
-                                        <Style TargetType="{x:Type Grid}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="False">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-                                    <Rectangle Stroke="#24FFFFFF"
-                                               StrokeThickness="1"
-                                               StrokeDashArray="3 3"
-                                               RadiusX="9"
-                                               RadiusY="9"
-                                               Fill="Transparent"
-                                               IsHitTestVisible="False" />
-                                    <StackPanel HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                IsHitTestVisible="False">
-                                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
-                                            <Path Data="M3,6 C3,4.9 3.9,4 5,4 L9.2,4 L11.2,6 L19,6 C20.1,6 21,6.9 21,8 L21,17 C21,18.1 20.1,19 19,19 L5,19 C3.9,19 3,18.1 3,17 Z"
-                                                  Stroke="{StaticResource AccentBrush}"
-                                                  StrokeThickness="1.4"
-                                                  StrokeLineJoin="Round"
-                                                  Fill="Transparent" />
-                                        </Viewbox>
-                                        <TextBlock Text="把文件拖到这里暂存"
-                                                   FontSize="11.5"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,4,0,0" />
-                                        <TextBlock Text="支持文件和文件夹 · 拖出时复制"
-                                                   FontSize="9"
-                                                   Foreground="{StaticResource TextMutedBrush}"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,2,0,0" />
-                                    </StackPanel>
-                                </Grid>
 
-                                <Grid>
-                                    <Grid.Style>
-                                        <Style TargetType="{x:Type Grid}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasStagedFiles}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled">
-                                        <ItemsControl ItemsSource="{Binding StagedFiles}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="#0BFFFFFF"
-                                                            BorderBrush="#12FFFFFF"
-                                                            BorderThickness="1"
-                                                            CornerRadius="8"
-                                                            Padding="7,4"
-                                                            Margin="0,0,0,4"
-                                                            Cursor="Hand"
-                                                            AllowDrop="True"
-                                                            ToolTip="按住拖出到资源管理器或其他应用（复制）"
-                                                            PreviewMouseLeftButtonDown="StagedFile_MouseLeftButtonDown"
-                                                            MouseLeftButtonUp="StagedFile_MouseLeftButtonUp">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
+                            <ItemsControl ItemsSource="{Binding ShortcutSlots}" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="94"
+                                              Margin="1,0"
+                                              Background="Transparent"
+                                              AllowDrop="True"
+                                              MouseEnter="ShortcutTile_MouseEnter"
+                                              MouseLeave="ShortcutTile_MouseLeave"
+                                              MouseLeftButtonUp="ShortcutTile_MouseLeftButtonUp"
+                                              DragOver="ShortcutTile_DragOver"
+                                              DragLeave="ShortcutTile_DragLeave"
+                                              Drop="ShortcutTile_Drop"
+                                              RenderTransformOrigin="0.5,0.85">
+                                            <Grid.RenderTransform>
+                                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            </Grid.RenderTransform>
+                                            <Grid.ContextMenu>
+                                                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                    <MenuItem Header="打开"
+                                                              Click="OpenShortcutMenu_Click"
+                                                              IsEnabled="{Binding HasShortcut}" />
+                                                    <MenuItem Header="移除此快捷方式"
+                                                              Click="RemoveShortcutMenu_Click"
+                                                              IsEnabled="{Binding HasShortcut}" />
+                                                </ContextMenu>
+                                            </Grid.ContextMenu>
 
-                                                            <Border Width="28"
-                                                                    Height="18"
-                                                                    CornerRadius="4"
-                                                                    Background="#14FFFFFF"
-                                                                    Margin="0,0,7,0">
-                                                                <TextBlock Text="{Binding KindLabel}"
-                                                                           FontSize="8"
-                                                                           FontWeight="SemiBold"
-                                                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                                                           HorizontalAlignment="Center"
-                                                                           VerticalAlignment="Center" />
-                                                            </Border>
+                                            <Button x:Name="ShortcutRemove"
+                                                    Content="×"
+                                                    Width="14"
+                                                    Height="14"
+                                                    FontSize="10"
+                                                    Padding="0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0,2,3,0"
+                                                    Panel.ZIndex="30"
+                                                    Visibility="Collapsed"
+                                                    Style="{StaticResource IconButton}"
+                                                    ToolTip="移除快捷方式"
+                                                    Click="RemoveShortcutButton_Click" />
 
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="{Binding Name}"
-                                                                       FontSize="10.5"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       VerticalAlignment="Center" />
+                                            <Grid x:Name="ShortcutVinylHost"
+                                                  Width="48"
+                                                  Height="48"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Top"
+                                                  Margin="0,1,0,0"
+                                                  Opacity="0"
+                                                  IsHitTestVisible="False">
+                                                <Grid.RenderTransform>
+                                                    <TranslateTransform X="4" />
+                                                </Grid.RenderTransform>
+                                                <Grid x:Name="ShortcutVinyl"
+                                                      RenderTransformOrigin="0.5,0.5">
+                                                    <Grid.RenderTransform>
+                                                        <RotateTransform Angle="0" />
+                                                    </Grid.RenderTransform>
+                                                    <Ellipse Fill="#0A0C12" Stroke="#35FFFFFF" StrokeThickness="1" />
+                                                    <Ellipse Width="35" Height="35" Stroke="#18FFFFFF" StrokeThickness="0.8" />
+                                                    <Ellipse Width="25" Height="25" Stroke="#14FFFFFF" StrokeThickness="0.8" />
+                                                    <Ellipse Width="14" Height="14" Fill="{StaticResource AccentBrush}" Opacity="0.82" />
+                                                    <Ellipse Width="3" Height="3" Fill="#0A0C12" />
+                                                </Grid>
+                                            </Grid>
 
-                                                            <TextBlock Grid.Column="2"
-                                                                       Text="{Binding SizeText}"
-                                                                       FontSize="9"
-                                                                       Foreground="{StaticResource TextMutedBrush}"
-                                                                       MinWidth="44"
-                                                                       TextAlignment="Right"
-                                                                       VerticalAlignment="Center"
-                                                                       Margin="8,0,2,0" />
+                                            <Grid x:Name="ShortcutFilled">
+                                                <Grid.Style>
+                                                    <Style TargetType="{x:Type Grid}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasShortcut}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Border x:Name="ShortcutCard"
+                                                        Width="48"
+                                                        Height="48"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Top"
+                                                        Margin="0,4,0,0"
+                                                        Background="#10141C"
+                                                        BorderBrush="#20FFFFFF"
+                                                        BorderThickness="1"
+                                                        CornerRadius="11">
+                                                    <Border.RenderTransform>
+                                                        <TranslateTransform X="0" />
+                                                    </Border.RenderTransform>
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Initial}"
+                                                                   FontSize="18"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource AccentBrush}"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                        <Image Source="{Binding Icon}"
+                                                               Width="28"
+                                                               Height="28"
+                                                               Stretch="Uniform"
+                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                    </Grid>
+                                                </Border>
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           FontSize="8.5"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Bottom"
+                                                           Margin="0,0,0,2"
+                                                           MaxWidth="58"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </Grid>
 
-                                                            <Button Grid.Column="3"
-                                                                    Content="×"
-                                                                    Width="20"
-                                                                    Height="20"
-                                                                    FontSize="11"
-                                                                    Padding="0"
-                                                                    Style="{StaticResource IconButton}"
-                                                                    ToolTip="移出暂存"
-                                                                    Click="RemoveStagedFile_Click" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-                                </Grid>
-
-                                <Border x:Name="ShelfHighlight"
-                                        Background="#1F6FE7C8"
-                                        BorderBrush="#666FE7C8"
-                                        BorderThickness="1"
-                                        CornerRadius="11"
-                                        Opacity="0"
-                                        IsHitTestVisible="False" />
-                            </Grid>
+                                            <StackPanel x:Name="ShortcutEmpty"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="{x:Type StackPanel}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasShortcut}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <Border Width="48"
+                                                        Height="48"
+                                                        Background="#06FFFFFF"
+                                                        BorderBrush="#28FFFFFF"
+                                                        BorderThickness="1"
+                                                        CornerRadius="11">
+                                                    <TextBlock Text="+"
+                                                               FontSize="20"
+                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                                <TextBlock Text="拖入"
+                                                           FontSize="8.5"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Border>
-
                         <Border Grid.Row="1"
                                 Height="108"
                                 Margin="0,6,0,0"
@@ -843,14 +848,14 @@
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                        <Button Click="FileTab_Click"
-                                Tag="{Binding IsFileShelfActive}"
-                                ToolTip="文件暂存"
-                                AutomationProperties.Name="文件暂存">
+                        <Button Click="ShortcutsTab_Click"
+                                Tag="{Binding IsShortcutsActive}"
+                                ToolTip="常用软件"
+                                AutomationProperties.Name="常用软件">
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsFileShelfActive}" Value="True">
+                                        <DataTrigger Binding="{Binding IsShortcutsActive}" Value="True">
                                             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
