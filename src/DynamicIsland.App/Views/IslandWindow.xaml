@@ -1104,6 +1104,7 @@
                                         <Grid>
                                             <TextBox x:Name="TranslationInputBox"
                                                      Text="{Binding TranslationInput, UpdateSourceTrigger=PropertyChanged}"
+                                                     TextChanged="TranslationInput_TextChanged"
                                                      Style="{StaticResource SettingsTextBox}"
                                                      Height="Auto"
                                                      MinHeight="60"
@@ -1304,7 +1305,7 @@
                                             Padding="6,2">
                                         <Grid>
                                             <TextBox x:Name="AgentInputBox"
-                                                     Text="{Binding AgentInput, UpdateSourceTrigger=PropertyChanged}"
+                                                     Text="{Binding AgentInput, UpdateSourceTrigger=PropertyChanged}" TextChanged="AgentInput_TextChanged"
                                                      Style="{StaticResource SettingsTextBox}"
                                                      Height="48"
                                                      MaxLength="4000"

@@ -1,6 +1,6 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.5.0-6FE7C8)
+![version](https://img.shields.io/badge/version-0.5.1-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -9,15 +9,15 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**当前版本 `v0.5.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+**当前版本 `v0.5.1`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.5.0 更新记录](docs/releases/v0.5.0.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.5.1 更新记录](docs/releases/v0.5.1.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.5.0-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.5.1-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
 3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
@@ -162,8 +162,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.5.0-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.5.0-win-x64.zip
+artifacts/publish/DynamicIsland-0.5.1-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.5.1-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -291,7 +291,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.5.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.5.1`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 

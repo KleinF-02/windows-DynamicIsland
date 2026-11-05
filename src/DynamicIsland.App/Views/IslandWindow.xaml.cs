@@ -41,6 +41,7 @@ public partial class IslandWindow : Window
     private readonly IslandViewModel _viewModel;
     private readonly DispatcherTimer _collapseTimer;
     private readonly DispatcherTimer _heightSyncTimer;
+    private readonly DispatcherTimer _typingHoldTimer;
     private readonly DispatcherTimer _startMenuGuardTimer;
     private int _boundsAnimationId;
     private DateTime _nativeHeightStart;
@@ -69,6 +70,8 @@ public partial class IslandWindow : Window
     private bool _editingTodo;
     private bool _editingTranslation;
     private bool _editingAgent;
+    private DateTime _translationTypingHoldUntil;
+    private DateTime _agentTypingHoldUntil;
     private bool _menuOpen;
     private bool _allowClose;
     private bool _topmostSuppressed;
@@ -107,6 +110,12 @@ public partial class IslandWindow : Window
             Interval = TimeSpan.FromMilliseconds(16)
         };
         _heightSyncTimer.Tick += (_, _) => ApplyNativeHeight();
+
+        _typingHoldTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        _typingHoldTimer.Tick += TypingHoldTimer_Tick;
 
         _startMenuGuardTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -158,6 +167,9 @@ public partial class IslandWindow : Window
         _editingTodo = false;
         _editingTranslation = false;
         _editingAgent = false;
+        _translationTypingHoldUntil = DateTime.MinValue;
+        _agentTypingHoldUntil = DateTime.MinValue;
+        _typingHoldTimer.Stop();
         _viewModel.IsPinned = false;
 
         SetState(IslandVisualState.Notification, animate: true);
@@ -185,7 +197,7 @@ public partial class IslandWindow : Window
         _editingTodo = false;
 
         if (_state == IslandVisualState.Expanded && !_pinned && !_hovering
-            && !_editingTranslation && !_editingAgent
+            && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive
             && !_menuOpen && !_dragActive && !_dragOutActive)
         {
             ScheduleCollapse();
@@ -331,6 +343,9 @@ public partial class IslandWindow : Window
         _editingTodo = false;
         _editingTranslation = false;
         _editingAgent = false;
+        _translationTypingHoldUntil = DateTime.MinValue;
+        _agentTypingHoldUntil = DateTime.MinValue;
+        _typingHoldTimer.Stop();
         _viewModel.IsPinned = false;
         SetState(IslandVisualState.Compact, animate: false);
         _viewModel.Stop();
@@ -405,7 +420,7 @@ public partial class IslandWindow : Window
     {
         _hovering = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
+        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -452,7 +467,7 @@ public partial class IslandWindow : Window
             {
                 _collapseTimer.Stop();
             }
-            else if (!_hovering && !_editingTodo && !_editingTranslation && !_editingAgent)
+            else if (!_hovering && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
             {
                 ScheduleCollapse();
             }
@@ -523,7 +538,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
+        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -708,7 +723,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
+        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -816,11 +831,13 @@ public partial class IslandWindow : Window
         if (_viewModel.IsTranslateActive && function != FunctionTab.Translate)
         {
             _editingTranslation = false;
+            _translationTypingHoldUntil = DateTime.MinValue;
         }
 
         if (_viewModel.IsAgentActive && function != FunctionTab.Agent)
         {
             _editingAgent = false;
+            _agentTypingHoldUntil = DateTime.MinValue;
         }
 
         _viewModel.SelectFunction(function);
@@ -930,17 +947,84 @@ public partial class IslandWindow : Window
         e.Handled = true;
     }
 
+    private bool IsTranslationTypingHoldActive
+        => _editingTranslation && DateTime.UtcNow < _translationTypingHoldUntil;
+
+    private bool IsAgentTypingHoldActive
+        => _editingAgent && DateTime.UtcNow < _agentTypingHoldUntil;
+
     private void TranslationInput_GotFocus(object sender, RoutedEventArgs e)
     {
         _editingTranslation = true;
+        _translationTypingHoldUntil = DateTime.MinValue;
         _collapseTimer.Stop();
     }
 
     private void TranslationInput_LostFocus(object sender, RoutedEventArgs e)
     {
         _editingTranslation = false;
+        _translationTypingHoldUntil = DateTime.MinValue;
 
         if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
+        {
+            ScheduleCollapse();
+        }
+    }
+
+    private void TranslationInput_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (TranslationInputBox.IsKeyboardFocused)
+        {
+            ExtendTranslationTypingHold();
+        }
+    }
+
+    private void ExtendTranslationTypingHold()
+    {
+        _translationTypingHoldUntil = DateTime.UtcNow.AddSeconds(2);
+        _collapseTimer.Stop();
+
+        if (_state == IslandVisualState.Expanded)
+        {
+            _typingHoldTimer.Start();
+        }
+    }
+
+    private void AgentInput_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (AgentInputBox.IsKeyboardFocused)
+        {
+            ExtendAgentTypingHold();
+        }
+    }
+
+    private void ExtendAgentTypingHold()
+    {
+        _agentTypingHoldUntil = DateTime.UtcNow.AddSeconds(2);
+        _collapseTimer.Stop();
+
+        if (_state == IslandVisualState.Expanded)
+        {
+            _typingHoldTimer.Start();
+        }
+    }
+
+    private void TypingHoldTimer_Tick(object? sender, EventArgs e)
+    {
+        if (IsAgentTypingHoldActive || IsTranslationTypingHoldActive)
+        {
+            return;
+        }
+
+        _typingHoldTimer.Stop();
+
+        if (_state == IslandVisualState.Expanded
+            && !_hovering
+            && !_pinned
+            && !_editingTodo
+            && !_menuOpen
+            && !_dragActive
+            && !_dragOutActive)
         {
             ScheduleCollapse();
         }
@@ -949,12 +1033,14 @@ public partial class IslandWindow : Window
     private void AgentInput_GotFocus(object sender, RoutedEventArgs e)
     {
         _editingAgent = true;
+        _agentTypingHoldUntil = DateTime.MinValue;
         _collapseTimer.Stop();
     }
 
     private void AgentInput_LostFocus(object sender, RoutedEventArgs e)
     {
         _editingAgent = false;
+        _agentTypingHoldUntil = DateTime.MinValue;
 
         if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
         {
@@ -982,6 +1068,8 @@ public partial class IslandWindow : Window
 
     private async void TranslationInput_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        ExtendTranslationTypingHold();
+
         if (e.Key != Key.Enter || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             return;
@@ -999,6 +1087,8 @@ public partial class IslandWindow : Window
 
     private async void AgentInput_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        ExtendAgentTypingHold();
+
         if (e.Key != Key.Enter || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             return;
@@ -1357,7 +1447,7 @@ public partial class IslandWindow : Window
         {
             _dragOutActive = false;
 
-            if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
+            if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
             {
                 ScheduleCollapse();
             }
@@ -1487,7 +1577,7 @@ public partial class IslandWindow : Window
     {
         _menuOpen = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent && _state == IslandVisualState.Expanded)
+        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive && _state == IslandVisualState.Expanded)
         {
             ScheduleCollapse();
         }
@@ -1503,7 +1593,7 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _editingTodo || _editingTranslation || _editingAgent || _menuOpen || _dragActive || _dragOutActive
+        if (_hovering || _pinned || _editingTodo || IsTranslationTypingHoldActive || IsAgentTypingHoldActive || _menuOpen || _dragActive || _dragOutActive
             || _state != IslandVisualState.Expanded)
         {
             return;
@@ -1541,6 +1631,9 @@ public partial class IslandWindow : Window
             _editingTodo = false;
             _editingTranslation = false;
             _editingAgent = false;
+            _translationTypingHoldUntil = DateTime.MinValue;
+            _agentTypingHoldUntil = DateTime.MinValue;
+            _typingHoldTimer.Stop();
         }
 
         _viewModel.IsExpanded = state == IslandVisualState.Expanded;
