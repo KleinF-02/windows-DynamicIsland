@@ -426,7 +426,8 @@
 
                                             <StackPanel x:Name="ShortcutEmpty"
                                                         HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center">
+                                                        VerticalAlignment="Center"
+                                                        ToolTip="点击从开始菜单选择，或直接拖入快捷方式">
                                                 <StackPanel.Style>
                                                     <Style TargetType="{x:Type StackPanel}">
                                                         <Setter Property="Visibility" Value="Visible" />
@@ -449,8 +450,8 @@
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center" />
                                                 </Border>
-                                                <TextBlock Text="拖入"
-                                                           FontSize="8.5"
+                                                <TextBlock Text="拖入 / 选择"
+                                                           FontSize="8"
                                                            Foreground="{StaticResource TextMutedBrush}"
                                                            HorizontalAlignment="Center"
                                                            Margin="0,2,0,0" />

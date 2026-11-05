@@ -62,6 +62,7 @@ public partial class IslandWindow : Window
     private bool _dragActive;
     private bool _dragOutActive;
     private bool _startMenuOpen;
+    private DateTime _startMenuDragGraceUntil;
     private IslandVisualState _stateBeforeStartMenu = IslandVisualState.Compact;
     private readonly HashSet<uint> _shellProcessIds = new();
     private IntPtr _lastForegroundWindow;
@@ -193,6 +194,8 @@ public partial class IslandWindow : Window
                 _stateBeforeStartMenu = _state;
                 _collapseTimer.Stop();
             }
+
+            _startMenuDragGraceUntil = DateTime.UtcNow.AddSeconds(3);
 
             // Keep the island as a small top drop target instead of covering the
             // Start menu. A drag started from Start can then enter it.
@@ -453,7 +456,7 @@ public partial class IslandWindow : Window
 
     private void Shell_DragEnter(object sender, DragEventArgs e)
     {
-        if (!HasFilePayload(e.Data))
+        if (!AcceptsDropPayload(e.Data))
         {
             e.Effects = DragDropEffects.None;
             e.Handled = true;
@@ -476,7 +479,7 @@ public partial class IslandWindow : Window
 
     private void Shell_DragOver(object sender, DragEventArgs e)
     {
-        var acceptsFiles = HasFilePayload(e.Data);
+        var acceptsFiles = AcceptsDropPayload(e.Data);
         e.Effects = acceptsFiles ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
 
@@ -598,10 +601,42 @@ public partial class IslandWindow : Window
         }
 
         if (sender is FrameworkElement root
-            && root.DataContext is ShortcutSlotViewModel { HasShortcut: true } slot)
+            && root.DataContext is ShortcutSlotViewModel slot)
         {
-            LaunchShortcut(slot);
+            if (slot.HasShortcut)
+            {
+                LaunchShortcut(slot);
+            }
+            else
+            {
+                OpenShortcutPicker(slot);
+            }
+
             e.Handled = true;
+        }
+    }
+
+    private void OpenShortcutPicker(ShortcutSlotViewModel slot)
+    {
+        SetTopmostSuppressed(true);
+        try
+        {
+            var dialog = new ShortcutPickerWindow { Owner = this };
+            if (dialog.ShowDialog() == true && dialog.SelectedPath is { } path)
+            {
+                var pinned = _viewModel.PinShortcuts([path], slot);
+                if (pinned == 0)
+                {
+                    ShowNotification(
+                        "无法添加这个快捷方式",
+                        "请选择 .lnk、.exe、.url 或 .appref-ms 文件。",
+                        TimeSpan.FromSeconds(4));
+                }
+            }
+        }
+        finally
+        {
+            SetTopmostSuppressed(false);
         }
     }
 
@@ -644,7 +679,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = true;
         _collapseTimer.Stop();
-        e.Effects = HasFilePayload(e.Data) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Effects = AcceptsDropPayload(e.Data) ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
@@ -1093,7 +1128,13 @@ public partial class IslandWindow : Window
         => data.GetDataPresent(DataFormats.FileDrop)
            || data.GetDataPresent("FileNameW")
            || data.GetDataPresent("FileName")
-           || ShellIdListParser.HasPayload(data);
+           || ShellIdListParser.HasPayload(data)
+           || ShellFileGroupParser.HasPayload(data);
+
+    private bool AcceptsDropPayload(IDataObject data)
+        => HasFilePayload(data)
+           || _startMenuOpen
+           || DateTime.UtcNow < _startMenuDragGraceUntil;
 
     private static IReadOnlyList<string> ExtractDroppedPaths(IDataObject data)
     {
@@ -1113,6 +1154,12 @@ public partial class IslandWindow : Window
         if (shellPaths.Count > 0)
         {
             return shellPaths;
+        }
+
+        var fileGroupPaths = ShellFileGroupParser.Extract(data);
+        if (fileGroupPaths.Count > 0)
+        {
+            return fileGroupPaths;
         }
 
         return [];

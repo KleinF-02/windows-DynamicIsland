@@ -142,6 +142,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 开始菜单通常不提供 `FileDrop`，而是提供 `Shell IDList Array`；`ShellIdListParser` 解析 CIDA 的 parent/child PIDL，用 `ILCombine` + `SHGetPathFromIDListW` 还原真实 `.lnk` 路径。虚拟 Store 应用没有文件路径时会被拒绝并提示改用桌面快捷方式。
 - 悬停：使用 `BackEase` 把整个格子放大到 `1.16`，离场时平滑回到 `1.0`；只保留缩放动画。`EnsureMutableTransform` 会克隆 WPF 冻结的变换再动画。
 - 单击快捷方式通过 `UseShellExecute` 启动；悬停后右上角 `×` 移除。右键仍保留全局菜单。
+- 点击空位打开 `ShortcutPickerWindow`，枚举 `CommonStartMenu` / `StartMenu` 下的 `.lnk`，支持搜索、图标预览和选择后钉入；这是 Windows 11 开始菜单不提供拖拽源时的可用入口。
 - 快捷方式路径保存在本机，不复制软件本身；不读取或上传快捷方式内容。
 
 ### 待办事项
