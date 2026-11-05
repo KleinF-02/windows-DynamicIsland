@@ -306,7 +306,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         FunctionTab.Shortcuts => "拖入快捷方式 · 悬停选择 · 单击打开",
         FunctionTab.Calendar => "今日日程 · 点击圆点切换",
         FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
-        FunctionTab.Translate => "输入文字 · 选择目标语言 · 本地模型翻译",
+        FunctionTab.Translate => "本地模型翻译 · 翻译时自动保持展开",
         _ => "点击圆点切换"
     };
 

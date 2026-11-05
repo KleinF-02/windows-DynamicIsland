@@ -55,6 +55,8 @@ public partial class IslandWindow : Window
     private bool _loaded;
     private bool _hovering;
     private bool _pinned;
+    private bool _pinnedBeforeTranslate;
+    private bool _translatePinSaved;
     private bool _editingTodo;
     private bool _menuOpen;
     private bool _allowClose;
@@ -464,7 +466,7 @@ public partial class IslandWindow : Window
         }
 
         e.Effects = DragDropEffects.Copy;
-        _viewModel.SelectFunction(FunctionTab.Shortcuts);
+        SelectFunction(FunctionTab.Shortcuts);
         _dragActive = true;
         _collapseTimer.Stop();
 
@@ -518,7 +520,7 @@ public partial class IslandWindow : Window
         var paths = ExtractDroppedPaths(e.Data);
         if (paths.Count > 0)
         {
-            _viewModel.SelectFunction(FunctionTab.Shortcuts);
+            SelectFunction(FunctionTab.Shortcuts);
             var pinned = _viewModel.PinShortcuts(paths);
             if (pinned == 0)
             {
@@ -539,7 +541,7 @@ public partial class IslandWindow : Window
 
     private void ShortcutsTab_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.SelectFunction(FunctionTab.Shortcuts);
+        SelectFunction(FunctionTab.Shortcuts);
         e.Handled = true;
     }
 
@@ -784,21 +786,72 @@ public partial class IslandWindow : Window
         return null;
     }
 
+    private void SelectFunction(FunctionTab function)
+    {
+        var wasTranslating = _viewModel.ActiveFunction == FunctionTab.Translate;
+        var willTranslate = function == FunctionTab.Translate;
+
+        if (wasTranslating && !willTranslate)
+        {
+            ExitTranslateMode();
+        }
+        else if (!wasTranslating && willTranslate)
+        {
+            EnterTranslateMode();
+        }
+
+        _viewModel.SelectFunction(function);
+    }
+
+    private void EnterTranslateMode()
+    {
+        _pinnedBeforeTranslate = _pinned;
+        _translatePinSaved = true;
+        _collapseTimer.Stop();
+
+        // Translation needs keyboard input and a stable result panel; keep the
+        // island expanded without changing the user's own pin choice on exit.
+        _pinned = true;
+        _viewModel.IsPinned = true;
+
+        if (_state != IslandVisualState.Expanded)
+        {
+            SetState(IslandVisualState.Expanded, animate: true);
+        }
+    }
+
+    private void ExitTranslateMode()
+    {
+        if (!_translatePinSaved)
+        {
+            return;
+        }
+
+        _translatePinSaved = false;
+        _pinned = _pinnedBeforeTranslate;
+        _viewModel.IsPinned = _pinned && _state == IslandVisualState.Expanded;
+
+        if (!_pinned && !_hovering && !_editingTodo && _state == IslandVisualState.Expanded)
+        {
+            ScheduleCollapse();
+        }
+    }
+
     private void CalendarTab_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.SelectFunction(FunctionTab.Calendar);
+        SelectFunction(FunctionTab.Calendar);
         e.Handled = true;
     }
 
     private void TodoTab_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.SelectFunction(FunctionTab.Todo);
+        SelectFunction(FunctionTab.Todo);
         e.Handled = true;
     }
 
     private void TranslateTab_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.SelectFunction(FunctionTab.Translate);
+        SelectFunction(FunctionTab.Translate);
         e.Handled = true;
     }
 
