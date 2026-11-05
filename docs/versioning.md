@@ -15,10 +15,12 @@ MAJOR.MINOR.PATCH
 当前版本在根目录的 [`VERSION`](../VERSION) 中维护：
 
 ```text
-0.1.0
+0.2.0
 ```
 
 `Directory.Build.props` 在构建时读取这个文件，程序集版本和发布包名称都从同一处派生，避免多处手改。
+
+**持续版本策略：** 每一次用户可见迭代都必须递增 `VERSION` 并创建新的 annotated tag；旧 tag 和已经发布的 Release 不移动、不覆盖、不删除。修复走 `PATCH`，新功能区或明显能力走 `MINOR`。
 
 ## 版本历史
 
@@ -35,8 +37,9 @@ Git 提交完整保留了每一次开发过程；下面的 annotated tag 标记�
 | `v0.1.0-dev.7` | 本地模型翻译 | `d5a6b1d` |
 | `v0.1.0-dev.8` | AI Agent 工作区 | `a964235` |
 | `v0.1.0` | 首个公开版本（含文档、版本流程） | 发布提交 |
+| `v0.2.0` | AI Agent 与翻译统一悬停窗口策略；版本流程固化 | 发布提交 |
 
-`v0.1.0-dev.*` 是**开发检查点**，不是对外发布二进制。GitHub 只对当前 `v0.1.0` 及之后的正式标签自动创建 Release。
+`v0.1.0-dev.*` 是**开发检查点**，不是对外发布二进制。GitHub 会对 `v0.1.0` 及之后的正式标签自动创建 Release；当前最新版本是 `v0.2.0`。
 
 查看历史版本：
 
@@ -48,13 +51,13 @@ git checkout v0.1.0-dev.5
 
 ## 发布新版本
 
-1. 修改 `VERSION`（例如 `0.2.0`）。
+1. 修改 `VERSION`（例如下一版 `0.3.0`）。
 2. 更新 `CHANGELOG.md`，把 `Unreleased` 移到新版本号下。
 3. 提交所有改动：
 
    ```powershell
    git add .
-   git commit -m "chore(release): v0.2.0"
+   git commit -m "chore(release): v0.3.0"
    ```
 
 4. 构建、测试并打 annotated tag：
@@ -67,7 +70,7 @@ git checkout v0.1.0-dev.5
 
    ```powershell
    git push origin main
-   git push origin v0.2.0
+   git push origin v0.3.0
    ```
 
 6. GitHub Actions 的 `release` workflow 会：

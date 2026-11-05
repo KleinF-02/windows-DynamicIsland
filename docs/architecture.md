@@ -206,7 +206,7 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 
 ### AI Agent
 
-`AgentMessageViewModel` 保存角色、文本、时间和左右对齐；`AgentMessages` 是当前运行期的会话集合，首条是本地 Agent 的固定问候。
+`AgentMessageViewModel` 保存角色、文本、时间和左右对齐；`AgentMessages` 是当前运行期的会话集合，首条是本地 Agent 的固定问候。Agent 和翻译共用 `IsWorkspaceActive` 与普通悬停收起规则，不自动改写固定状态；收起或切换标签不会清空会话。
 
 1. 发送时把用户消息加入集合，状态变为“正在思考”，请求期间禁用发送。
 2. 发给本地模型的 system prompt 说明当前时间、回答语言，以及不能执行系统命令、访问文件或控制应用。

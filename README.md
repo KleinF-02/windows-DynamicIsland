@@ -1,6 +1,6 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.1.0-6FE7C8)
+![version](https://img.shields.io/badge/version-0.2.0-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -9,7 +9,7 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**首个公开版本 `v0.1.0`。** 包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+**当前版本 `v0.2.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
@@ -17,7 +17,7 @@
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.1.0-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.2.0-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
 3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
@@ -42,7 +42,7 @@
 - 日历支持加载中、无日程、链接失效、未配置来源、重试和手动刷新
 - **待办事项**：在标签直接输入或修改，打勾后粒子散开、整行淡出并从列表删除；待办持久化到本机
 - **翻译**：第四个圆点；输入文字后调用本机 Ollama / LM Studio / llama.cpp 大模型，支持切换目标语言、Ctrl+Enter 翻译、复制结果；光标在功能区时保持展开，移出后按原有悬浮规则收起，翻译内容保留到下次展开
-- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，和翻译共用本地模型配置；激活时同样放大为工作区
+- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，和翻译共用本地模型配置；激活时放大为工作区，并和翻译共用同一套悬停策略：光标在功能区内保持展开，移出后收起
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
 - 深色 / 浅色两套主题，自动跟随 Windows“应用模式”实时切换
 - 设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（默认 `0` = 贴顶）
@@ -162,8 +162,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.1.0-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.1.0-win-x64.zip
+artifacts/publish/DynamicIsland-0.2.0-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.2.0-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -193,7 +193,7 @@ artifacts/publish/DynamicIsland-0.1.0-win-x64.zip
 | 翻译页点击“翻译” | 调用本地模型；`Ctrl+Enter` 也可触发，结果可复制 |
 | 切到翻译 / AI Agent | 窗口放大为接近普通应用的 `720 × 560` 工作区 |
 | Agent 对话 | 输入后发送；`Ctrl+Enter` 也可发送，对话在本次运行中保留 |
-| 翻译时移动鼠标 | 光标在功能区时保持展开；移出后收起，重新展开仍有上次输入和译文 |
+| 翻译 / Agent 移动鼠标 | 光标在功能区时保持展开；移出后收起，重新展开仍有上次输入和结果 |
 | 右键单击 | 打开菜单 |
 | 托盘图标双击 | 显示灵动岛 |
 | 托盘图标右键 | 显示、设置、演示通知、开机启动、退出 |
@@ -291,7 +291,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.1.0`。版本号在 [`VERSION`](VERSION) 中维护；历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.2.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 

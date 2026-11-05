@@ -491,6 +491,8 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public bool IsAgentActive => _activeFunction == FunctionTab.Agent;
 
+    // Translate and Agent intentionally share the same large-workspace sizing
+    // and the normal hover/collapse policy; neither auto-pins the window.
     public bool IsWorkspaceActive => IsTranslateActive || IsAgentActive;
 
     public ObservableCollection<AgentMessageViewModel> AgentMessages { get; } = new();

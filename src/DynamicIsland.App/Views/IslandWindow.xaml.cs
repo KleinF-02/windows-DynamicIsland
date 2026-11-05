@@ -787,6 +787,9 @@ public partial class IslandWindow : Window
 
     private void SelectFunction(FunctionTab function)
     {
+        // Translate and Agent share this policy: tab entry only changes size,
+        // never pin state. Hovering the expanded window keeps it open; leaving
+        // follows the normal collapse timer.
         var wasWorkspace = _viewModel.IsWorkspaceActive;
         _viewModel.SelectFunction(function);
 

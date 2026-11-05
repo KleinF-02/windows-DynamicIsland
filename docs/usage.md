@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.1.0-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.2.0-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -119,6 +119,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 
 - 多轮对话，自动携带最近 18 条上下文。
 - 支持粘贴剪贴板、复制最后回复、清空对话。
+- 窗口策略和翻译一致：光标在功能区内保持展开，移出后收起；不自动改变固定状态。
 - 不直接执行 Windows 命令、不读取文件、不控制应用。
 
 > 没有启动本地服务或没有加载模型时，状态栏会显示连接失败。先确认 `ollama serve` / LM Studio server 正常运行。
