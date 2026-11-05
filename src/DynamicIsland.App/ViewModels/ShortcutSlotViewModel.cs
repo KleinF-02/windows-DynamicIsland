@@ -23,9 +23,15 @@ public sealed class ShortcutSlotViewModel : ObservableObject
         ? "+"
         : _displayName[..1].ToUpperInvariant();
 
+    public bool IsHtml => HasShortcut
+                          && (string.Equals(System.IO.Path.GetExtension(_path), ".html", StringComparison.OrdinalIgnoreCase)
+                              || string.Equals(System.IO.Path.GetExtension(_path), ".htm", StringComparison.OrdinalIgnoreCase));
+
+    public string IconGlyph => IsHtml ? "</>" : Initial;
+
     public string ToolTipText => HasShortcut
         ? $"{_displayName}\n{_path}\n单击打开"
-        : "把 .lnk、.exe、.url 或 .appref-ms 拖到这里";
+        : "把 .lnk、.exe、.url、.appref-ms 或 .html 拖到这里";
 
     public bool TrySetShortcut(string? candidate)
     {
@@ -43,6 +49,8 @@ public sealed class ShortcutSlotViewModel : ObservableObject
         OnPropertyChanged(nameof(HasShortcut));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(Initial));
+        OnPropertyChanged(nameof(IsHtml));
+        OnPropertyChanged(nameof(IconGlyph));
         OnPropertyChanged(nameof(ToolTipText));
         return true;
     }
@@ -58,6 +66,8 @@ public sealed class ShortcutSlotViewModel : ObservableObject
         OnPropertyChanged(nameof(HasShortcut));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(Initial));
+        OnPropertyChanged(nameof(IsHtml));
+        OnPropertyChanged(nameof(IconGlyph));
         OnPropertyChanged(nameof(ToolTipText));
     }
 }

@@ -136,13 +136,13 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 ### 常用软件
 
 - 固定 6 个 `ShortcutSlotViewModel`，每个保存路径、显示名、`ImageSource` 图标和空位状态。
-- `ShortcutPath` 只接受 `.lnk`、`.exe`、`.url`、`.appref-ms`；`ShortcutStore` 把 6 个路径（含空位 null）原子写入 `shortcuts.json`。
+- `ShortcutPath` 接受 `.lnk`、`.exe`、`.url`、`.appref-ms`、`.html`、`.htm`；`ShortcutStore` 把 6 个路径（含空位 null）原子写入 `shortcuts.json`。HTML 由 `UseShellExecute` 交给默认浏览器打开，图标通过 `SHGetFileInfo`（必要时回退 `ExtractAssociatedIcon`）读取默认浏览器图标；取不到时 XAML 用 `</>` 占位。
 - 图标通过 `SHGetFileInfo(SHGFI_ICON | SHGFI_LARGEICON)` 获取，再由 `Imaging.CreateBitmapSourceFromHIcon` 转成 WPF 图像；结束后 `DestroyIcon` 释放句柄。
 - 拖入：每个格子 `AllowDrop=True`。拖到空位填入该格，拖到已有格子替换；多文件依次填满剩余空位。`Shell_Drop` 作为岛内空白区域的兜底。
 - 开始菜单通常不提供 `FileDrop`，而是提供 `Shell IDList Array`；`ShellIdListParser` 解析 CIDA 的 parent/child PIDL，用 `ILCombine` + `SHGetPathFromIDListW` 还原真实 `.lnk` 路径。虚拟 Store 应用没有文件路径时会被拒绝并提示改用桌面快捷方式。
 - 悬停：使用 `BackEase` 把整个格子放大到 `1.16`，离场时平滑回到 `1.0`；只保留缩放动画。`EnsureMutableTransform` 会克隆 WPF 冻结的变换再动画。
 - 单击快捷方式通过 `UseShellExecute` 启动；悬停后右上角 `×` 移除。右键仍保留全局菜单。
-- 点击空位打开 `ShortcutPickerWindow`，枚举 `CommonStartMenu` / `StartMenu` 下的 `.lnk`，以及 `%LocalAppData%\Microsoft\WindowsApps` 下的应用执行别名（如 `SnippingTool.exe`），支持搜索、图标预览和选择后钉入；这是 Windows 11 开始菜单不提供拖拽源时的可用入口。
+- 点击空位打开 `ShortcutPickerWindow`，枚举 `CommonStartMenu` / `StartMenu` 下的 `.lnk`，以及 `%LocalAppData%\Microsoft\WindowsApps` 下的应用执行别名（如 `SnippingTool.exe`），支持搜索、图标预览和选择后钉入；底部“浏览文件…”可用文件对话框直接选择 `.html` / `.htm` 或快捷方式；这是 Windows 11 开始菜单不提供拖拽源时的可用入口。
 - 快捷方式路径保存在本机，不复制软件本身；不读取或上传快捷方式内容。
 
 ### 待办事项

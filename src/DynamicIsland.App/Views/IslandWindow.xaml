@@ -483,12 +483,22 @@
                                                         BorderThickness="1"
                                                         CornerRadius="11">
                                                     <Grid>
-                                                        <TextBlock Text="{Binding Initial}"
-                                                                   FontSize="18"
+                                                        <TextBlock Text="{Binding IconGlyph}"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource AccentBrush}"
                                                                    HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center" />
+                                                                   VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="{x:Type TextBlock}">
+                                                                    <Setter Property="FontSize" Value="18" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHtml}" Value="True">
+                                                                            <Setter Property="FontSize" Value="11" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                         <Image Source="{Binding Icon}"
                                                                Width="28"
                                                                Height="28"

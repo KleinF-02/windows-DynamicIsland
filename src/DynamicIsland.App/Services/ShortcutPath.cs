@@ -14,7 +14,9 @@ public static class ShortcutPath
         ".lnk",
         ".exe",
         ".url",
-        ".appref-ms"
+        ".appref-ms",
+        ".html",
+        ".htm"
     ];
 
     public static bool TryNormalize(string? candidate, out string path)

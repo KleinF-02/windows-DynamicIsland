@@ -123,6 +123,29 @@ public partial class ShortcutPickerWindow : Window, INotifyPropertyChanged
         Close();
     }
 
+    private void Browse_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "选择网页或快捷方式",
+            Filter = "网页文件 (*.html;*.htm)|*.html;*.htm|"
+                     + "快捷方式 (*.lnk;*.exe;*.url;*.appref-ms)|*.lnk;*.exe;*.url;*.appref-ms|"
+                     + "所有文件 (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog(this) != true
+            || !ShortcutPath.TryNormalize(dialog.FileName, out var path))
+        {
+            return;
+        }
+
+        SelectedPath = path;
+        DialogResult = true;
+        Close();
+    }
+
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
