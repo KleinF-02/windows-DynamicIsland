@@ -64,6 +64,8 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 `TopMargin` 的语义是“到胶囊可见顶边的距离”，默认 `0`。设置页可调到 `0–40 DIP`，向右拉才会出现缝隙。
 
+`PositionWindow` 会在工作区尺寸不足时调用 `IslandMetrics.FitWithin`，等比缩小超过 `工作区宽度 - 24 DIP` 或 `工作区高度 - TopMargin - 8 DIP` 的窗口。常规 1920×1080 / 2560×1440 不缩放；200% 缩放或小屏时，大工作区会自适应缩小而不会超出屏幕。
+
 当前默认使用主屏。`IslandSettings.PreferredScreen` 已经存在，`ResolveScreen()` 也已按设备名匹配，只差设置页中的显示器下拉框。
 
 ### 点击穿透边距
@@ -101,9 +103,9 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 ## 5. 动画
 
-- 展开：`Width`、`Height`、`Left` 使用 `QuinticEase(EaseOut)`，`300ms`。
+- 展开：`Width`、`Height`、`Left` 使用 `QuinticEase(EaseOut)`，基础 `300ms`；尺寸变化越大时长最多增加到 `420ms`，避免大工作区直接弹开。
 - 收起：使用 `CubicEase(EaseInOut)`，`360ms`；鼠标离开后延迟 `320ms` 再开始，避免边缘误触。
-- 透明分层窗口的 `Height` 在动画期间通过 `16ms` 原生 `SetWindowPos` 同步，避免 WPF 只在动画结束时才更新 HWND 高度、造成中段卡住或末尾跳动。
+- 透明分层窗口的 `Width` 和 `Height` 在动画期间通过 `16ms` 原生 `SetWindowPos` 同步，避免 WPF 只在动画结束时才更新 HWND 尺寸、造成横向跳变或末尾卡顿。
 - 宽度和左边同时按相同缓动变化，视觉中心保持不动；顶部保持贴屏，因此展开只向下生长。
 - 内容视图额外带 `ScaleTransform`：展开态从 `0.92` 放大到 `1.0`，`RenderTransformOrigin="0.5,0"` 让缩放从顶部中心发生。
 - 收起时旧内容先缩小、上移并淡出（`220ms`），紧凑内容延迟 `95ms` 再淡入；窗口尺寸动画尚未结束时不会突然切换视图。

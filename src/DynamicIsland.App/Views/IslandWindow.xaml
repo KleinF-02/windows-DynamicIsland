@@ -1098,7 +1098,8 @@
                                             CornerRadius="8"
                                             Padding="6,4">
                                         <Grid>
-                                            <TextBox Text="{Binding TranslationInput, UpdateSourceTrigger=PropertyChanged}"
+                                            <TextBox x:Name="TranslationInputBox"
+                                                     Text="{Binding TranslationInput, UpdateSourceTrigger=PropertyChanged}"
                                                      Style="{StaticResource SettingsTextBox}"
                                                      Height="Auto"
                                                      MinHeight="60"
@@ -1110,6 +1111,8 @@
                                                      FontSize="12"
                                                      Padding="4,4"
                                                      PreviewKeyDown="TranslationInput_PreviewKeyDown"
+                                                     GotFocus="TranslationInput_GotFocus"
+                                                     LostFocus="TranslationInput_LostFocus"
                                                      AutomationProperties.Name="待翻译文字"
                                                      ToolTip="输入或粘贴文字，Ctrl+Enter 翻译" />
                                             <TextBlock Text="输入或粘贴要翻译的文字…"

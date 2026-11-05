@@ -37,6 +37,20 @@ public sealed class IslandMetricsTests
     }
 
     [Fact]
+    public void FitWithin_ScalesWorkspaceToSmallWorkingArea()
+    {
+        var workspace = IslandMetrics.Outer(IslandVisualState.Expanded, workspace: true);
+        var fitted = IslandMetrics.FitWithin(workspace, maxWidth: 900, maxHeight: 520);
+
+        Assert.True(fitted.Width <= 900);
+        Assert.True(fitted.Height <= 520);
+        Assert.InRange(
+            fitted.Width / fitted.Height,
+            (workspace.Width / workspace.Height) - 0.001,
+            (workspace.Width / workspace.Height) + 0.001);
+    }
+
+    [Fact]
     public void Placement_CentersWindowAndHonorsTopMargin()
     {
         var position = IslandPlacement.TopCenter(

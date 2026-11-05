@@ -30,4 +30,29 @@ public static class IslandMetrics
             content.Width + (ShadowPadding * 2),
             content.Height + (ShadowPadding * 2));
     }
+
+    /// <summary>
+    /// Keeps the island inside the monitor working area on high-DPI or small
+    /// screens. Aspect ratio is preserved; normal desktop sizes are unchanged.
+    /// </summary>
+    public static IslandSize FitWithin(IslandSize size, double maxWidth, double maxHeight)
+    {
+        if (!double.IsFinite(size.Width) || !double.IsFinite(size.Height)
+            || size.Width <= 0 || size.Height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(size));
+        }
+
+        if (!double.IsFinite(maxWidth) || !double.IsFinite(maxHeight))
+        {
+            return size;
+        }
+
+        var widthLimit = Math.Max(1.0, maxWidth);
+        var heightLimit = Math.Max(1.0, maxHeight);
+        var scale = Math.Min(1.0, Math.Min(widthLimit / size.Width, heightLimit / size.Height));
+        return scale >= 1.0
+            ? size
+            : new IslandSize(size.Width * scale, size.Height * scale);
+    }
 }

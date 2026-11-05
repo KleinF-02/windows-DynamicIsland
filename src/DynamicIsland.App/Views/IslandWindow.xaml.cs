@@ -42,6 +42,8 @@ public partial class IslandWindow : Window
     private readonly DispatcherTimer _startMenuGuardTimer;
     private int _boundsAnimationId;
     private DateTime _nativeHeightStart;
+    private double _nativeWidthFrom;
+    private double _nativeWidthTo;
     private double _nativeHeightFrom;
     private double _nativeHeightTo;
     private TimeSpan _nativeHeightDuration;
@@ -56,6 +58,7 @@ public partial class IslandWindow : Window
     private bool _hovering;
     private bool _pinned;
     private bool _editingTodo;
+    private bool _editingTranslation;
     private bool _editingAgent;
     private bool _menuOpen;
     private bool _allowClose;
@@ -144,6 +147,7 @@ public partial class IslandWindow : Window
         _viewModel.NotificationMessage = message;
         _pinned = false;
         _editingTodo = false;
+        _editingTranslation = false;
         _editingAgent = false;
         _viewModel.IsPinned = false;
 
@@ -172,7 +176,8 @@ public partial class IslandWindow : Window
         _editingTodo = false;
 
         if (_state == IslandVisualState.Expanded && !_pinned && !_hovering
-            && !_editingAgent && !_menuOpen && !_dragActive && !_dragOutActive)
+            && !_editingTranslation && !_editingAgent
+            && !_menuOpen && !_dragActive && !_dragOutActive)
         {
             ScheduleCollapse();
         }
@@ -315,6 +320,7 @@ public partial class IslandWindow : Window
         _collapseTimer.Stop();
         _pinned = false;
         _editingTodo = false;
+        _editingTranslation = false;
         _editingAgent = false;
         _viewModel.IsPinned = false;
         SetState(IslandVisualState.Compact, animate: false);
@@ -390,7 +396,7 @@ public partial class IslandWindow : Window
     {
         _hovering = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !_editingAgent)
+        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -437,7 +443,7 @@ public partial class IslandWindow : Window
             {
                 _collapseTimer.Stop();
             }
-            else if (!_hovering && !_editingTodo && !_editingAgent)
+            else if (!_hovering && !_editingTodo && !_editingTranslation && !_editingAgent)
             {
                 ScheduleCollapse();
             }
@@ -508,7 +514,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -693,7 +699,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -797,6 +803,11 @@ public partial class IslandWindow : Window
         // follows the normal collapse timer.
         var wasWorkspace = _viewModel.IsWorkspaceActive;
 
+        if (_viewModel.IsTranslateActive && function != FunctionTab.Translate)
+        {
+            _editingTranslation = false;
+        }
+
         if (_viewModel.IsAgentActive && function != FunctionTab.Agent)
         {
             _editingAgent = false;
@@ -834,6 +845,22 @@ public partial class IslandWindow : Window
         SelectFunction(FunctionTab.Agent);
         AgentInputBox.Focus();
         e.Handled = true;
+    }
+
+    private void TranslationInput_GotFocus(object sender, RoutedEventArgs e)
+    {
+        _editingTranslation = true;
+        _collapseTimer.Stop();
+    }
+
+    private void TranslationInput_LostFocus(object sender, RoutedEventArgs e)
+    {
+        _editingTranslation = false;
+
+        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
+        {
+            ScheduleCollapse();
+        }
     }
 
     private void AgentInput_GotFocus(object sender, RoutedEventArgs e)
@@ -1247,7 +1274,7 @@ public partial class IslandWindow : Window
         {
             _dragOutActive = false;
 
-            if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
+            if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent)
             {
                 ScheduleCollapse();
             }
@@ -1377,7 +1404,7 @@ public partial class IslandWindow : Window
     {
         _menuOpen = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent && _state == IslandVisualState.Expanded)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingTranslation && !_editingAgent && _state == IslandVisualState.Expanded)
         {
             ScheduleCollapse();
         }
@@ -1393,7 +1420,7 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _editingTodo || _editingAgent || _menuOpen || _dragActive || _dragOutActive
+        if (_hovering || _pinned || _editingTodo || _editingTranslation || _editingAgent || _menuOpen || _dragActive || _dragOutActive
             || _state != IslandVisualState.Expanded)
         {
             return;
@@ -1428,6 +1455,7 @@ public partial class IslandWindow : Window
         if (state != IslandVisualState.Expanded)
         {
             _editingTodo = false;
+            _editingTranslation = false;
             _editingAgent = false;
         }
 
@@ -1447,16 +1475,24 @@ public partial class IslandWindow : Window
     private void PositionWindow(bool animate)
     {
         var screen = ResolveScreen();
-        var outer = IslandMetrics.Outer(_state, _viewModel.IsWorkspaceActive);
         var source = PresentationSource.FromVisual(this);
         var fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
 
         var topLeft = fromDevice.Transform(new Point(screen.WorkingArea.Left, screen.WorkingArea.Top));
         var bottomRight = fromDevice.Transform(new Point(screen.WorkingArea.Right, screen.WorkingArea.Bottom));
+        var workWidth = Math.Max(1.0, bottomRight.X - topLeft.X);
+        var workHeight = Math.Max(1.0, bottomRight.Y - topLeft.Y);
+
+        var outer = IslandMetrics.Outer(_state, _viewModel.IsWorkspaceActive);
+        outer = IslandMetrics.FitWithin(
+            outer,
+            workWidth - 24.0,
+            workHeight - _settings.TopMargin - 8.0);
+
         var placement = IslandPlacement.TopCenter(
             topLeft.X,
             topLeft.Y,
-            bottomRight.X - topLeft.X,
+            workWidth,
             outer.Width,
             topMargin: 0);
 
@@ -1508,12 +1544,21 @@ public partial class IslandWindow : Window
         EasingFunctionBase ease = collapsing
             ? new CubicEase { EasingMode = EasingMode.EaseInOut }
             : new QuinticEase { EasingMode = EasingMode.EaseOut };
-        var duration = TimeSpan.FromMilliseconds(collapsing ? 360 : 300);
 
-        // The native HWND height does not follow Window.Height reliably while
-        // that property is animated on a transparent window, so drive the
-        // native height from the same timing curve explicitly.
+        // Larger state changes (compact -> workspace) need a little more time;
+        // small hover transitions stay snappy.
+        var distance = Math.Abs(width - fromWidth) + Math.Abs(height - fromHeight);
+        var durationMs = collapsing
+            ? 360.0
+            : Math.Min(420.0, 300.0 + (distance * 0.08));
+        var duration = TimeSpan.FromMilliseconds(durationMs);
+
+        // The native HWND size does not follow Window.Width/Height reliably
+        // while those properties are animated on a transparent window, so
+        // drive both native dimensions from the same timing curve explicitly.
         _nativeHeightStart = DateTime.UtcNow;
+        _nativeWidthFrom = fromWidth;
+        _nativeWidthTo = width;
         _nativeHeightFrom = fromHeight;
         _nativeHeightTo = height;
         _nativeHeightDuration = duration;
@@ -1559,9 +1604,9 @@ public partial class IslandWindow : Window
     }
 
     /// <summary>
-    /// WPF can defer the native height update while Window.Height is animated.
-    /// Keep the HWND height in sync with the animated DIP value so the visual
-    /// collapse is smooth instead of snapping at the end.
+    /// WPF can defer native width/height updates while Window.Width/Height are
+    /// animated. Keep both HWND dimensions in sync with the animated DIP
+    /// values so the island does not snap or lag at the end of a transition.
     /// </summary>
     private void ApplyNativeHeight()
     {
@@ -1570,6 +1615,7 @@ public partial class IslandWindow : Window
             return;
         }
 
+        var width = Width;
         var height = Height;
         if (_nativeHeightEase is not null)
         {
@@ -1579,23 +1625,26 @@ public partial class IslandWindow : Window
                 0.0,
                 1.0);
             var eased = _nativeHeightEase.Ease(progress);
+            width = _nativeWidthFrom + ((_nativeWidthTo - _nativeWidthFrom) * eased);
             height = _nativeHeightFrom + ((_nativeHeightTo - _nativeHeightFrom) * eased);
         }
 
-        if (!double.IsFinite(height))
+        if (!double.IsFinite(width) || !double.IsFinite(height))
         {
             return;
         }
 
         var handle = _hwndSource.Handle;
-        if (!NativeMethods.GetWindowRect(handle, out var rect))
+        if (!NativeMethods.GetWindowRect(handle, out _))
         {
             return;
         }
 
-        var scale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M22 ?? 1.0;
-        var nativeHeight = Math.Max(1, (int)Math.Round(height * scale));
-        var nativeWidth = Math.Max(1, rect.Right - rect.Left);
+        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
+        var scaleX = transform?.M11 ?? 1.0;
+        var scaleY = transform?.M22 ?? 1.0;
+        var nativeWidth = Math.Max(1, (int)Math.Round(width * scaleX));
+        var nativeHeight = Math.Max(1, (int)Math.Round(height * scaleY));
 
         NativeMethods.SetWindowPos(
             handle,
