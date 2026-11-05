@@ -15,6 +15,23 @@ public static class ShellIconService
 {
     public static ImageSource? TryGetIcon(string path)
     {
+        // App execution aliases are zero-byte reparse points; the shell gives
+        // them a generic exe icon. Prefer the package executable target's icon.
+        if (AppExecutionAlias.IsWindowsAppsAlias(path)
+            && AppExecutionAlias.TryGetTarget(path, out var targetPath))
+        {
+            var targetIcon = TryGetShellIcon(targetPath) ?? TryExtractAssociatedIcon(targetPath);
+            if (targetIcon is not null)
+            {
+                return targetIcon;
+            }
+        }
+
+        return TryGetShellIcon(path) ?? TryExtractAssociatedIcon(path);
+    }
+
+    private static ImageSource? TryGetShellIcon(string path)
+    {
         var fileInfo = new NativeMethods.ShFileInfo();
         try
         {
@@ -47,6 +64,29 @@ public static class ShellIconService
             {
                 NativeMethods.DestroyIcon(fileInfo.IconHandle);
             }
+        }
+    }
+
+    private static ImageSource? TryExtractAssociatedIcon(string path)
+    {
+        try
+        {
+            using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
+            if (icon is null)
+            {
+                return null;
+            }
+
+            var source = Imaging.CreateBitmapSourceFromHIcon(
+                icon.Handle,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+            source.Freeze();
+            return source;
+        }
+        catch (Exception ex) when (ex is ArgumentException or ExternalException or InvalidOperationException)
+        {
+            return null;
         }
     }
 }
