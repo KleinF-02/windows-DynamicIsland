@@ -185,8 +185,79 @@ public partial class ShortcutPickerWindow : Window, INotifyPropertyChanged
             }
         }
 
+        AddWindowsAppAliases(apps, seen);
         apps.Sort((left, right) => StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name));
         return apps;
+    }
+
+    private static void AddWindowsAppAliases(List<StartMenuShortcut> apps, HashSet<string> seen)
+    {
+        var windowsApps = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Microsoft",
+            "WindowsApps");
+
+        if (!Directory.Exists(windowsApps))
+        {
+            return;
+        }
+
+        List<string> aliases;
+        try
+        {
+            aliases = Directory.EnumerateFiles(windowsApps, "*.exe", SearchOption.TopDirectoryOnly).ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+
+        foreach (var path in aliases)
+        {
+            if (apps.Count >= 250
+                || !seen.Add(path)
+                || !ShortcutPath.TryNormalize(path, out var normalized))
+            {
+                continue;
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(normalized);
+            var displayName = fileName.ToLowerInvariant() switch
+            {
+                "snippingtool" => "Snipping Tool",
+                "windowsterminal" => "Windows Terminal",
+                "winget" => "winget",
+                "wt" => "Windows Terminal",
+                _ => AddSpaces(fileName)
+            };
+
+            apps.Add(new StartMenuShortcut(
+                displayName,
+                normalized,
+                "应用别名",
+                ShellIconService.TryGetIcon(normalized)));
+        }
+    }
+
+    private static string AddSpaces(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Contains(' '))
+        {
+            return value;
+        }
+
+        var builder = new System.Text.StringBuilder(value.Length + 4);
+        for (var i = 0; i < value.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(value[i]) && !char.IsUpper(value[i - 1]))
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(value[i]);
+        }
+
+        return builder.ToString();
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
