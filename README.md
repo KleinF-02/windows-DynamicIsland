@@ -1,10 +1,26 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-> 一颗停靠在桌面顶部的胶囊。悬停展开，右下角固定。
+![version](https://img.shields.io/badge/version-0.1.0-6FE7C8)
+![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
+![.NET](https://img.shields.io/badge/.NET-10-512BD4)
+![license](https://img.shields.io/badge/license-MIT-blue)
+
+> 一颗停在桌面顶部的胶囊。悬停展开，常用软件、日程、待办、翻译和本地 AI Agent 都在这里完成。
 
 ![灵动岛](docs/images/hero.png)
 
-**当前状态：`0.1.0` 可运行开发骨架。** 窗口、动画、托盘、设置、开机启动、通知胶囊、常用软件快捷方式和待办事项都已在本机实机跑通；日历模块支持 **Microsoft 365 网页版 ICS 链接**，也保留桌面版 Outlook COM 回退。本机通过本地 HTTP ICS 源实测了获取、重复日程展开、全天日程和列表 UI，未使用真实 Microsoft 365 账号链接测试。
+**首个公开版本 `v0.1.0`。** 包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+
+**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
+
+## 快速开始
+
+1. 从 GitHub Releases 下载 `DynamicIsland-0.1.0-win-x64.zip`。
+2. 解压后运行 `DynamicIsland.exe`。
+3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
+4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
+
+自包含发布包不需要预装 .NET。翻译 / AI Agent 需要本机运行 Ollama 或 LM Studio，并在设置中填写模型地址。
 
 ## 现在能做什么
 
@@ -74,6 +90,18 @@ ollama pull qwen2.5:7b
 翻译页切换目标语言后输入文字，点“翻译”或按 `Ctrl+Enter`；结果可以一键复制。切到翻译或 AI Agent 时窗口会放大到接近普通应用的 `720 × 560` 工作区，离开后恢复原来的展开尺寸。
 
 AI Agent 支持多轮对话，会携带最近 18 条消息作为上下文；可以粘贴剪贴板、复制最后一条回复或清空对话。它只读取对话文本并请求本机模型，不会直接执行 Windows 命令、读取文件或控制应用。
+
+### 翻译工作区
+
+![翻译工作区](docs/images/translation.png)
+
+### AI Agent
+
+![AI Agent](docs/images/agent.png)
+
+### 浅色主题
+
+![浅色主题](docs/images/theme-light.png)
 
 ## 配置 Microsoft 365 网页版日历
 
@@ -249,9 +277,23 @@ dynamic-island/
 
 ## 文档
 
-- [开发环境与工作流](docs/development.md)
+- [软件设计思路](docs/design.md)
+- [使用的框架与技术选型](docs/frameworks.md)
+- [详细使用说明](docs/usage.md)
 - [架构与扩展点](docs/architecture.md)
+- [版本管理与发布](docs/versioning.md)
+- [变更日志](CHANGELOG.md)
+- [开发环境与工作流](docs/development.md)
 - [路线图](docs/roadmap.md)
+- [贡献指南](CONTRIBUTING.md)
+
+## 版本
+
+当前版本 `0.1.0`。版本号在 [`VERSION`](VERSION) 中维护；历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+
+## License
+
+[MIT](LICENSE)
 
 ## 环境实测
 

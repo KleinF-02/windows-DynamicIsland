@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 
-$version = '0.1.0'
+$version = (Get-Content (Join-Path $script:RepoRoot 'VERSION') -Raw).Trim()
 $selfContained = -not $FrameworkDependent
 $selfContainedValue = if ($selfContained) { 'true' } else { 'false' }
 $suffix = if ($FrameworkDependent) { '-fdd' } else { '' }

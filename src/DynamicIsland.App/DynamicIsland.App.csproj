@@ -18,9 +18,7 @@
     <AssemblyTitle>灵动岛 for Windows 11</AssemblyTitle>
     <Description>A lightweight Dynamic Island for Windows 11.</Description>
     <Company>DynamicIsland</Company>
-    <Version>0.1.0</Version>
-    <FileVersion>0.1.0.0</FileVersion>
-    <InformationalVersion>0.1.0</InformationalVersion>
+    <!-- Version is centralized in Directory.Build.props and the root VERSION file. -->
     <!-- The manifest is the authoritative DPI declaration for this WPF app. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>

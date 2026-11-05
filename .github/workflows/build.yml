@@ -35,5 +35,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DynamicIsland-win-x64
-          path: artifacts/publish/DynamicIsland-0.1.0-win-x64/
+          path: artifacts/publish/DynamicIsland-*-win-x64/
           if-no-files-found: error

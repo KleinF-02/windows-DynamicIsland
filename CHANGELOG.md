@@ -1,0 +1,49 @@
+# Changelog
+
+本项目的用户可见变化记录在这里。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+### Planned
+
+- 本地模型的流式输出
+- AI Agent 的安全工具调用（白名单 + 用户确认）
+- 多显示器选择与按显示器记忆位置
+
+## [0.1.0] - 2026-11-05
+
+首个公开版本。
+
+### Added
+
+- 贴住 Windows 11 屏幕顶部的透明无边框胶囊，悬停展开、移出收起
+- 右下角固定 / 取消固定；展开、收起和内容交叉淡化动画
+- 时钟、日期、秒数、电池与充电状态
+- 五个功能区：常用软件、Calendar、待办事项、翻译、AI Agent
+- 常用软件：6 格快捷方式，支持 `.lnk`、`.exe`、`.url`、`.appref-ms`、`.html`、`.htm`
+- 开始菜单应用选择器、WindowsApps 执行别名、Store 应用真实图标
+- HTML 本地网页支持，默认浏览器图标与 `</>` 占位图标
+- Calendar：Microsoft 365 网页版 ICS、重复日程、全天日程、桌面 Outlook COM 回退
+- 会议前 5 分钟圆环倒计时，并同步显示在缩小胶囊；会议开始恢复议程
+- 待办事项：行内编辑、打勾粒子删除、本地持久化
+- 翻译：本地 Ollama / OpenAI-compatible 模型，四种目标语言、复制结果
+- AI Agent：本地模型多轮对话、最近 18 条上下文、粘贴/复制/清空
+- 翻译 / Agent 大工作区，切换后恢复原尺寸并保留内容
+- 深色 / 浅色双主题，自动跟随 Windows 应用模式
+- 设置页、托盘菜单、单实例、开机启动、通知胶囊
+- JSON 原子持久化、启动/崩溃日志、Win32 Shell 拖拽兼容
+
+### Security
+
+- 日历令牌和本地模型地址只存本机，不写日志
+- AI Agent 不执行系统命令、不读取文件、不控制应用
+
+### Known Limitations
+
+- 仅 Windows 11
+- 本地模型依赖外部服务，未内置模型
+- 开始菜单直接拖拽在 Windows 11 上不稳定，选择器是主路径
+
+## Historical development checkpoints
+
+早期开发检查点以 `v0.1.0-dev.*` tag 保存，详见 [docs/versioning.md](docs/versioning.md)。它们不是公开二进制发布。

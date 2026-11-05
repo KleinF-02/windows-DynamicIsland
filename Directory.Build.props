@@ -6,5 +6,8 @@
     <Deterministic>true</Deterministic>
     <DebugType>portable</DebugType>
     <NeutralLanguage>zh-Hans</NeutralLanguage>
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)VERSION').Trim())</Version>
+    <FileVersion>$(Version).0</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
   </PropertyGroup>
 </Project>
