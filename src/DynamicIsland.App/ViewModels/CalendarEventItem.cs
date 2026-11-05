@@ -17,6 +17,9 @@ public sealed class CalendarEventItem
         TimeText = isAllDay
             ? "全天"
             : $"{start:HH:mm} – {end:HH:mm}";
+        StartTimeText = isAllDay ? "全天" : start.ToString("HH:mm");
+        EndTimeText = isAllDay ? string.Empty : end.ToString("HH:mm");
+        HasEndTime = !isAllDay;
     }
 
     public string Subject { get; }
@@ -26,6 +29,12 @@ public sealed class CalendarEventItem
     public bool IsAllDay { get; }
 
     public string TimeText { get; }
+
+    public string StartTimeText { get; }
+
+    public string EndTimeText { get; }
+
+    public bool HasEndTime { get; }
 
     public string LocationText { get; }
 

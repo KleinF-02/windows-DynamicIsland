@@ -13,8 +13,8 @@
         Topmost="True"
         FontFamily="{StaticResource AppFont}"
         Loaded="Window_Loaded">
-    <Border Background="#FA0B0E14"
-            BorderBrush="#20FFFFFF"
+    <Border Background="{DynamicResource PickerSurfaceBrush}"
+            BorderBrush="{DynamicResource PickerBorderBrush}"
             BorderThickness="1"
             CornerRadius="16">
         <Border.Effect>
@@ -34,7 +34,7 @@
                     <TextBlock Text="添加到常用软件" FontSize="22" FontWeight="SemiBold" />
                     <TextBlock Text="从开始菜单选择一个桌面应用"
                                FontSize="11"
-                               Foreground="{StaticResource TextMutedBrush}"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,4,0,0" />
                 </StackPanel>
                 <Button Content="×"
@@ -48,8 +48,8 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    Background="#0BFFFFFF"
-                    BorderBrush="#18FFFFFF"
+                    Background="{DynamicResource PickerSearchBackgroundBrush}"
+                    BorderBrush="{DynamicResource PickerSearchBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="10,0"
@@ -62,7 +62,7 @@
                              AutomationProperties.Name="搜索开始菜单应用" />
                     <TextBlock Text="搜索应用…"
                                FontSize="10"
-                               Foreground="{StaticResource TextMutedBrush}"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                IsHitTestVisible="False"
                                VerticalAlignment="Center">
                         <TextBlock.Style>
@@ -80,8 +80,8 @@
             </Border>
 
             <Border Grid.Row="2"
-                    Background="#06FFFFFF"
-                    BorderBrush="#12FFFFFF"
+                    Background="{DynamicResource PickerListBackgroundBrush}"
+                    BorderBrush="{DynamicResource PickerListBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="10"
                     Margin="0,12,0,0">
@@ -110,10 +110,10 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Row" Property="Background" Value="#10FFFFFF" />
+                                                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource PickerRowHoverBrush}" />
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Row" Property="Background" Value="#1F6FE7C8" />
+                                                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource PickerRowSelectedBrush}" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -131,7 +131,7 @@
                                     <Grid Width="26" Height="26" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}"
                                                    FontSize="8"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center" />
                                         <Image Source="{Binding Icon}"
@@ -146,7 +146,7 @@
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Text="{Binding Folder}"
                                                    FontSize="8.5"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Margin="0,2,0,0" />
                                     </StackPanel>
@@ -157,7 +157,7 @@
 
                     <TextBlock Text="开始菜单里没有找到可添加的快捷方式"
                                FontSize="11"
-                               Foreground="{StaticResource TextMutedBrush}"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                IsHitTestVisible="False">
@@ -178,7 +178,7 @@
             <Grid Grid.Row="3" Margin="0,14,0,0">
                 <TextBlock Text="{Binding HintText}"
                            FontSize="9.5"
-                           Foreground="{StaticResource TextMutedBrush}"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            VerticalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="取消"

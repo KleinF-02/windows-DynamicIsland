@@ -163,6 +163,13 @@ dotnet test DynamicIsland.sln
 4. 点待办左侧圆圈，确认出现粒子扩散和整行淡出，约 0.3 秒后待办消失。
 5. 检查 `%LOCALAPPDATA%\DynamicIsland\todos.json`，确认已完成的条目被删除。
 
+### 主题手工验收
+
+1. Windows 设置 → 个性化 → 颜色，把“应用模式”在深色/浅色之间切换。
+2. 保持灵动岛和设置页打开，确认 2 秒内两者都换色，文字、卡片、按钮和日历时间块对比度正常。
+3. 打开快捷方式选择器和右键菜单，确认弹层也跟随主题。
+4. 开发时可分别用 `DYNAMIC_ISLAND_THEME=light`、`DYNAMIC_ISLAND_THEME=dark` 启动截图。
+
 ### Calendar 手工验收
 
 **Microsoft 365 网页版（推荐）**

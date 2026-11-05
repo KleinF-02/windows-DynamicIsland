@@ -1,0 +1,108 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Light palette -->
+    <Color x:Key="AccentColor">#0B8A72</Color>
+    <Color x:Key="AccentBlueColor">#3D6FD8</Color>
+    <Color x:Key="TextPrimaryColor">#111722</Color>
+    <Color x:Key="TextSecondaryColor">#505A68</Color>
+    <Color x:Key="TextMutedColor">#7A8492</Color>
+
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlueColor}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#F9FBFE" />
+    <SolidColorBrush x:Key="PanelStrokeBrush" Color="#22000000" />
+    <SolidColorBrush x:Key="HairlineBrush" Color="#14000000" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#B34157" />
+    <SolidColorBrush x:Key="WindowShadowBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="CompactDotBrush" Color="#1F000000" />
+    <SolidColorBrush x:Key="CompactSeparatorBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="CompactRingTrackBrush" Color="#26000000" />
+    <SolidColorBrush x:Key="BatteryOutlineBrush" Color="#66000000" />
+    <SolidColorBrush x:Key="BatteryCapBrush" Color="#66000000" />
+    <SolidColorBrush x:Key="SubtleSurfaceBrush" Color="#CCFFFFFF" />
+    <SolidColorBrush x:Key="SubtleBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="ShortcutCardBackgroundBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="ShortcutCardBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="ShortcutEmptyBackgroundBrush" Color="#E6FFFFFF" />
+    <SolidColorBrush x:Key="ShortcutEmptyBorderBrush" Color="#26000000" />
+    <SolidColorBrush x:Key="CalendarSourceBackgroundBrush" Color="#FFE8EEF5" />
+    <SolidColorBrush x:Key="CalendarSourceBorderBrush" Color="#1F000000" />
+    <SolidColorBrush x:Key="CalendarTabBackgroundBrush" Color="#CCFFFFFF" />
+    <SolidColorBrush x:Key="CalendarTabBorderBrush" Color="#1F000000" />
+    <SolidColorBrush x:Key="CalendarCardBackgroundBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="CalendarCardBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="CalendarTimePillBackgroundBrush" Color="#FFEAF2F5" />
+    <SolidColorBrush x:Key="CalendarTimePillBorderBrush" Color="#1C000000" />
+    <SolidColorBrush x:Key="TodoCardBackgroundBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="TodoCardBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="TodoInputBackgroundBrush" Color="#E6FFFFFF" />
+    <SolidColorBrush x:Key="TodoInputBorderBrush" Color="#22000000" />
+    <SolidColorBrush x:Key="CountdownSurfaceBrush" Color="#FFF8FBFD" />
+    <SolidColorBrush x:Key="CountdownBorderBrush" Color="#330B8A72" />
+    <SolidColorBrush x:Key="CountdownTrackBrush" Color="#22000000" />
+    <SolidColorBrush x:Key="SettingsOverlayBrush" Color="#66FFFFFF" />
+    <SolidColorBrush x:Key="SettingsGlowBrush" Color="#1A0B8A72" />
+    <SolidColorBrush x:Key="NotificationOrbBrush" Color="#0D000000" />
+    <SolidColorBrush x:Key="SettingsFieldBackgroundBrush" Color="#CCFFFFFF" />
+    <SolidColorBrush x:Key="SettingsFieldBorderBrush" Color="#1F000000" />
+    <SolidColorBrush x:Key="PickerSurfaceBrush" Color="#F8FBFDFF" />
+    <SolidColorBrush x:Key="PickerBorderBrush" Color="#20000000" />
+    <SolidColorBrush x:Key="PickerSearchBackgroundBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="PickerSearchBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="PickerListBackgroundBrush" Color="#B3FFFFFF" />
+    <SolidColorBrush x:Key="PickerListBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="PickerRowHoverBrush" Color="#0F000000" />
+    <SolidColorBrush x:Key="PickerRowSelectedBrush" Color="#1F0B8A72" />
+    <SolidColorBrush x:Key="MenuSurfaceBrush" Color="#F8FBFDFF" />
+    <SolidColorBrush x:Key="MenuBorderBrush" Color="#2B000000" />
+    <SolidColorBrush x:Key="MenuHoverBrush" Color="#10000000" />
+    <SolidColorBrush x:Key="MenuSeparatorBrush" Color="#18000000" />
+    <SolidColorBrush x:Key="TooltipSurfaceBrush" Color="#F8FBFDFF" />
+    <SolidColorBrush x:Key="TooltipBorderBrush" Color="#26000000" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33000000" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#55000000" />
+    <SolidColorBrush x:Key="SwitchTrackBrush" Color="#FFC9CED6" />
+    <SolidColorBrush x:Key="SwitchKnobBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="SwitchKnobCheckedBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="SliderTrackBrush" Color="#22000000" />
+    <SolidColorBrush x:Key="SliderThumbHaloBrush" Color="#66000000" />
+    <SolidColorBrush x:Key="TodoCheckRingBrush" Color="#55000000" />
+    <SolidColorBrush x:Key="TodoCheckMarkBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#12A88C" />
+    <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#0B6F5E" />
+    <SolidColorBrush x:Key="AccentButtonForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="GhostButtonBackgroundBrush" Color="#0D000000" />
+    <SolidColorBrush x:Key="GhostButtonBorderBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="GhostButtonHoverBrush" Color="#14000000" />
+    <SolidColorBrush x:Key="GhostButtonPressedBrush" Color="#08000000" />
+    <SolidColorBrush x:Key="IconButtonHoverBrush" Color="#10000000" />
+    <SolidColorBrush x:Key="TabDotBrush" Color="#66000000" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#550B8A72" />
+    <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#1AB34157" />
+
+    <LinearGradientBrush x:Key="IslandSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#FFF8FAFC" />
+        <GradientStop Offset="0.52" Color="#FFF1F5FA" />
+        <GradientStop Offset="1" Color="#FFE7EDF5" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="IslandEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#44000000" />
+        <GradientStop Offset="0.45" Color="#18000000" />
+        <GradientStop Offset="1" Color="#08000000" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#0B8A72" />
+        <GradientStop Offset="1" Color="#3D6FD8" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="SettingsBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#FFF4F7FB" />
+        <GradientStop Offset="1" Color="#FFE7EDF4" />
+    </LinearGradientBrush>
+</ResourceDictionary>

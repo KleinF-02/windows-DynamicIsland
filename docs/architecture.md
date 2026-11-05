@@ -155,6 +155,17 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - `TodoStore` 使用 `%LOCALAPPDATA%\DynamicIsland\todos.json` 原子写入，最多 20 条，损坏文件回退为空。
 - 输入框获得焦点时只设置 `_editingTodo`，避免鼠标移出后编辑中的列表收起；不会改变固定状态。焦点离开、窗口失活或切换到紧凑态时清除该状态，再按固定/悬停条件决定是否收起。
 
+### 主题
+
+`Themes/Palette.Dark.xaml` 与 `Themes/Palette.Light.xaml` 各自定义同一组颜色和画刷；`Themes/Theme.xaml` 只保留样式，并使用 `DynamicResource` 引用调色板。`ThemeService` 读取：
+
+```text
+HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
+  AppsUseLightTheme
+```
+
+启动时在 `ApplicationIdle` 应用目标调色板；监听 `SystemEvents.UserPreferenceChanged`，并用 2 秒轮询兜底，因此 Windows 切换深/浅色时已打开的灵动岛、设置页和选择器都会即时换色。`DYNAMIC_ISLAND_THEME=light|dark` 可用于本地截图测试，不写入用户设置。
+
 ### Calendar
 
 `OutlookCalendarService` 优先读取 **Microsoft 365 网页版发布的 ICS 链接**，未配置链接时才回退桌面 COM。
@@ -164,7 +175,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 1. `IslandSettings.WebCalendarUrl` 非空时走网页路径；支持 `https://`、`webcal://`、`http(s)` 和本地 `.ics` 文件。
 2. 通过静态 `HttpClient` 下载，20 秒超时、自动重定向/解压，内容上限 8 MB；如果返回 HTML 登录页则给出“链接可能已过期”的可读错误。
 3. 使用 `Ical.Net.Calendar.Load` 解析 RFC 5545，并用 `GetOccurrences(today, tomorrow)` 展开重复日程。
-4. 跳过 `STATUS:CANCELLED`，将 `Summary / Start / End / IsAllDay / Location` 映射为 `CalendarEventItem`；如果发布源没有 `SUMMARY`，回退到 `DESCRIPTION` 的第一行，仍为空时显示“（无主题）”。所有主题都缺失时状态栏显示“主题未公开”。
+4. 跳过 `STATUS:CANCELLED`，将 `Summary / Start / End / IsAllDay / Location` 映射为 `CalendarEventItem`；如果发布源没有 `SUMMARY`，回退到 `DESCRIPTION` 的第一行，仍为空时显示“（无主题）”。所有主题都缺失时状态栏显示“主题未公开”。时间列使用独立的开始/结束两行时间块，开始时间加粗、结束时间弱化显示。
 5. ICS 链接包含私人令牌，只保存在本机设置里，不写入日志；不请求链接以外的服务。
 
 **桌面 COM 回退**

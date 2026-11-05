@@ -8,7 +8,7 @@
         WindowStyle="None"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource SettingsBackgroundBrush}"
+        Background="{DynamicResource SettingsBackgroundBrush}"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         FontFamily="{StaticResource AppFont}"
@@ -40,14 +40,14 @@
             </Grid.ColumnDefinitions>
 
             <Grid Width="28" Height="28" Margin="26,0,10,0" VerticalAlignment="Center">
-                <Ellipse Fill="{StaticResource AccentGradientBrush}" />
-                <Ellipse Width="9" Height="9" Fill="#FF081018" />
+                <Ellipse Fill="{DynamicResource AccentGradientBrush}" />
+                <Ellipse Width="9" Height="9" Fill="{DynamicResource AccentButtonForegroundBrush}" />
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Text="灵动岛" FontSize="13.5" FontWeight="SemiBold" />
                 <TextBlock Text="Dynamic Island for Windows 11"
                            FontSize="9.5"
-                           Foreground="{StaticResource TextMutedBrush}" />
+                           Foreground="{DynamicResource TextMutedBrush}" />
             </StackPanel>
             <Button Grid.Column="2"
                     Content="✕"
@@ -64,7 +64,7 @@
                       Padding="0,0,0,0">
             <StackPanel Margin="26,4,26,20">
                 <TextBlock Text="让桌面边缘" FontSize="25" FontWeight="SemiBold" />
-                <TextBlock Text="多一点呼吸感。" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                <TextBlock Text="多一点呼吸感。" FontSize="25" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
                 <TextBlock Text="把时间、电量与通知收进一颗胶囊。悬停展开，点击固定。"
                            Style="{StaticResource CaptionText}"
                            Margin="0,9,0,16" />
@@ -153,8 +153,8 @@
                         <TextBlock Text="适用于 Microsoft 365 网页版。在 Outlook 网页版依次打开：设置 → 日历 → 共享日历 → 发布日历，复制生成的 ICS 链接。"
                                    Style="{StaticResource CaptionText}"
                                    Margin="0,3,0,0" />
-                        <Border Background="#0BFFFFFF"
-                                BorderBrush="#22FFFFFF"
+                        <Border Background="{DynamicResource SettingsFieldBackgroundBrush}"
+                                BorderBrush="{DynamicResource SettingsFieldBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Height="32"
@@ -166,7 +166,7 @@
                         </Border>
                         <TextBlock Text="留空则尝试桌面版 Outlook。链接包含访问令牌，仅保存在本机设置中。"
                                    FontSize="9"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    TextWrapping="Wrap"
                                    Margin="0,6,0,0" />
                     </StackPanel>
@@ -198,7 +198,7 @@
                                 <TextBlock Text="{Binding OpacityLabel}"
                                            Width="42"
                                            FontSize="11.5"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            TextAlignment="Right"
                                            VerticalAlignment="Center"
                                            Typography.NumeralAlignment="Tabular" />
@@ -232,7 +232,7 @@
                                 <TextBlock Text="{Binding TopMarginLabel}"
                                            Width="48"
                                            FontSize="11.5"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            TextAlignment="Right"
                                            VerticalAlignment="Center"
                                            Typography.NumeralAlignment="Tabular" />
@@ -244,23 +244,23 @@
                 <Grid Margin="2,14,2,0">
                     <TextBlock Text="{Binding VersionText}"
                                FontSize="10"
-                               Foreground="{StaticResource TextMutedBrush}" />
+                               Foreground="{DynamicResource TextMutedBrush}" />
                     <TextBlock Text="设置仅保存在本机 · 网页日历需联网"
                                FontSize="10"
-                               Foreground="{StaticResource TextMutedBrush}"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                HorizontalAlignment="Right" />
                 </Grid>
             </StackPanel>
         </ScrollViewer>
 
         <Border Grid.Row="2"
-                Background="#66080A0F"
-                BorderBrush="#12FFFFFF"
+                Background="{DynamicResource SettingsOverlayBrush}"
+                BorderBrush="{DynamicResource SettingsFieldBorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid Margin="26,0">
                 <TextBlock Text="更改会在保存后立即生效"
                            FontSize="10"
-                           Foreground="{StaticResource TextMutedBrush}"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            VerticalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button Content="取消"

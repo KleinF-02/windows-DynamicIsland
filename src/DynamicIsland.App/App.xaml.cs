@@ -47,6 +47,8 @@ public partial class App : Application
             return;
         }
 
+        ThemeService.Initialize();
+
         try
         {
             var settingsPath = SettingsStore.DefaultPath;

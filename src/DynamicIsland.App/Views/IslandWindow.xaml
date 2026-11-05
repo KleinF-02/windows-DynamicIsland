@@ -24,7 +24,7 @@
 
     <Grid x:Name="Root" Margin="14">
         <!-- Shadow is a separate layer so text is not rasterized by the effect. -->
-        <Border CornerRadius="23" Background="#FF000000">
+        <Border CornerRadius="23" Background="{DynamicResource WindowShadowBrush}">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="24"
                                   ShadowDepth="5"
@@ -36,8 +36,8 @@
 
         <Border x:Name="Shell"
                 CornerRadius="23"
-                Background="{StaticResource IslandSurfaceBrush}"
-                BorderBrush="{StaticResource IslandEdgeBrush}"
+                Background="{DynamicResource IslandSurfaceBrush}"
+                BorderBrush="{DynamicResource IslandEdgeBrush}"
                 BorderThickness="1"
                 Cursor="Hand"
                 AllowDrop="True"
@@ -88,12 +88,12 @@
                                 </Style.Triggers>
                             </Style>
                         </Grid.Style>
-                        <Ellipse Width="16" Height="16" Fill="#16FFFFFF" />
-                        <Ellipse Width="7" Height="7" Fill="{StaticResource AccentGradientBrush}">
+                        <Ellipse Width="16" Height="16" Fill="{DynamicResource CompactDotBrush}" />
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentGradientBrush}">
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="8"
                                                   ShadowDepth="0"
-                                                  Color="#FF6FE7C8"
+                                                  Color="{DynamicResource AccentColor}"
                                                   Opacity="0.8" />
                             </Ellipse.Effect>
                         </Ellipse>
@@ -119,10 +119,10 @@
                                    MaxWidth="64"
                                    TextTrimming="CharacterEllipsis"
                                    ToolTip="{Binding UserName}" />
-                        <Border Width="1" Height="10" Background="#1FFFFFFF" Margin="9,0" />
+                        <Border Width="1" Height="10" Background="{DynamicResource CompactSeparatorBrush}" Margin="9,0" />
                         <TextBlock Text="{Binding Greeting}"
                                    FontSize="11.5"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
 
@@ -143,7 +143,7 @@
                                    Typography.NumeralAlignment="Tabular" />
                         <TextBlock Text="{Binding SecondsDisplay}"
                                    FontSize="10.5"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="1,2,0,0"
                                    Typography.NumeralAlignment="Tabular"
                                    Visibility="{Binding ShowSeconds, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -172,10 +172,10 @@
                             <Grid Width="90" Height="90">
                                 <Ellipse Width="80"
                                          Height="80"
-                                         Stroke="#2BFFFFFF"
+                                         Stroke="{DynamicResource CompactRingTrackBrush}"
                                          StrokeThickness="6" />
                                 <Path Data="{Binding CountdownRingGeometry}"
-                                      Stroke="{StaticResource AccentBrush}"
+                                      Stroke="{DynamicResource AccentBrush}"
                                       StrokeThickness="6"
                                       StrokeStartLineCap="Round"
                                       StrokeEndLineCap="Round"
@@ -204,7 +204,7 @@
                              Width="5"
                              Height="5"
                              Margin="10,0,0,0"
-                             Fill="{StaticResource AccentBrush}"
+                             Fill="{DynamicResource AccentBrush}"
                              VerticalAlignment="Center"
                              Visibility="{Binding IsPinned, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
@@ -241,10 +241,10 @@
                                        LineHeight="38"
                                        Typography.NumeralAlignment="Tabular"><Run Text="{Binding TimeText, Mode=OneWay}" /><Run Text="{Binding ExpandedSeconds, Mode=OneWay}"
                                                                                                                                                     FontSize="12"
-                                                                                                                                                    Foreground="{StaticResource TextSecondaryBrush}" /></TextBlock>
+                                                                                                                                                    Foreground="{DynamicResource TextSecondaryBrush}" /></TextBlock>
                             <TextBlock Text="{Binding DateText}"
                                        FontSize="11.5"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="1,1,0,0" />
                         </StackPanel>
 
@@ -260,7 +260,7 @@
                                             Height="14"
                                             HorizontalAlignment="Left"
                                             CornerRadius="4"
-                                            BorderBrush="#55FFFFFF"
+                                            BorderBrush="{DynamicResource BatteryOutlineBrush}"
                                             BorderThickness="1"
                                             Padding="2">
                                         <Border Height="8"
@@ -269,10 +269,10 @@
                                                 Width="{Binding BatteryFillWidth}">
                                             <Border.Style>
                                                 <Style TargetType="{x:Type Border}">
-                                                    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                                                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsCharging}" Value="True">
-                                                            <Setter Property="Background" Value="{StaticResource AccentBlueBrush}" />
+                                                            <Setter Property="Background" Value="{DynamicResource AccentBlueBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -283,18 +283,18 @@
                                             Height="6"
                                             HorizontalAlignment="Right"
                                             CornerRadius="0,1,1,0"
-                                            Background="#55FFFFFF" />
+                                            Background="{DynamicResource BatteryCapBrush}" />
                                 </Grid>
                             </StackPanel>
                             <TextBlock Text="{Binding PowerLabel}"
                                        FontSize="10"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        HorizontalAlignment="Right"
                                        Margin="0,4,0,0" />
                         </StackPanel>
                     </Grid>
 
-                    <Border Grid.Row="1" Height="1" Background="#14FFFFFF" Margin="0,10,0,10" />
+                    <Border Grid.Row="1" Height="1" Background="{DynamicResource HairlineBrush}" Margin="0,10,0,10" />
 
                     <Grid Grid.Row="2" Margin="0,0,0,4">
                         <Grid.RowDefinitions>
@@ -312,12 +312,12 @@
                                 <Border Width="3"
                                         Height="10"
                                         CornerRadius="1.5"
-                                        Background="{StaticResource AccentBrush}"
+                                        Background="{DynamicResource AccentBrush}"
                                         Margin="0,0,7,0" />
                                 <TextBlock Text="{Binding ActiveFunctionTitle}"
                                            FontSize="9.5"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource AccentBrush}" />
+                                           Foreground="{DynamicResource AccentBrush}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1"
@@ -336,7 +336,7 @@
                                 </StackPanel.Style>
                                 <TextBlock Text="{Binding ShortcutCountText}"
                                            FontSize="9"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
 
@@ -356,7 +356,7 @@
                                 </StackPanel.Style>
                                 <TextBlock Text="{Binding CalendarStatusText}"
                                            FontSize="9"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"
                                            ToolTip="若显示“主题未公开”，请在 Outlook 网页版重新发布日历，并将权限设为“可查看所有详细信息”。" />
@@ -389,7 +389,7 @@
                                 </StackPanel.Style>
                                 <TextBlock Text="{Binding TodoCountText}"
                                            FontSize="9"
-                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
@@ -397,8 +397,8 @@
                         <Border Grid.Row="1"
                                 Height="108"
                                 Margin="0,6,0,0"
-                                Background="#08FFFFFF"
-                                BorderBrush="#16FFFFFF"
+                                Background="{DynamicResource SubtleSurfaceBrush}"
+                                BorderBrush="{DynamicResource SubtleBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="4">
@@ -478,15 +478,15 @@
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Top"
                                                         Margin="0,4,0,0"
-                                                        Background="#10141C"
-                                                        BorderBrush="#20FFFFFF"
+                                                        Background="{DynamicResource ShortcutCardBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource ShortcutCardBorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="11">
                                                     <Grid>
                                                         <TextBlock Text="{Binding Initial}"
                                                                    FontSize="18"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="{StaticResource AccentBrush}"
+                                                                   Foreground="{DynamicResource AccentBrush}"
                                                                    HorizontalAlignment="Center"
                                                                    VerticalAlignment="Center" />
                                                         <Image Source="{Binding Icon}"
@@ -498,7 +498,7 @@
                                                 </Border>
                                                 <TextBlock Text="{Binding DisplayName}"
                                                            FontSize="8.5"
-                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Bottom"
                                                            Margin="0,0,0,2"
@@ -522,19 +522,19 @@
                                                 </StackPanel.Style>
                                                 <Border Width="48"
                                                         Height="48"
-                                                        Background="#06FFFFFF"
-                                                        BorderBrush="#28FFFFFF"
+                                                        Background="{DynamicResource ShortcutEmptyBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource ShortcutEmptyBorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="11">
                                                     <TextBlock Text="+"
                                                                FontSize="20"
-                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center" />
                                                 </Border>
                                                 <TextBlock Text="拖入 / 选择"
                                                            FontSize="8"
-                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                            HorizontalAlignment="Center"
                                                            Margin="0,2,0,0" />
                                             </StackPanel>
@@ -546,8 +546,8 @@
                         <Border Grid.Row="1"
                                 Height="108"
                                 Margin="0,6,0,0"
-                                Background="#08FFFFFF"
-                                BorderBrush="#16FFFFFF"
+                                Background="{DynamicResource SubtleSurfaceBrush}"
+                                BorderBrush="{DynamicResource SubtleBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="6">
@@ -577,11 +577,11 @@
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <TextBlock Text="正在读取 Calendar…"
                                                    FontSize="10.5"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                                    HorizontalAlignment="Center" />
                                         <TextBlock Text="首次连接可能需要几秒"
                                                    FontSize="9"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    HorizontalAlignment="Center"
                                                    Margin="0,3,0,0" />
                                     </StackPanel>
@@ -606,7 +606,7 @@
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Text="{Binding CalendarErrorMessage}"
                                                    FontSize="9.5"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    TextWrapping="Wrap"
                                                    TextAlignment="Center"
                                                    MaxHeight="34"
@@ -651,7 +651,7 @@
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
                                             <Path Data="M4,6 C4,4.9 4.9,4 6,4 L18,4 C19.1,4 20,4.9 20,6 L20,18 C20,19.1 19.1,20 18,20 L6,20 C4.9,20 4,19.1 4,18 Z M4,9 L20,9 M8,2 L8,6 M16,2 L16,6"
-                                                  Stroke="{StaticResource AccentBrush}"
+                                                  Stroke="{DynamicResource AccentBrush}"
                                                   StrokeThickness="1.4"
                                                   StrokeLineJoin="Round"
                                                   Fill="Transparent" />
@@ -663,7 +663,7 @@
                                                    Margin="0,4,0,0" />
                                         <TextBlock Text="Calendar 已连接"
                                                    FontSize="9"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    HorizontalAlignment="Center"
                                                    Margin="0,2,0,0" />
                                     </StackPanel>
@@ -685,31 +685,60 @@
                                         <ItemsControl ItemsSource="{Binding CalendarEvents}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#0BFFFFFF"
-                                                            BorderBrush="#12FFFFFF"
+                                                    <Border Background="{DynamicResource CalendarCardBackgroundBrush}"
+                                                            BorderBrush="{DynamicResource CalendarCardBorderBrush}"
                                                             BorderThickness="1"
                                                             CornerRadius="8"
                                                             Padding="7,4"
                                                             Margin="0,0,0,4">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="72" />
+                                                                <ColumnDefinition Width="58" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding TimeText}"
-                                                                       FontSize="8.8"
-                                                                       Foreground="{StaticResource AccentBrush}"
-                                                                       VerticalAlignment="Center" />
+                                                            <Border Background="{DynamicResource CalendarTimePillBackgroundBrush}"
+                                                                    BorderBrush="{DynamicResource CalendarTimePillBorderBrush}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="6"
+                                                                    Padding="4,3"
+                                                                    VerticalAlignment="Center"
+                                                                    ToolTip="{Binding TimeText}">
+                                                                <StackPanel>
+                                                                    <TextBlock Text="{Binding StartTimeText}"
+                                                                               FontSize="12.5"
+                                                                               FontWeight="SemiBold"
+                                                                               Foreground="{DynamicResource AccentBrush}"
+                                                                               HorizontalAlignment="Center"
+                                                                               Typography.NumeralAlignment="Tabular" />
+                                                                    <TextBlock Text="{Binding EndTimeText}"
+                                                                               FontSize="8.5"
+                                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                                               HorizontalAlignment="Center"
+                                                                               Margin="0,-1,0,0"
+                                                                               Typography.NumeralAlignment="Tabular">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="{x:Type TextBlock}">
+                                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding HasEndTime}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                                                            </Border>
                                                             <StackPanel Grid.Column="1">
                                                                 <TextBlock Text="{Binding Subject}"
                                                                            FontSize="10.5"
                                                                            FontWeight="SemiBold"
-                                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                                                            TextTrimming="CharacterEllipsis"
                                                                            ToolTip="{Binding Subject}" />
                                                                 <TextBlock Text="{Binding LocationText}"
                                                                            FontSize="8.5"
-                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                                            TextTrimming="CharacterEllipsis"
                                                                            Margin="0,1,0,0">
                                                                     <TextBlock.Style>
@@ -744,8 +773,8 @@
                                         </Style>
                                     </Grid.Style>
 
-                                    <Border Background="#FF0B0E14"
-                                            BorderBrush="#2E6FE7C8"
+                                    <Border Background="{DynamicResource CountdownSurfaceBrush}"
+                                            BorderBrush="{DynamicResource CountdownBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="10"
                                             Padding="10,5">
@@ -758,10 +787,10 @@
                                             <Grid Width="86" Height="86">
                                                 <Ellipse Width="80"
                                                          Height="80"
-                                                         Stroke="#1AFFFFFF"
+                                                         Stroke="{DynamicResource CountdownTrackBrush}"
                                                          StrokeThickness="4" />
                                                 <Path Data="{Binding CountdownRingGeometry}"
-                                                      Stroke="{StaticResource AccentBrush}"
+                                                      Stroke="{DynamicResource AccentBrush}"
                                                       StrokeThickness="4"
                                                       StrokeStartLineCap="Round"
                                                       StrokeEndLineCap="Round"
@@ -775,7 +804,7 @@
                                                                Typography.NumeralAlignment="Tabular" />
                                                     <TextBlock Text="剩余"
                                                                FontSize="8"
-                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
                                                                HorizontalAlignment="Center"
                                                                Margin="0,-2,0,0" />
                                                 </StackPanel>
@@ -787,7 +816,7 @@
                                                 <TextBlock Text="下一场会议"
                                                            FontSize="8.5"
                                                            FontWeight="SemiBold"
-                                                           Foreground="{StaticResource AccentBrush}" />
+                                                           Foreground="{DynamicResource AccentBrush}" />
                                                 <TextBlock Text="{Binding CountdownSubject}"
                                                            FontSize="11.5"
                                                            FontWeight="SemiBold"
@@ -795,7 +824,7 @@
                                                            Margin="0,3,0,0" />
                                                 <TextBlock Text="{Binding CountdownStartText}"
                                                            FontSize="9"
-                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                            Margin="0,2,0,0" />
                                             </StackPanel>
                                         </Grid>
@@ -808,8 +837,8 @@
                                 Grid.Row="1"
                                 Height="108"
                                 Margin="0,6,0,0"
-                                Background="#08FFFFFF"
-                                BorderBrush="#16FFFFFF"
+                                Background="{DynamicResource SubtleSurfaceBrush}"
+                                BorderBrush="{DynamicResource SubtleBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="6">
@@ -836,8 +865,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Background="#0BFFFFFF"
-                                            BorderBrush="#18FFFFFF"
+                                    <Border Background="{DynamicResource CalendarCardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource TodoInputBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="7"
                                             Padding="8,0">
@@ -852,7 +881,7 @@
                                                      AutomationProperties.Name="添加待办" />
                                             <TextBlock Text="添加待办，回车保存"
                                                        FontSize="9.5"
-                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
                                                        IsHitTestVisible="False"
                                                        VerticalAlignment="Center"
                                                        Margin="1,0,0,0">
@@ -882,7 +911,7 @@
                                             Padding="0"
                                             Margin="5,0,0,0"
                                             Style="{StaticResource IconButton}"
-                                            Foreground="{StaticResource AccentBrush}"
+                                            Foreground="{DynamicResource AccentBrush}"
                                             ToolTip="添加待办"
                                             AutomationProperties.Name="添加待办按钮"
                                             Click="AddTodo_Click" />
@@ -905,8 +934,8 @@
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Tag="TodoRow"
-                                                            Background="#0BFFFFFF"
-                                                            BorderBrush="#12FFFFFF"
+                                                            Background="{DynamicResource CalendarCardBackgroundBrush}"
+                                                            BorderBrush="{DynamicResource CalendarCardBorderBrush}"
                                                             BorderThickness="1"
                                                             CornerRadius="7"
                                                             Padding="6,3"
@@ -957,7 +986,7 @@
                                                    HorizontalAlignment="Center" />
                                         <TextBlock Text="输入后回车或点 + 添加"
                                                    FontSize="9"
-                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    HorizontalAlignment="Center"
                                                    Margin="0,2,0,0" />
                                     </StackPanel>
@@ -985,7 +1014,7 @@
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsShortcutsActive}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -999,7 +1028,7 @@
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsCalendarActive}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -1013,7 +1042,7 @@
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTodoActive}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -1024,7 +1053,7 @@
                     <Grid Grid.Row="4">
                         <TextBlock Text="{Binding FooterHint}"
                                    FontSize="9.5"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Bottom" />
                         <Button x:Name="PinButton"
                                 Click="PinButton_Click"
@@ -1038,16 +1067,16 @@
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GhostButton}">
                                     <Setter Property="FontSize" Value="9" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="4" Height="4" Fill="{StaticResource AccentBrush}" Margin="0,0,5,0" />
+                                <Ellipse Width="4" Height="4" Fill="{DynamicResource AccentBrush}" Margin="0,0,5,0" />
                                 <TextBlock Text="{Binding PinButtonText}" />
                             </StackPanel>
                         </Button>
@@ -1073,11 +1102,11 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Width="44" Height="44" VerticalAlignment="Top">
-                        <Ellipse Fill="#176FE7C8" />
-                        <Ellipse Width="36" Height="36" Fill="#0DFFFFFF" />
+                        <Ellipse Fill="{DynamicResource SettingsGlowBrush}" />
+                        <Ellipse Width="36" Height="36" Fill="{DynamicResource NotificationOrbBrush}" />
                         <Viewbox Width="21" Height="21">
                             <Path Data="M12,2 C8.686,2 6,4.686 6,8 L6,12.2 L4.4,15.4 C4.1,16 4.55,16.7 5.22,16.7 L18.78,16.7 C19.45,16.7 19.9,16 19.6,15.4 L18,12.2 L18,8 C18,4.686 15.314,2 12,2 Z M9.5,19 C9.85,20.16 10.85,21 12,21 C13.15,21 14.15,20.16 14.5,19 Z"
-                                  Stroke="{StaticResource AccentBrush}"
+                                  Stroke="{DynamicResource AccentBrush}"
                                   StrokeThickness="1.4"
                                   StrokeLineJoin="Round"
                                   Fill="Transparent" />
@@ -1097,13 +1126,13 @@
                         <TextBlock Grid.Row="1"
                                    Text="{Binding NotificationMessage}"
                                    FontSize="11.5"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap"
                                    Margin="0,4,0,0" />
                         <TextBlock Grid.Row="2"
                                    Text="点击关闭"
                                    FontSize="9.5"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    HorizontalAlignment="Right" />
                     </Grid>
                 </Grid>
