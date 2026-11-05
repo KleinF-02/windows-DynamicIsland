@@ -70,6 +70,7 @@ public partial class IslandWindow : Window
     private bool _editingTodo;
     private bool _editingTranslation;
     private bool _editingAgent;
+    private bool _agentFileDialogOpen;
     private DateTime _translationTypingHoldUntil;
     private DateTime _agentTypingHoldUntil;
     private bool _menuOpen;
@@ -196,7 +197,7 @@ public partial class IslandWindow : Window
         // TextBox still owns keyboard focus. Do not collapse during that case.
         _editingTodo = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned && !_hovering
+        if (_state == IslandVisualState.Expanded && !_pinned && !_agentFileDialogOpen && !_hovering
             && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive
             && !_menuOpen && !_dragActive && !_dragOutActive)
         {
@@ -258,11 +259,11 @@ public partial class IslandWindow : Window
         {
             SetState(IslandVisualState.Expanded, animate: true);
         }
-        else if (!_pinned && !_hovering && _state == IslandVisualState.Compact)
+        else if (!_pinned && !_agentFileDialogOpen && !_hovering && _state == IslandVisualState.Compact)
         {
             // Already compact; nothing else to do.
         }
-        else if (!_pinned && !_hovering)
+        else if (!_pinned && !_agentFileDialogOpen && !_hovering)
         {
             ScheduleCollapse();
         }
@@ -420,7 +421,7 @@ public partial class IslandWindow : Window
     {
         _hovering = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
+        if (_state == IslandVisualState.Expanded && !_agentFileDialogOpen && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -467,7 +468,7 @@ public partial class IslandWindow : Window
             {
                 _collapseTimer.Stop();
             }
-            else if (!_hovering && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
+            else if (!_agentFileDialogOpen && !_hovering && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
             {
                 ScheduleCollapse();
             }
@@ -538,7 +539,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
+        if (!_hovering && !_pinned && !_agentFileDialogOpen && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -723,7 +724,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
+        if (!_hovering && !_pinned && !_agentFileDialogOpen && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
@@ -965,7 +966,7 @@ public partial class IslandWindow : Window
         _editingTranslation = false;
         _translationTypingHoldUntil = DateTime.MinValue;
 
-        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
+        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_agentFileDialogOpen && !_menuOpen)
         {
             ScheduleCollapse();
         }
@@ -1021,6 +1022,7 @@ public partial class IslandWindow : Window
         if (_state == IslandVisualState.Expanded
             && !_hovering
             && !_pinned
+            && !_agentFileDialogOpen
             && !_editingTodo
             && !_menuOpen
             && !_dragActive
@@ -1042,7 +1044,7 @@ public partial class IslandWindow : Window
         _editingAgent = false;
         _agentTypingHoldUntil = DateTime.MinValue;
 
-        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
+        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_agentFileDialogOpen && !_menuOpen)
         {
             ScheduleCollapse();
         }
@@ -1109,6 +1111,55 @@ public partial class IslandWindow : Window
         _viewModel.PasteClipboardToAgent();
         AgentInputBox.Focus();
         e.Handled = true;
+    }
+
+    private async void AgentAttachFile_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (_viewModel.IsAgentBusy)
+        {
+            return;
+        }
+
+        _agentFileDialogOpen = true;
+        _collapseTimer.Stop();
+
+        try
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "选择要交给 AI Agent 分析的文件",
+                Filter = AgentFileReader.BuildDialogFilter(),
+                FilterIndex = 1,
+                Multiselect = true,
+                CheckFileExists = true
+            };
+
+            if (dialog.ShowDialog(this) != true)
+            {
+                return;
+            }
+
+            await _viewModel.AttachAgentFilesAsync(dialog.FileNames);
+        }
+        finally
+        {
+            _agentFileDialogOpen = false;
+            AgentInputBox.Focus();
+            ExtendAgentTypingHold();
+        }
+    }
+
+    private void AgentRemoveAttachment_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is Button { Tag: AgentAttachmentViewModel attachment })
+        {
+            _viewModel.RemoveAgentAttachment(attachment);
+            AgentInputBox.Focus();
+        }
     }
 
     private void AgentCopy_Click(object sender, RoutedEventArgs e)
@@ -1199,7 +1250,7 @@ public partial class IslandWindow : Window
 
                 _editingTodo = false;
 
-                if (!_pinned && !_hovering && _state == IslandVisualState.Expanded)
+                if (!_pinned && !_agentFileDialogOpen && !_hovering && _state == IslandVisualState.Expanded)
                 {
                     ScheduleCollapse();
                 }
@@ -1447,7 +1498,7 @@ public partial class IslandWindow : Window
         {
             _dragOutActive = false;
 
-            if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
+            if (!_hovering && !_pinned && !_agentFileDialogOpen && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
             {
                 ScheduleCollapse();
             }
@@ -1577,7 +1628,7 @@ public partial class IslandWindow : Window
     {
         _menuOpen = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive && _state == IslandVisualState.Expanded)
+        if (!_hovering && !_pinned && !_agentFileDialogOpen && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive && _state == IslandVisualState.Expanded)
         {
             ScheduleCollapse();
         }
@@ -1593,7 +1644,7 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _editingTodo || IsTranslationTypingHoldActive || IsAgentTypingHoldActive || _menuOpen || _dragActive || _dragOutActive
+        if (_agentFileDialogOpen || _hovering || _pinned || _editingTodo || IsTranslationTypingHoldActive || IsAgentTypingHoldActive || _menuOpen || _dragActive || _dragOutActive
             || _state != IslandVisualState.Expanded)
         {
             return;

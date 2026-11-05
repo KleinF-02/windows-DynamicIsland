@@ -1202,7 +1202,7 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="28" />
                                     <RowDefinition Height="*" />
-                                    <RowDefinition Height="64" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <Grid>
@@ -1292,18 +1292,88 @@
                                 </ScrollViewer>
 
                                 <Grid Grid.Row="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="8" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
 
-                                    <Border Background="{DynamicResource TodoInputBackgroundBrush}"
-                                            BorderBrush="{DynamicResource TodoInputBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="6,2">
-                                        <Grid>
+                                    <ItemsControl Grid.Row="0"
+                                                  ItemsSource="{Binding AgentAttachments}"
+                                                  Margin="0,0,0,6">
+                                        <ItemsControl.Style>
+                                            <Style TargetType="{x:Type ItemsControl}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasAgentAttachments}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ItemsControl.Style>
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource SubtleSurfaceBrush}"
+                                                        BorderBrush="{DynamicResource SubtleBorderBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6"
+                                                        Padding="6,3"
+                                                        Margin="0,0,6,4"
+                                                        ToolTip="{Binding ToolTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding DisplayLabel}"
+                                                                   FontSize="9.5"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   MaxWidth="250"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   VerticalAlignment="Center" />
+                                                        <Button Content="×"
+                                                                Tag="{Binding}"
+                                                                Style="{StaticResource GhostButton}"
+                                                                Width="18"
+                                                                Height="18"
+                                                                Padding="0"
+                                                                Margin="3,0,0,0"
+                                                                FontSize="11"
+                                                                ToolTip="移除附件"
+                                                                Click="AgentRemoveAttachment_Click" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button Grid.Column="0"
+                                                Content="📎"
+                                                Style="{StaticResource GhostButton}"
+                                                Width="38"
+                                                Height="52"
+                                                Padding="0"
+                                                FontSize="17"
+                                                Margin="0,0,6,0"
+                                                ToolTip="上传文件（文本、代码、.docx）"
+                                                AutomationProperties.Name="上传文件"
+                                                Click="AgentAttachFile_Click" />
+
+                                        <Border Grid.Column="1"
+                                                Background="{DynamicResource TodoInputBackgroundBrush}"
+                                                BorderBrush="{DynamicResource TodoInputBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="6,2">
+                                            <Grid>
                                             <TextBox x:Name="AgentInputBox"
                                                      Text="{Binding AgentInput, UpdateSourceTrigger=PropertyChanged}" TextChanged="AgentInput_TextChanged"
                                                      Style="{StaticResource SettingsTextBox}"
@@ -1339,7 +1409,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <Button Grid.Column="2"
+                                    <Button Grid.Column="3"
                                             Content="发送"
                                             Style="{StaticResource AccentButton}"
                                             Width="64"
@@ -1349,6 +1419,7 @@
                                             IsEnabled="{Binding CanSendAgent}"
                                             Click="AgentSend_Click" />
                                 </Grid>
+                            </Grid>
                             </Grid>
                         </Border>
                     </Grid>

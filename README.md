@@ -1,6 +1,6 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.5.1-6FE7C8)
+![version](https://img.shields.io/badge/version-0.6.0-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -9,15 +9,15 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**当前版本 `v0.5.1`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+**当前版本 `v0.6.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传文本、代码和 `.docx` 文件进行分析。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.5.1 更新记录](docs/releases/v0.5.1.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.6.0 更新记录](docs/releases/v0.6.0.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.5.1-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.6.0-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
 3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
@@ -42,7 +42,7 @@
 - 日历支持加载中、无日程、链接失效、未配置来源、重试和手动刷新
 - **待办事项**：在标签直接输入或修改，打勾后粒子散开、整行淡出并从列表删除；待办持久化到本机
 - **翻译**：第四个圆点；输入文字后调用本机 Ollama / LM Studio / llama.cpp 大模型，支持切换目标语言、Ctrl+Enter 翻译、复制结果；光标在功能区时保持展开，移出后按原有悬浮规则收起，翻译内容保留到下次展开
-- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，和翻译共用本地模型配置；激活时放大为工作区，并和翻译共用同一套悬停策略：光标在功能区内保持展开，移出后收起
+- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，支持上传文本、代码和 `.docx` 文件交给本地模型分析；聊天记录只显示文件名，文件正文只进入本次模型请求；激活时放大为工作区，并和翻译共用同一套悬停策略
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
 - 深色 / 浅色两套主题，自动跟随 Windows“应用模式”实时切换
 - 设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（默认 `0` = 贴顶）
@@ -91,7 +91,7 @@ ollama pull qwen2.5:7b
 
 翻译页切换目标语言后输入文字，点“翻译”或按 `Ctrl+Enter`；结果可以一键复制。切到翻译或 AI Agent 时窗口会放大到接近普通应用的 `720 × 560` 工作区，离开后恢复原来的展开尺寸。
 
-AI Agent 支持多轮对话，会携带最近 18 条消息作为上下文；可以粘贴剪贴板、复制最后一条回复或清空对话。它只读取对话文本并请求本机模型，不会直接执行 Windows 命令、读取文件或控制应用。
+AI Agent 支持多轮对话，会携带最近 18 条消息作为上下文；可以粘贴剪贴板、复制最后一条回复、清空对话，或通过回形针按钮上传文本、代码、`.docx` 文件。文件正文会随当前问题一起发送给本机模型，聊天记录只显示文件名；不会直接执行 Windows 命令、访问未选择的文件或控制应用。
 
 ### 翻译工作区
 
@@ -99,7 +99,7 @@ AI Agent 支持多轮对话，会携带最近 18 条消息作为上下文；可�
 
 ### AI Agent
 
-![AI Agent](docs/images/agent.png)
+![AI Agent 文件上传](docs/images/agent-upload.png)
 
 ### 浅色主题
 
@@ -162,8 +162,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.5.1-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.5.1-win-x64.zip
+artifacts/publish/DynamicIsland-0.6.0-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.6.0-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -192,7 +192,7 @@ artifacts/publish/DynamicIsland-0.5.1-win-x64.zip
 | 下一场会议前 5 分钟 | 自动显示圆环倒计时；会议开始时恢复日程列表 |
 | 翻译页点击“翻译” | 调用本地模型；`Ctrl+Enter` 也可触发，结果可复制 |
 | 切到翻译 / AI Agent | 窗口放大为接近普通应用的 `720 × 560` 工作区 |
-| Agent 对话 | 输入后发送；`Ctrl+Enter` 也可发送，对话在本次运行中保留 |
+| Agent 对话 | 输入后发送；`Ctrl+Enter` 也可发送；点回形针可附加文本、代码或 `.docx`，最多 3 个文件 |
 | 翻译 / Agent 移动鼠标 | 光标在功能区时保持展开；移出后收起，重新展开仍有上次输入和结果 |
 | 右键单击 | 打开菜单 |
 | 托盘图标双击 | 显示灵动岛 |
@@ -265,7 +265,7 @@ dynamic-island/
 - 代码仍保留 `Shell IDList Array` / `FileGroupDescriptorW` 解析，兼容能从其他 Shell 视图产生拖拽数据的场景。
 - 待办最多 20 条、每条 120 字；打勾即删除，没有“已完成历史”。待办保存在本机，不上传。
 - 翻译依赖本机已启动的 Ollama 或 OpenAI 兼容服务；没有模型时无法翻译。每次最多 2000 字，等待上限 90 秒，不做流式输出。
-- AI Agent 共用上述本地模型；每次输入最多 4000 字，携带最近 18 条对话作为上下文。对话只保存在当前运行的内存中，重启后清空；不会执行系统命令或访问文件。
+- AI Agent 共用上述本地模型；每次输入最多 4000 字，携带最近 18 条对话作为上下文。附件最多 3 个，单个文件最大 2 MB，单文件最多读取 12000 字、合计最多 24000 字，超出会截断。支持文本/代码和 `.docx`，PDF 暂不支持。对话和附件只保存在当前运行的内存中，重启后清空；不会执行系统命令或访问未选择的文件。
 - 胶囊启动、托盘唤出和悬停展开不抢焦点；点击胶囊（尤其是待办输入框）会激活窗口，这是键盘输入所必需的。
 - Outlook 网页日历通过**发布 ICS 链接**接入，不支持需要登录态的私有网页抓取；未使用 Microsoft Graph/OAuth。若组织禁用发布日历，需要额外做 Azure 应用注册和 Graph 授权。
 - ICS 链接以明文保存在本机设置中，包含访问令牌；请勿分享设置文件。桌面版 Outlook COM 仅在未配置 ICS 链接时作为回退。
@@ -291,7 +291,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.5.1`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.6.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 
