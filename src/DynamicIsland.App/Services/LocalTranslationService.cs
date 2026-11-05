@@ -12,7 +12,12 @@ public sealed record TranslationRequest(
 
 public sealed record TranslationResult(string Text, string Provider, string Model);
 
-public sealed record LocalChatMessage(string Role, string Content);
+public sealed record LocalChatImage(string MimeType, string Base64);
+
+public sealed record LocalChatMessage(
+    string Role,
+    string Content,
+    IReadOnlyList<LocalChatImage>? Images = null);
 
 public sealed class LocalTranslationException : Exception
 {
@@ -222,7 +227,57 @@ public sealed class LocalTranslationService
         CancellationToken cancellationToken)
     {
         var payloadMessages = messages
-            .Select(message => new { role = message.Role, content = message.Content })
+            .Select(message =>
+            {
+                var images = message.Images;
+                if (provider == Provider.Ollama)
+                {
+                    var item = new Dictionary<string, object?>
+                    {
+                        ["role"] = message.Role,
+                        ["content"] = message.Content
+                    };
+                    if (images is { Count: > 0 })
+                    {
+                        item["images"] = images.Select(image => image.Base64).ToArray();
+                    }
+
+                    return item;
+                }
+
+                object content = message.Content;
+                if (images is { Count: > 0 })
+                {
+                    var parts = new List<object>
+                    {
+                        new Dictionary<string, object?>
+                        {
+                            ["type"] = "text",
+                            ["text"] = message.Content
+                        }
+                    };
+
+                    foreach (var image in images)
+                    {
+                        parts.Add(new Dictionary<string, object?>
+                        {
+                            ["type"] = "image_url",
+                            ["image_url"] = new Dictionary<string, object?>
+                            {
+                                ["url"] = $"data:{image.MimeType};base64,{image.Base64}"
+                            }
+                        });
+                    }
+
+                    content = parts;
+                }
+
+                return new Dictionary<string, object?>
+                {
+                    ["role"] = message.Role,
+                    ["content"] = content
+                };
+            })
             .ToArray();
 
         object payload = provider == Provider.Ollama

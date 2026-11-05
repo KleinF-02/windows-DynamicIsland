@@ -8,7 +8,9 @@ public sealed class AgentAttachmentViewModel
         string content,
         long bytes,
         bool isTruncated,
-        string kind)
+        string kind,
+        string? imageBase64 = null,
+        string? imageMimeType = null)
     {
         FilePath = filePath;
         FileName = fileName;
@@ -16,6 +18,8 @@ public sealed class AgentAttachmentViewModel
         Bytes = bytes;
         IsTruncated = isTruncated;
         Kind = kind;
+        ImageBase64 = imageBase64;
+        ImageMimeType = imageMimeType;
     }
 
     public string FilePath { get; }
@@ -29,6 +33,12 @@ public sealed class AgentAttachmentViewModel
     public bool IsTruncated { get; }
 
     public string Kind { get; }
+
+    public string? ImageBase64 { get; }
+
+    public string? ImageMimeType { get; }
+
+    public bool IsImage => !string.IsNullOrWhiteSpace(ImageBase64);
 
     public string SizeText => Bytes >= 1024 * 1024
         ? $"{Bytes / 1024.0 / 1024.0:0.0} MB"

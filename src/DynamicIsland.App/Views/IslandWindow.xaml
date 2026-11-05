@@ -1363,7 +1363,7 @@
                                                 Padding="0"
                                                 FontSize="17"
                                                 Margin="0,0,6,0"
-                                                ToolTip="上传文件（文本、代码、.docx）"
+                                                ToolTip="上传图片、文本、代码或 Office 文件"
                                                 AutomationProperties.Name="上传文件"
                                                 Click="AgentAttachFile_Click" />
 

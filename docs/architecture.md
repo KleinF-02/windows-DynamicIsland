@@ -218,12 +218,13 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 1. 发送时把用户消息加入集合，状态变为“正在思考”，请求期间禁用发送。
 2. 发给本地模型的 system prompt 说明当前时间、回答语言，以及不能执行系统命令或控制应用；附件文字被明确标记为不可信数据。
 3. 上下文由 system + 最近 18 条 user/assistant 消息组成，当前问题单独追加；输入上限 4000 字；请求复用 `LocalTranslationService.CompleteAsync` 的 Ollama / OpenAI 兼容双协议。
-4. 文件按钮打开 `OpenFileDialog`，`AgentFileReader` 读取文本/代码或解压 `.docx` 的 `word/document.xml`；最多 3 个、单个 2 MB、单文件 12000 字、合计 24000 字，超出截断。
-5. 聊天记录只保存“问题 + 文件名”，文件正文只拼进当前模型请求，避免后续 18 条上下文反复膨胀。
-6. 回复追加为 assistant 气泡；`CollectionChanged` 触发滚动到底部；附件在发送后清空。
-7. 支持粘贴剪贴板、复制最后一条回复和清空对话；取消 / 清空 / 窗口停止都会取消未完成请求。
-8. Agent 与翻译共用设置里的本地模型地址和模型名；对话、附件文字不写入磁盘，重启后清空。
-9. 常见失败包括服务未启动、没有加载模型、模型名错误和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
+4. 文件按钮打开 `OpenFileDialog`，`AgentFileReader` 读取文本/代码、解压 Office Open XML 文档的 XML，或把图片等比缩到最长边 1600px 后转为 PNG；最多 3 个，文本 4 MB、图片 12 MB、Office 16 MB，单文件 24000 字、合计 48000 字，超出截断。
+5. 图片以 `LocalChatImage` 传给 `LocalTranslationService`：Ollama 放在 `images` 数组，OpenAI 兼容协议使用 `image_url` data URI；文本附件拼进当前用户消息。
+6. 聊天记录只保存“问题 + 文件名”，文件正文和图片只进入当前模型请求，避免后续 18 条上下文反复膨胀。
+7. 回复追加为 assistant 气泡；`CollectionChanged` 触发滚动到底部；附件在发送后清空。
+8. 支持粘贴剪贴板、复制最后一条回复和清空对话；取消 / 清空 / 窗口停止都会取消未完成请求。
+9. Agent 与翻译共用设置里的本地模型地址和模型名；对话、附件文字和图片不写入磁盘，重启后清空。
+10. 常见失败包括服务未启动、没有加载模型、模型名错误、模型不支持视觉输入和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
 
 ### 开机启动
 
