@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using DynamicIsland.App.Interop;
 using DynamicIsland.App.Services;
@@ -42,6 +43,8 @@ public partial class IslandWindow : Window
     private readonly DispatcherTimer _startMenuGuardTimer;
     private int _boundsAnimationId;
     private DateTime _nativeHeightStart;
+    private BlurEffect? _transitionBlur;
+    private int _transitionBlurId;
     private double _nativeWidthFrom;
     private double _nativeWidthTo;
     private double _nativeHeightFrom;
@@ -802,6 +805,7 @@ public partial class IslandWindow : Window
         // never pin state. Hovering the expanded window keeps it open; leaving
         // follows the normal collapse timer.
         var wasWorkspace = _viewModel.IsWorkspaceActive;
+        var previousFunction = _viewModel.ActiveFunction;
 
         if (_viewModel.IsTranslateActive && function != FunctionTab.Translate)
         {
@@ -820,6 +824,79 @@ public partial class IslandWindow : Window
         {
             PositionWindow(animate: true);
         }
+
+        if (_state == IslandVisualState.Expanded
+            && previousFunction != function
+            && _settings.AnimationsEnabled)
+        {
+            AnimateFunctionContent();
+            StartTransitionBlur(peakRadius: 4.0, durationMs: 240);
+        }
+    }
+
+    private void AnimateFunctionContent()
+    {
+        FunctionContentHost.BeginAnimation(OpacityProperty, null);
+        FunctionContentHost.Opacity = 1;
+
+        var fade = new DoubleAnimation(0.72, 1, TimeSpan.FromMilliseconds(180))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        Timeline.SetDesiredFrameRate(fade, 60);
+        FunctionContentHost.BeginAnimation(OpacityProperty, fade);
+    }
+
+    private void StartTransitionBlur(double peakRadius, int durationMs, int beginMs = 0)
+    {
+        // Rendering tier 2 is hardware accelerated; on software/remote sessions
+        // prefer the existing fade/scale transition rather than dropping frames.
+        if (!_settings.AnimationsEnabled || (RenderCapability.Tier >> 16) < 2)
+        {
+            return;
+        }
+
+        var id = ++_transitionBlurId;
+        var blur = _transitionBlur ??= new BlurEffect
+        {
+            KernelType = KernelType.Gaussian,
+            RenderingBias = RenderingBias.Performance
+        };
+
+        ContentRoot.Effect = blur;
+        blur.BeginAnimation(BlurEffect.RadiusProperty, null);
+        blur.Radius = 0;
+
+        var animation = new DoubleAnimationUsingKeyFrames
+        {
+            BeginTime = TimeSpan.FromMilliseconds(beginMs),
+            Duration = TimeSpan.FromMilliseconds(durationMs),
+            FillBehavior = FillBehavior.Stop
+        };
+        animation.KeyFrames.Add(new EasingDoubleKeyFrame(
+            peakRadius,
+            KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(45)),
+            new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+        animation.KeyFrames.Add(new EasingDoubleKeyFrame(
+            0,
+            KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(durationMs)),
+            new CubicEase { EasingMode = EasingMode.EaseOut }));
+
+        animation.Completed += (_, _) =>
+        {
+            if (id != _transitionBlurId)
+            {
+                return;
+            }
+
+            blur.BeginAnimation(BlurEffect.RadiusProperty, null);
+            blur.Radius = 0;
+            ContentRoot.Effect = null;
+            _transitionBlur = null;
+        };
+
+        Timeline.SetDesiredFrameRate(animation, 60);
+        blur.BeginAnimation(BlurEffect.RadiusProperty, animation);
     }
 
     private void CalendarTab_Click(object sender, RoutedEventArgs e)
@@ -1469,6 +1546,14 @@ public partial class IslandWindow : Window
         if (changed || _activeView != GetView(state))
         {
             SwitchContent(state, shouldAnimate);
+
+            if (shouldAnimate && changed)
+            {
+                StartTransitionBlur(
+                    peakRadius: state == IslandVisualState.Compact ? 4.5 : 3.5,
+                    durationMs: 260,
+                    beginMs: state == IslandVisualState.Compact ? 20 : 0);
+            }
         }
     }
 
@@ -1564,19 +1649,20 @@ public partial class IslandWindow : Window
         _nativeHeightDuration = duration;
         _nativeHeightEase = ease;
 
-        BeginAnimation(
-            WidthProperty,
-            new DoubleAnimation(fromWidth, width, duration)
-            {
-                EasingFunction = ease,
-                FillBehavior = FillBehavior.Stop
-            });
+        var widthAnimation = new DoubleAnimation(fromWidth, width, duration)
+        {
+            EasingFunction = ease,
+            FillBehavior = FillBehavior.Stop
+        };
+        Timeline.SetDesiredFrameRate(widthAnimation, 60);
+        BeginAnimation(WidthProperty, widthAnimation);
 
         var heightAnimation = new DoubleAnimation(fromHeight, height, duration)
         {
             EasingFunction = ease,
             FillBehavior = FillBehavior.Stop
         };
+        Timeline.SetDesiredFrameRate(heightAnimation, 60);
         heightAnimation.Completed += (_, _) =>
         {
             if (animationId != _boundsAnimationId)
@@ -1594,13 +1680,13 @@ public partial class IslandWindow : Window
         BeginAnimation(HeightProperty, heightAnimation);
         _heightSyncTimer.Start();
 
-        BeginAnimation(
-            LeftProperty,
-            new DoubleAnimation(fromLeft, left, duration)
-            {
-                EasingFunction = ease,
-                FillBehavior = FillBehavior.Stop
-            });
+        var leftAnimation = new DoubleAnimation(fromLeft, left, duration)
+        {
+            EasingFunction = ease,
+            FillBehavior = FillBehavior.Stop
+        };
+        Timeline.SetDesiredFrameRate(leftAnimation, 60);
+        BeginAnimation(LeftProperty, leftAnimation);
     }
 
     /// <summary>
