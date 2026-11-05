@@ -57,6 +57,10 @@
     <SolidColorBrush x:Key="PickerListBorderBrush" Color="#1A000000" />
     <SolidColorBrush x:Key="PickerRowHoverBrush" Color="#0F000000" />
     <SolidColorBrush x:Key="PickerRowSelectedBrush" Color="#1F0B8A72" />
+    <SolidColorBrush x:Key="AgentUserBubbleBrush" Color="#240B8A72" />
+    <SolidColorBrush x:Key="AgentUserBubbleBorderBrush" Color="#4A0B8A72" />
+    <SolidColorBrush x:Key="AgentAssistantBubbleBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="AgentAssistantBubbleBorderBrush" Color="#1A000000" />
     <SolidColorBrush x:Key="MenuSurfaceBrush" Color="#F8FBFDFF" />
     <SolidColorBrush x:Key="MenuBorderBrush" Color="#2B000000" />
     <SolidColorBrush x:Key="MenuHoverBrush" Color="#10000000" />

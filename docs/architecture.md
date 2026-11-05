@@ -51,7 +51,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 | --- | --- | --- |
 | Compact | `248 × 46` | `276 × 74` |
 | Expanded | `424 × 284` | `452 × 312` |
-| Expanded + 翻译工作区 | `720 × 560` | `748 × 588` |
+| Expanded + 工作区（翻译 / AI Agent） | `720 × 560` | `748 × 588` |
 | Notification | `400 × 118` | `428 × 146` |
 
 外窗四周各留 `14 DIP` 给 WPF 阴影。窗口本身是 `AllowsTransparency=True` 的透明分层窗口，视觉上只有胶囊本体是实心。
@@ -202,7 +202,18 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 4. 目标语言支持中文、English、日本語、한국어；UI 只保留输入/结果两个区域，Ctrl+Enter 触发，复制按钮写入剪贴板。
 5. 请求支持取消：切换目标语言后重新翻译会取消旧请求；窗口停止时也会取消。超时 90 秒。
 6. 翻译页不改变用户固定状态：光标在展开窗口内时沿用普通悬停保持展开，移出后沿用普通收起规则。`TranslationInput / TranslationOutput` 保存在 ViewModel 中，收起或切换标签不会清空，重新展开仍保留上次内容。
-7. 翻译标签激活时，`IslandMetrics` 使用 `720 × 560` 的工作区尺寸；切回其他标签时 `SelectFunction` 重新调用 `PositionWindow`，动画恢复到 `424 × 284`。展开内容的 `Grid` 行改为可伸缩，翻译面板随之填满窗口，其他面板仍保持 108 高。
+7. 翻译 / AI Agent 标签激活时，`IslandMetrics` 使用 `720 × 560` 的工作区尺寸；切回其他标签时 `SelectFunction` 重新调用 `PositionWindow`，动画恢复到 `424 × 284`。展开内容的 `Grid` 行改为可伸缩，工作区面板随之填满窗口，其他面板仍保持 108 高。
+
+### AI Agent
+
+`AgentMessageViewModel` 保存角色、文本、时间和左右对齐；`AgentMessages` 是当前运行期的会话集合，首条是本地 Agent 的固定问候。
+
+1. 发送时把用户消息加入集合，状态变为“正在思考”，请求期间禁用发送。
+2. 发给本地模型的 system prompt 说明当前时间、回答语言，以及不能执行系统命令、访问文件或控制应用。
+3. 上下文由 system + 最近 18 条 user/assistant 消息组成，输入上限 4000 字；请求复用 `LocalTranslationService.CompleteAsync` 的 Ollama / OpenAI 兼容双协议。
+4. 回复追加为 assistant 气泡；`CollectionChanged` 触发滚动到底部。
+5. 支持粘贴剪贴板、复制最后一条回复和清空对话；取消 / 清空 / 窗口停止都会取消未完成请求。
+6. Agent 与翻译共用设置里的本地模型地址和模型名；对话不写入磁盘，重启后清空。
 6. 常见失败包括服务未启动、没有加载模型、模型名错误和 HTTP 非 2xx；错误显示在翻译页状态文字中并写入本机日志。
 
 ### 开机启动

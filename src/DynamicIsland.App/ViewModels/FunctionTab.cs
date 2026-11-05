@@ -5,5 +5,6 @@ public enum FunctionTab
     Shortcuts,
     Calendar,
     Todo,
-    Translate
+    Translate,
+    Agent
 }

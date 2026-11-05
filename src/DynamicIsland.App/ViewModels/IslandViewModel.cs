@@ -21,7 +21,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _powerTimer;
     private readonly OutlookCalendarService _calendarService = new();
-    private readonly LocalTranslationService _translationService = new();
+    private readonly LocalTranslationService _localModelService = new();
     private readonly TodoStore _todoStore = new();
     private readonly ShortcutStore _shortcutStore = new();
     private IslandSettings _settings;
@@ -60,7 +60,15 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private bool _isTranslating;
     private int _translationRequestId;
     private CancellationTokenSource? _translationCts;
+    private string _agentInput = string.Empty;
+    private string _agentStatus = "本地模型 · 等待提问";
+    private bool _isAgentBusy;
+    private int _agentRequestId;
+    private CancellationTokenSource? _agentCts;
     private string _newTodoText = string.Empty;
+
+    private const string AgentGreeting =
+        "你好，我是本地 AI Agent。可以问我问题、整理思路、写代码或分析文本。所有请求只发送到本机模型。";
 
     private static readonly string[] TranslationTargets = ["中文", "English", "日本語", "한국어"];
 
@@ -85,6 +93,8 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromMilliseconds(100)
         };
         _calendarCountdownTimer.Tick += OnCalendarCountdownTick;
+
+        AgentMessages.Add(new AgentMessageViewModel(AgentGreeting, isUser: false));
 
         RefreshClock();
         RefreshPower();
@@ -225,7 +235,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _translationService.TranslateAsync(
+            var result = await _localModelService.TranslateAsync(
                 new TranslationRequest(
                     TranslationInput,
                     _translationTarget,
@@ -293,6 +303,182 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(CanTranslate));
     }
 
+    public string AgentInput
+    {
+        get => _agentInput;
+        set
+        {
+            var text = value ?? string.Empty;
+            if (text.Length > 4000)
+            {
+                text = text[..4000];
+            }
+
+            if (SetProperty(ref _agentInput, text))
+            {
+                OnPropertyChanged(nameof(CanSendAgent));
+                OnPropertyChanged(nameof(IsAgentInputEmpty));
+            }
+        }
+    }
+
+    public bool IsAgentInputEmpty => string.IsNullOrWhiteSpace(AgentInput);
+
+    public string AgentStatus
+    {
+        get => _agentStatus;
+        private set => SetProperty(ref _agentStatus, value);
+    }
+
+    public bool IsAgentBusy => _isAgentBusy;
+
+    public bool CanSendAgent => !_isAgentBusy && !string.IsNullOrWhiteSpace(AgentInput);
+
+    public async Task SendAgentMessageAsync()
+    {
+        var text = AgentInput.Trim();
+        if (text.Length == 0 || _isAgentBusy)
+        {
+            return;
+        }
+
+        AgentInput = string.Empty;
+        AgentMessages.Add(new AgentMessageViewModel(text, isUser: true));
+
+        var requestId = ++_agentRequestId;
+        _agentCts?.Cancel();
+        _agentCts?.Dispose();
+        var cts = new CancellationTokenSource();
+        _agentCts = cts;
+
+        _isAgentBusy = true;
+        OnPropertyChanged(nameof(IsAgentBusy));
+        OnPropertyChanged(nameof(CanSendAgent));
+        AgentStatus = "AI Agent 正在思考…";
+
+        try
+        {
+            var messages = new List<LocalChatMessage>
+            {
+                new("system", BuildAgentSystemPrompt())
+            };
+
+            foreach (var message in AgentMessages.Skip(1).TakeLast(18))
+            {
+                messages.Add(new LocalChatMessage(
+                    message.IsUser ? "user" : "assistant",
+                    message.Text));
+            }
+
+            var result = await _localModelService.CompleteAsync(
+                messages,
+                _settings.LocalLlmEndpoint,
+                _settings.LocalLlmModel,
+                cts.Token);
+
+            if (requestId != _agentRequestId)
+            {
+                return;
+            }
+
+            AgentMessages.Add(new AgentMessageViewModel(result.Text, isUser: false));
+            AgentStatus = $"完成 · {result.Provider} · {result.Model}";
+        }
+        catch (OperationCanceledException) when (requestId == _agentRequestId)
+        {
+            AgentStatus = "已取消";
+        }
+        catch (Exception ex) when (requestId == _agentRequestId)
+        {
+            AgentStatus = ex.Message;
+        }
+        finally
+        {
+            if (requestId == _agentRequestId)
+            {
+                _isAgentBusy = false;
+                _agentCts = null;
+                cts.Dispose();
+                OnPropertyChanged(nameof(IsAgentBusy));
+                OnPropertyChanged(nameof(CanSendAgent));
+            }
+        }
+    }
+
+    public void ClearAgentChat()
+    {
+        CancelAgent();
+        AgentMessages.Clear();
+        AgentMessages.Add(new AgentMessageViewModel(AgentGreeting, isUser: false));
+        AgentInput = string.Empty;
+        AgentStatus = "本地模型 · 等待提问";
+    }
+
+    public bool TryCopyAgentReply()
+    {
+        var reply = AgentMessages.LastOrDefault(message => !message.IsUser);
+        if (reply is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            System.Windows.Clipboard.SetText(reply.Text);
+            AgentStatus = "已复制最后一条回复";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            AgentStatus = $"复制失败：{ex.Message}";
+            return false;
+        }
+    }
+
+    public bool PasteClipboardToAgent()
+    {
+        try
+        {
+            var text = System.Windows.Clipboard.GetText();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                AgentStatus = "剪贴板没有文字";
+                return false;
+            }
+
+            AgentInput = text;
+            AgentStatus = "已粘贴剪贴板内容";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            AgentStatus = $"读取剪贴板失败：{ex.Message}";
+            return false;
+        }
+    }
+
+    public void CancelAgent()
+    {
+        _agentRequestId++;
+        _agentCts?.Cancel();
+        _agentCts?.Dispose();
+        _agentCts = null;
+        _isAgentBusy = false;
+        OnPropertyChanged(nameof(IsAgentBusy));
+        OnPropertyChanged(nameof(CanSendAgent));
+    }
+
+    private static string BuildAgentSystemPrompt()
+    {
+        return "You are \"灵动岛 AI Agent\", a helpful local desktop assistant. "
+               + "Answer in the user's language. Be concise but complete. "
+               + "You can help with writing, coding, analysis, planning, summarization and translation. "
+               + "You cannot execute Windows commands, access local files, or control apps; "
+               + "when a task requires that, explain the exact steps instead. "
+               + "Plain text and Markdown are supported. "
+               + $"Current local time: {DateTime.Now:yyyy-MM-dd HH:mm}.";
+    }
+
     public FunctionTab ActiveFunction => _activeFunction;
 
     public bool IsShortcutsActive => _activeFunction == FunctionTab.Shortcuts;
@@ -303,12 +489,19 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public bool IsTranslateActive => _activeFunction == FunctionTab.Translate;
 
+    public bool IsAgentActive => _activeFunction == FunctionTab.Agent;
+
+    public bool IsWorkspaceActive => IsTranslateActive || IsAgentActive;
+
+    public ObservableCollection<AgentMessageViewModel> AgentMessages { get; } = new();
+
     public string ActiveFunctionTitle => _activeFunction switch
     {
         FunctionTab.Shortcuts => "常用软件",
         FunctionTab.Calendar => "Calendar",
         FunctionTab.Todo => "待办事项",
         FunctionTab.Translate => "翻译",
+        FunctionTab.Agent => "AI Agent",
         _ => "功能"
     };
 
@@ -318,6 +511,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         FunctionTab.Calendar => "今日日程 · 点击圆点切换",
         FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
         FunctionTab.Translate => "本地模型翻译 · 悬停保持展开 · 移出后收起",
+        FunctionTab.Agent => "本地 AI Agent · 对话只发送到本机模型",
         _ => "点击圆点切换"
     };
 
@@ -455,6 +649,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         _powerTimer.Stop();
         _calendarCountdownTimer.Stop();
         CancelTranslation();
+        CancelAgent();
     }
 
     /// <summary>
@@ -716,6 +911,8 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(IsCalendarActive));
             OnPropertyChanged(nameof(IsTodoActive));
             OnPropertyChanged(nameof(IsTranslateActive));
+            OnPropertyChanged(nameof(IsAgentActive));
+            OnPropertyChanged(nameof(IsWorkspaceActive));
             OnPropertyChanged(nameof(ActiveFunctionTitle));
             OnPropertyChanged(nameof(FooterHint));
         }

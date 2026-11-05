@@ -78,6 +78,7 @@ public partial class IslandWindow : Window
         _viewModel = new IslandViewModel(_settings);
         DataContext = _viewModel;
         _activeView = CompactView;
+        _viewModel.AgentMessages.CollectionChanged += AgentMessages_CollectionChanged;
 
         Topmost = _settings.AlwaysOnTop;
         Opacity = _settings.Opacity;
@@ -786,11 +787,11 @@ public partial class IslandWindow : Window
 
     private void SelectFunction(FunctionTab function)
     {
-        var wasTranslating = _viewModel.IsTranslateActive;
+        var wasWorkspace = _viewModel.IsWorkspaceActive;
         _viewModel.SelectFunction(function);
 
         if (_state == IslandVisualState.Expanded
-            && wasTranslating != _viewModel.IsTranslateActive)
+            && wasWorkspace != _viewModel.IsWorkspaceActive)
         {
             PositionWindow(animate: true);
         }
@@ -811,6 +812,13 @@ public partial class IslandWindow : Window
     private void TranslateTab_Click(object sender, RoutedEventArgs e)
     {
         SelectFunction(FunctionTab.Translate);
+        e.Handled = true;
+    }
+
+    private void AgentTab_Click(object sender, RoutedEventArgs e)
+    {
+        SelectFunction(FunctionTab.Agent);
+        AgentInputBox.Focus();
         e.Handled = true;
     }
 
@@ -841,6 +849,61 @@ public partial class IslandWindow : Window
 
         e.Handled = true;
         await _viewModel.TranslateAsync();
+    }
+
+    private async void AgentSend_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        await SendAgentMessageAsync();
+    }
+
+    private async void AgentInput_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        await SendAgentMessageAsync();
+    }
+
+    private async Task SendAgentMessageAsync()
+    {
+        await _viewModel.SendAgentMessageAsync();
+        AgentInputBox.Focus();
+    }
+
+    private void AgentPaste_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.PasteClipboardToAgent();
+        AgentInputBox.Focus();
+        e.Handled = true;
+    }
+
+    private void AgentCopy_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.TryCopyAgentReply();
+        e.Handled = true;
+    }
+
+    private void AgentClear_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ClearAgentChat();
+        AgentInputBox.Focus();
+        e.Handled = true;
+    }
+
+    private void AgentMessages_CollectionChanged(
+        object? sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Background,
+            new Action(() =>
+            {
+                AgentScroll.ScrollToEnd();
+            }));
     }
 
     private void AddTodo_Click(object sender, RoutedEventArgs e)
@@ -1353,7 +1416,7 @@ public partial class IslandWindow : Window
     private void PositionWindow(bool animate)
     {
         var screen = ResolveScreen();
-        var outer = IslandMetrics.Outer(_state, _viewModel.IsTranslateActive);
+        var outer = IslandMetrics.Outer(_state, _viewModel.IsWorkspaceActive);
         var source = PresentationSource.FromVisual(this);
         var fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
 

@@ -14,18 +14,18 @@ public static class IslandMetrics
     /// <summary>Larger Expanded footprint used by the translation workspace.</summary>
     public static IslandSize Translation { get; } = new(720, 560);
 
-    public static IslandSize Content(IslandVisualState state, bool translationWorkspace = false) => state switch
+    public static IslandSize Content(IslandVisualState state, bool workspace = false) => state switch
     {
         IslandVisualState.Compact => new IslandSize(248, 46),
-        IslandVisualState.Expanded when translationWorkspace => Translation,
+        IslandVisualState.Expanded when workspace => Translation,
         IslandVisualState.Expanded => new IslandSize(424, 284),
         IslandVisualState.Notification => new IslandSize(400, 118),
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
     };
 
-    public static IslandSize Outer(IslandVisualState state, bool translationWorkspace = false)
+    public static IslandSize Outer(IslandVisualState state, bool workspace = false)
     {
-        var content = Content(state, translationWorkspace);
+        var content = Content(state, workspace);
         return new IslandSize(
             content.Width + (ShadowPadding * 2),
             content.Height + (ShadowPadding * 2));

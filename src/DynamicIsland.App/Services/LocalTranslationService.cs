@@ -12,6 +12,8 @@ public sealed record TranslationRequest(
 
 public sealed record TranslationResult(string Text, string Provider, string Model);
 
+public sealed record LocalChatMessage(string Role, string Content);
+
 public sealed class LocalTranslationException : Exception
 {
     public LocalTranslationException(string message)
@@ -47,9 +49,40 @@ public sealed class LocalTranslationService
             throw new LocalTranslationException("请先输入要翻译的文字。");
         }
 
-        var endpoint = string.IsNullOrWhiteSpace(request.Endpoint)
+        var target = MapLanguage(request.TargetLanguage);
+        var systemPrompt =
+            $"You are a precise translation engine. Translate the user's text into {target}. "
+            + "Preserve line breaks, markdown, code, URLs and proper names. "
+            + "Return only the translated text, without explanations or quotes.";
+
+        return await CompleteAsync(
+            [
+                new LocalChatMessage("system", systemPrompt),
+                new LocalChatMessage("user", request.Text)
+            ],
+            request.Endpoint,
+            request.Model,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends a complete role/content conversation to the local model. Used by
+    /// translation and by the multi-turn AI agent workspace.
+    /// </summary>
+    public async Task<TranslationResult> CompleteAsync(
+        IReadOnlyList<LocalChatMessage> messages,
+        string endpointValue,
+        string modelValue,
+        CancellationToken cancellationToken = default)
+    {
+        if (messages.Count == 0)
+        {
+            throw new LocalTranslationException("没有可发送的消息。");
+        }
+
+        var endpoint = string.IsNullOrWhiteSpace(endpointValue)
             ? "http://127.0.0.1:11434"
-            : request.Endpoint.Trim();
+            : endpointValue.Trim();
 
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var baseUri)
             || (baseUri.Scheme != Uri.UriSchemeHttp && baseUri.Scheme != Uri.UriSchemeHttps))
@@ -57,8 +90,7 @@ public sealed class LocalTranslationService
             throw new LocalTranslationException("本地模型地址无效，请填写 http://127.0.0.1:11434 这类地址。");
         }
 
-        var target = MapLanguage(request.TargetLanguage);
-        var model = request.Model.Trim();
+        var model = modelValue.Trim();
         var attempts = BuildAttempts(baseUri);
         var failures = new List<string>();
 
@@ -70,23 +102,22 @@ public sealed class LocalTranslationService
                     ? await ResolveModelAsync(provider, baseUri, cancellationToken)
                     : model;
 
-                var translated = await ChatAsync(
+                var content = await SendChatAsync(
                     provider,
                     baseUri,
                     resolvedModel,
-                    request.Text,
-                    target,
+                    messages,
                     cancellationToken);
 
-                if (!string.IsNullOrWhiteSpace(translated))
+                if (!string.IsNullOrWhiteSpace(content))
                 {
                     return new TranslationResult(
-                        translated.Trim(),
+                        content.Trim(),
                         provider == Provider.Ollama ? "Ollama" : "OpenAI 兼容",
                         resolvedModel);
                 }
 
-                failures.Add("模型返回了空翻译");
+                failures.Add("模型返回了空内容");
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -102,11 +133,11 @@ public sealed class LocalTranslationService
             }
         }
 
-        AppLogger.Error($"Local translation failed: {string.Join(" | ", failures)}");
+        AppLogger.Error($"Local model call failed: {string.Join(" | ", failures)}");
         throw new LocalTranslationException(
             string.IsNullOrWhiteSpace(model)
                 ? "无法连接本地模型。请确认 Ollama / LM Studio 已启动并加载了模型，或在设置中填写模型名。"
-                : "本地模型没有返回翻译。请确认服务已启动，且模型名称填写正确。");
+                : "本地模型没有返回内容。请确认服务已启动，且模型名称填写正确。");
     }
 
     private static IReadOnlyList<Provider> BuildAttempts(Uri endpoint)
@@ -183,41 +214,31 @@ public sealed class LocalTranslationService
         throw new LocalTranslationException("本地服务没有返回可用模型，请先在 Ollama / LM Studio 中加载模型。");
     }
 
-    private static async Task<string> ChatAsync(
+    private static async Task<string> SendChatAsync(
         Provider provider,
         Uri endpoint,
         string model,
-        string text,
-        string target,
+        IReadOnlyList<LocalChatMessage> messages,
         CancellationToken cancellationToken)
     {
-        var systemPrompt =
-            $"You are a precise translation engine. Translate the user's text into {target}. "
-            + "Preserve line breaks, markdown, code, URLs and proper names. "
-            + "Return only the translated text, without explanations or quotes.";
+        var payloadMessages = messages
+            .Select(message => new { role = message.Role, content = message.Content })
+            .ToArray();
 
         object payload = provider == Provider.Ollama
             ? new
             {
                 model,
                 stream = false,
-                messages = new object[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = text }
-                },
-                options = new { temperature = 0.2 }
+                messages = payloadMessages,
+                options = new { temperature = 0.3 }
             }
             : new
             {
                 model,
                 stream = false,
-                temperature = 0.2,
-                messages = new object[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = text }
-                }
+                temperature = 0.3,
+                messages = payloadMessages
             };
 
         var json = JsonSerializer.Serialize(payload);

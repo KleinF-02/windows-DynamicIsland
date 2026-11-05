@@ -1168,6 +1168,179 @@
                                 </Grid>
                             </Grid>
                         </Border>
+
+                        <Border x:Name="AgentPanel"
+                                Grid.Row="1"
+                                MinHeight="108"
+                                VerticalAlignment="Stretch"
+                                Margin="0,6,0,0"
+                                Background="{DynamicResource SubtleSurfaceBrush}"
+                                BorderBrush="{DynamicResource SubtleBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="8">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAgentActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="64" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="AI Agent"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding AgentStatus}"
+                                                   FontSize="9.5"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="220"
+                                                   Margin="9,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="{Binding AgentStatus}" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center">
+                                        <Button Content="粘贴"
+                                                Style="{StaticResource GhostButton}"
+                                                Height="26"
+                                                Padding="9,2"
+                                                FontSize="10"
+                                                Margin="0,0,6,0"
+                                                Click="AgentPaste_Click" />
+                                        <Button Content="复制"
+                                                Style="{StaticResource GhostButton}"
+                                                Height="26"
+                                                Padding="9,2"
+                                                FontSize="10"
+                                                Margin="0,0,6,0"
+                                                Click="AgentCopy_Click" />
+                                        <Button Content="清空"
+                                                Style="{StaticResource GhostButton}"
+                                                Height="26"
+                                                Padding="9,2"
+                                                FontSize="10"
+                                                Click="AgentClear_Click" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <ScrollViewer x:Name="AgentScroll"
+                                              Grid.Row="1"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              Margin="1,7,3,6">
+                                    <ItemsControl ItemsSource="{Binding AgentMessages}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,7">
+                                                    <Border MaxWidth="560"
+                                                            HorizontalAlignment="{Binding Alignment}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="10"
+                                                            Padding="10,7">
+                                                        <Border.Style>
+                                                            <Style TargetType="{x:Type Border}">
+                                                                <Setter Property="Background" Value="{DynamicResource AgentAssistantBubbleBrush}" />
+                                                                <Setter Property="BorderBrush" Value="{DynamicResource AgentAssistantBubbleBorderBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                                                        <Setter Property="Background" Value="{DynamicResource AgentUserBubbleBrush}" />
+                                                                        <Setter Property="BorderBrush" Value="{DynamicResource AgentUserBubbleBorderBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Text}"
+                                                                       FontSize="12"
+                                                                       LineHeight="18"
+                                                                       TextWrapping="Wrap"
+                                                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                            <TextBlock Text="{Binding TimeText}"
+                                                                       FontSize="8.5"
+                                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                                       HorizontalAlignment="Right"
+                                                                       Margin="0,3,0,0" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+
+                                <Grid Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Background="{DynamicResource TodoInputBackgroundBrush}"
+                                            BorderBrush="{DynamicResource TodoInputBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="6,2">
+                                        <Grid>
+                                            <TextBox x:Name="AgentInputBox"
+                                                     Text="{Binding AgentInput, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource SettingsTextBox}"
+                                                     Height="48"
+                                                     MaxLength="4000"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     VerticalContentAlignment="Top"
+                                                     FontSize="12"
+                                                     Padding="4,4"
+                                                     PreviewKeyDown="AgentInput_PreviewKeyDown"
+                                                     AutomationProperties.Name="AI Agent 输入"
+                                                     ToolTip="Ctrl+Enter 发送" />
+                                            <TextBlock Text="向本地 AI Agent 提问…"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       Margin="5,5,0,0"
+                                                       IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAgentInputEmpty}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <Button Grid.Column="2"
+                                            Content="发送"
+                                            Style="{StaticResource AccentButton}"
+                                            Width="64"
+                                            Height="52"
+                                            Padding="8,4"
+                                            FontSize="11"
+                                            IsEnabled="{Binding CanSendAgent}"
+                                            Click="AgentSend_Click" />
+                                </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
                     <StackPanel Grid.Row="3"
@@ -1224,6 +1397,20 @@
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTranslateActive}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Click="AgentTab_Click"
+                                Tag="{Binding IsAgentActive}"
+                                ToolTip="AI Agent"
+                                AutomationProperties.Name="AI Agent">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DotTabButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAgentActive}" Value="True">
                                             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
