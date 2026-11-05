@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace DynamicIsland.App.Interop;
 
@@ -59,6 +60,13 @@ internal static class NativeMethods
         int width,
         int height,
         uint flags);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SHGetPathFromIDListW(IntPtr pidl, StringBuilder path);
+
+    [DllImport("shell32.dll")]
+    internal static extern IntPtr ILCombine(IntPtr parent, IntPtr child);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     internal static extern IntPtr SHGetFileInfo(

@@ -963,12 +963,14 @@ public partial class IslandWindow : Window
     private static bool HasFilePayload(IDataObject data)
         => data.GetDataPresent(DataFormats.FileDrop)
            || data.GetDataPresent("FileNameW")
-           || data.GetDataPresent("FileName");
+           || data.GetDataPresent("FileName")
+           || ShellIdListParser.HasPayload(data);
 
     private static IReadOnlyList<string> ExtractDroppedPaths(IDataObject data)
     {
         // FileDrop is the normal OLE format. FileNameW/FileName are fallbacks used
-        // by a few drag sources (and by the PowerShell drag helper used in testing).
+        // by a few drag sources. Start menu drags commonly expose Shell IDList
+        // Array instead, which is resolved to real .lnk paths by the parser.
         foreach (var format in new[] { DataFormats.FileDrop, "FileNameW", "FileName" })
         {
             var paths = ParseDropPayload(data.GetData(format));
@@ -976,6 +978,12 @@ public partial class IslandWindow : Window
             {
                 return paths;
             }
+        }
+
+        var shellPaths = ShellIdListParser.Extract(data);
+        if (shellPaths.Count > 0)
+        {
+            return shellPaths;
         }
 
         return [];
