@@ -277,7 +277,8 @@
                                            FontSize="9"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            VerticalAlignment="Center"
-                                           Margin="0,0,8,0" />
+                                           Margin="0,0,8,0"
+                                           ToolTip="若显示“主题未公开”，请在 Outlook 网页版重新发布日历，并将权限设为“可查看所有详细信息”。" />
                                 <Button Content="刷新"
                                         Click="RefreshCalendar_Click"
                                         ToolTip="刷新 Calendar">
@@ -621,7 +622,10 @@
                                                             <StackPanel Grid.Column="1">
                                                                 <TextBlock Text="{Binding Subject}"
                                                                            FontSize="10.5"
-                                                                           TextTrimming="CharacterEllipsis" />
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding Subject}" />
                                                                 <TextBlock Text="{Binding LocationText}"
                                                                            FontSize="8.5"
                                                                            Foreground="{StaticResource TextMutedBrush}"
@@ -645,6 +649,76 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </ScrollViewer>
+                                </Grid>
+
+                                <Grid Panel.ZIndex="20">
+                                    <Grid.Style>
+                                        <Style TargetType="{x:Type Grid}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMeetingCountdownActive}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+
+                                    <Border Background="#FF0B0E14"
+                                            BorderBrush="#2E6FE7C8"
+                                            BorderThickness="1"
+                                            CornerRadius="10"
+                                            Padding="10,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Width="86" Height="86">
+                                                <Ellipse Width="80"
+                                                         Height="80"
+                                                         Stroke="#1AFFFFFF"
+                                                         StrokeThickness="4" />
+                                                <Path Data="{Binding CountdownRingGeometry}"
+                                                      Stroke="{StaticResource AccentBrush}"
+                                                      StrokeThickness="4"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      Fill="Transparent" />
+                                                <StackPanel HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CountdownText}"
+                                                               FontSize="22"
+                                                               FontWeight="SemiBold"
+                                                               HorizontalAlignment="Center"
+                                                               Typography.NumeralAlignment="Tabular" />
+                                                    <TextBlock Text="剩余"
+                                                               FontSize="8"
+                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                               HorizontalAlignment="Center"
+                                                               Margin="0,-2,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1"
+                                                        Margin="12,0,0,0"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="下一场会议"
+                                                           FontSize="8.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Text="{Binding CountdownSubject}"
+                                                           FontSize="11.5"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,3,0,0" />
+                                                <TextBlock Text="{Binding CountdownStartText}"
+                                                           FontSize="9"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
                             </Grid>
                         </Border>

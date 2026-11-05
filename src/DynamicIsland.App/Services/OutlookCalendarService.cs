@@ -314,8 +314,14 @@ public sealed class OutlookCalendarService
                 continue;
             }
 
+            var subject = source.Summary;
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                subject = FirstMeaningfulLine(source.Description);
+            }
+
             events.Add(new CalendarEventItem(
-                source.Summary ?? string.Empty,
+                subject ?? string.Empty,
                 start,
                 end,
                 source.IsAllDay,
@@ -365,6 +371,26 @@ public sealed class OutlookCalendarService
         }
 
         return CalendarLoadResult.Failure("无法读取网页日历", message);
+    }
+
+    private static string? FirstMeaningfulLine(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var line = text
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => value.Trim())
+            .FirstOrDefault(value => value.Length > 0);
+
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return null;
+        }
+
+        return line.Length > 120 ? line[..120] + "…" : line;
     }
 
     private static CalendarLoadResult Failure(Exception exception)

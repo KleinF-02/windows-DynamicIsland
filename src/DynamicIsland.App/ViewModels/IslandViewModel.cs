@@ -1,10 +1,14 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using DynamicIsland.App.Interop;
 using DynamicIsland.App.Services;
 using DynamicIsland.Core.Models;
+using Point = System.Windows.Point;
 using Screen = System.Windows.Forms.Screen;
+using Size = System.Windows.Size;
 
 namespace DynamicIsland.App.ViewModels;
 
@@ -42,6 +46,12 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private string _calendarErrorMessage = string.Empty;
     private DateTime _calendarLoadedAt;
     private int _calendarRequestId;
+    private readonly DispatcherTimer _calendarCountdownTimer;
+    private bool _isMeetingCountdownActive;
+    private string _countdownSubject = string.Empty;
+    private string _countdownText = "05:00";
+    private string _countdownStartText = string.Empty;
+    private Geometry? _countdownRingGeometry;
     private string _newTodoText = string.Empty;
 
     public IslandViewModel(IslandSettings settings)
@@ -59,6 +69,12 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromSeconds(30)
         };
         _powerTimer.Tick += OnPowerTick;
+
+        _calendarCountdownTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(100)
+        };
+        _calendarCountdownTimer.Tick += OnCalendarCountdownTick;
 
         RefreshClock();
         RefreshPower();
@@ -164,6 +180,16 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     public bool IsCalendarEmpty => _calendarLoaded && !_calendarLoading && !_calendarError
                                    && CalendarEvents.Count == 0;
 
+    public bool IsMeetingCountdownActive => _isMeetingCountdownActive;
+
+    public string CountdownSubject => _countdownSubject;
+
+    public string CountdownText => _countdownText;
+
+    public string CountdownStartText => _countdownStartText;
+
+    public Geometry? CountdownRingGeometry => _countdownRingGeometry;
+
     public string CalendarStatusText
     {
         get => _calendarStatusText;
@@ -263,12 +289,14 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         RefreshScreen();
         _clockTimer.Start();
         _powerTimer.Start();
+        _calendarCountdownTimer.Start();
     }
 
     public void Stop()
     {
         _clockTimer.Stop();
         _powerTimer.Stop();
+        _calendarCountdownTimer.Stop();
     }
 
     /// <summary>
@@ -575,6 +603,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         CalendarErrorTitle = string.Empty;
         CalendarErrorMessage = string.Empty;
         CalendarStatusText = "正在读取…";
+        UpdateMeetingCountdown();
 
         OnPropertyChanged(nameof(IsCalendarLoading));
         OnPropertyChanged(nameof(HasCalendarError));
@@ -618,9 +647,8 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
             _calendarLoaded = true;
             _calendarLoadedAt = DateTime.Now;
-            CalendarStatusText = CalendarEvents.Count == 0
-                ? "今天没有日程"
-                : $"{CalendarEvents.Count} 个日程";
+            CalendarStatusText = DescribeCalendarStatus();
+            UpdateMeetingCountdown();
 
             OnPropertyChanged(nameof(HasCalendarEvents));
             OnPropertyChanged(nameof(IsCalendarEmpty));
@@ -775,10 +803,131 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     private void OnPowerTick(object? sender, EventArgs e) => RefreshPower();
 
+    private void OnCalendarCountdownTick(object? sender, EventArgs e)
+        => UpdateMeetingCountdown();
+
+    private void UpdateMeetingCountdown()
+    {
+        if (!_calendarLoaded || _calendarLoading || _calendarError)
+        {
+            DeactivateMeetingCountdown();
+            return;
+        }
+
+        var now = DateTime.Now;
+        var next = CalendarEvents
+            .Where(item => !item.IsAllDay && item.Start > now)
+            .OrderBy(item => item.Start)
+            .FirstOrDefault();
+
+        if (next is null)
+        {
+            DeactivateMeetingCountdown();
+            return;
+        }
+
+        var remaining = next.Start - now;
+        if (remaining <= TimeSpan.Zero || remaining > TimeSpan.FromMinutes(5))
+        {
+            DeactivateMeetingCountdown();
+            return;
+        }
+
+        var seconds = Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds));
+        var subject = next.Subject;
+        var startText = $"{next.Start:HH:mm} 开始";
+        var text = $"{seconds / 60}:{seconds % 60:00}";
+        var progress = Math.Clamp(seconds / 300.0, 0.0, 1.0);
+
+        var newlyActive = !_isMeetingCountdownActive;
+        _isMeetingCountdownActive = true;
+        _countdownSubject = subject;
+        _countdownText = text;
+        _countdownStartText = startText;
+        _countdownRingGeometry = BuildCountdownRing(progress);
+
+        if (newlyActive)
+        {
+            OnPropertyChanged(nameof(IsMeetingCountdownActive));
+            CalendarStatusText = "即将开始";
+        }
+
+        OnPropertyChanged(nameof(CountdownSubject));
+        OnPropertyChanged(nameof(CountdownText));
+        OnPropertyChanged(nameof(CountdownStartText));
+        OnPropertyChanged(nameof(CountdownRingGeometry));
+    }
+
+    private void DeactivateMeetingCountdown()
+    {
+        if (!_isMeetingCountdownActive)
+        {
+            return;
+        }
+
+        _isMeetingCountdownActive = false;
+        OnPropertyChanged(nameof(IsMeetingCountdownActive));
+
+        if (!_calendarLoading && !_calendarError)
+        {
+            CalendarStatusText = DescribeCalendarStatus();
+        }
+    }
+
+    private string DescribeCalendarStatus()
+    {
+        if (CalendarEvents.Count == 0)
+        {
+            return "今天没有日程";
+        }
+
+        return CalendarEvents.All(item => item.Subject == "（无主题）")
+            ? "主题未公开"
+            : $"{CalendarEvents.Count} 个日程";
+    }
+
+    private static Geometry BuildCountdownRing(double progress)
+    {
+        const double center = 45;
+        const double radius = 37;
+        var clamped = Math.Clamp(progress, 0.0, 1.0);
+        var sweep = 359.999 * clamped;
+        var start = PointOnCircle(center, radius, -90);
+        var end = PointOnCircle(center, radius, -90 + sweep);
+
+        var figure = new PathFigure
+        {
+            StartPoint = start,
+            IsClosed = false,
+            IsFilled = false
+        };
+        figure.Segments.Add(new ArcSegment(
+            end,
+            new Size(radius, radius),
+            0,
+            sweep > 180,
+            SweepDirection.Clockwise,
+            true));
+
+        var geometry = new PathGeometry();
+        geometry.Figures.Add(figure);
+        geometry.Freeze();
+        return geometry;
+    }
+
+    private static Point PointOnCircle(double center, double radius, double angleDegrees)
+    {
+        var radians = angleDegrees * Math.PI / 180.0;
+        return new Point(
+            center + (radius * Math.Cos(radians)),
+            center + (radius * Math.Sin(radians)));
+    }
+
     public void Dispose()
     {
         Stop();
         _clockTimer.Tick -= OnClockTick;
         _powerTimer.Tick -= OnPowerTick;
+        _calendarCountdownTimer.Tick -= OnCalendarCountdownTick;
     }
 }

@@ -164,7 +164,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 1. `IslandSettings.WebCalendarUrl` 非空时走网页路径；支持 `https://`、`webcal://`、`http(s)` 和本地 `.ics` 文件。
 2. 通过静态 `HttpClient` 下载，20 秒超时、自动重定向/解压，内容上限 8 MB；如果返回 HTML 登录页则给出“链接可能已过期”的可读错误。
 3. 使用 `Ical.Net.Calendar.Load` 解析 RFC 5545，并用 `GetOccurrences(today, tomorrow)` 展开重复日程。
-4. 跳过 `STATUS:CANCELLED`，将 `Summary / Start / End / IsAllDay / Location` 映射为 `CalendarEventItem`。
+4. 跳过 `STATUS:CANCELLED`，将 `Summary / Start / End / IsAllDay / Location` 映射为 `CalendarEventItem`；如果发布源没有 `SUMMARY`，回退到 `DESCRIPTION` 的第一行，仍为空时显示“（无主题）”。所有主题都缺失时状态栏显示“主题未公开”。
 5. ICS 链接包含私人令牌，只保存在本机设置里，不写入日志；不请求链接以外的服务。
 
 **桌面 COM 回退**
@@ -174,7 +174,9 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 3. 开启 `IncludeRecurrences`，按 `[Start]` 排序并用日期区间 `Restrict` 查询；如果当前 Outlook 不接受过滤表达式，则退回遍历并按托管代码过滤。
 4. 每次读取最多 200 条；UI 侧 15 秒超时。失败时区分“未配置”“读取失败”并提供重试。
 
-两条路径最终都返回同一套 `CalendarLoadResult`/`CalendarEventItem`，因此 UI 不区分来源。日历页不常驻定时器：首次切到该标签时读取，之后 2 分钟内复用结果，手动“刷新”会强制重新读取；修改设置里的 URL 会清空缓存并按需重新加载。
+两条路径最终都返回同一套 `CalendarLoadResult`/`CalendarEventItem`，因此 UI 不区分来源。首次切到日历标签时读取，之后 2 分钟内复用结果，手动“刷新”会强制重新读取；修改设置里的 URL 会清空缓存并按需重新加载。
+
+会议倒计时由 `IslandViewModel` 的 100ms `DispatcherTimer` 驱动：取今天最近一场未开始、非全天的会议，若距开始时间 ≤ 5 分钟则进入倒计时；`CountdownRingGeometry` 用 `ArcSegment` 生成圆环进度，`CountdownText` 显示 `m:ss`。会议开始后条件不再成立，倒计时视口隐藏，日程列表恢复。全部主题为空时状态栏显示“主题未公开”，提示重新发布日历并选择“可查看所有详细信息”。
 
 ### 开机启动
 
