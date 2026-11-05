@@ -42,6 +42,9 @@ public partial class IslandWindow : Window
     private readonly DispatcherTimer _collapseTimer;
     private readonly DispatcherTimer _heightSyncTimer;
     private readonly DispatcherTimer _typingHoldTimer;
+    private readonly DispatcherTimer _idleTimer;
+    private bool _idleActive;
+    private const double IdleOpacityFactor = 0.45;
     private readonly DispatcherTimer _startMenuGuardTimer;
     private int _boundsAnimationId;
     private DateTime _nativeHeightStart;
@@ -118,6 +121,12 @@ public partial class IslandWindow : Window
         };
         _typingHoldTimer.Tick += TypingHoldTimer_Tick;
 
+        _idleTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMinutes(1)
+        };
+        _idleTimer.Tick += IdleTimer_Tick;
+
         _startMenuGuardTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromMilliseconds(200)
@@ -137,7 +146,9 @@ public partial class IslandWindow : Window
         _settings = settings.Clone();
         _viewModel.ApplySettings(_settings);
         Topmost = !_topmostSuppressed && _settings.AlwaysOnTop;
-        Opacity = _settings.Opacity;
+        _idleActive = false;
+        AnimateWindowOpacity(_settings.Opacity, animate: false);
+        RestartIdleTimer();
         PositionWindow(animate: false);
     }
 
@@ -162,6 +173,7 @@ public partial class IslandWindow : Window
         }
 
         _notificationTimer.Stop();
+        RegisterInteraction();
         _viewModel.NotificationTitle = title;
         _viewModel.NotificationMessage = message;
         _pinned = false;
@@ -333,6 +345,7 @@ public partial class IslandWindow : Window
         _viewModel.Start();
         Topmost = _settings.AlwaysOnTop;
         PositionWindow(animate: false);
+        RegisterInteraction();
         ShowNotification("灵动岛", "我在这里。", TimeSpan.FromSeconds(2.5));
     }
 
@@ -340,6 +353,7 @@ public partial class IslandWindow : Window
     {
         _notificationTimer.Stop();
         _collapseTimer.Stop();
+        _idleTimer.Stop();
         _pinned = false;
         _editingTodo = false;
         _editingTranslation = false;
@@ -393,6 +407,7 @@ public partial class IslandWindow : Window
         _viewModel.Start();
         PositionWindow(animate: false);
         _startMenuGuardTimer.Start();
+        RestartIdleTimer();
     }
 
     private void Window_Closed(object? sender, EventArgs e)
@@ -401,6 +416,7 @@ public partial class IslandWindow : Window
         _heightSyncTimer.Stop();
         _startMenuGuardTimer.Stop();
         _notificationTimer.Stop();
+        _idleTimer.Stop();
         _viewModel.Dispose();
         _hwndSource?.RemoveHook(WindowProc);
         _hwndSource = null;
@@ -408,6 +424,7 @@ public partial class IslandWindow : Window
 
     private void Window_MouseEnter(object sender, MouseEventArgs e)
     {
+        RegisterInteraction();
         _hovering = true;
         _collapseTimer.Stop();
 
@@ -420,11 +437,92 @@ public partial class IslandWindow : Window
     private void Window_MouseLeave(object sender, MouseEventArgs e)
     {
         _hovering = false;
+        RestartIdleTimer();
 
         if (_state == IslandVisualState.Expanded && !_agentFileDialogOpen && !_pinned && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive)
         {
             ScheduleCollapse();
         }
+    }
+
+    private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        RegisterInteraction();
+    }
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        RegisterInteraction();
+    }
+
+    private void RestartIdleTimer()
+    {
+        if (!_loaded)
+        {
+            return;
+        }
+
+        _idleTimer.Stop();
+        _idleTimer.Start();
+    }
+
+    private void RegisterInteraction()
+    {
+        if (_idleActive)
+        {
+            _idleActive = false;
+            AnimateWindowOpacity(_settings.Opacity, animate: true, durationMs: 220);
+        }
+
+        RestartIdleTimer();
+    }
+
+    private void IdleTimer_Tick(object? sender, EventArgs e)
+    {
+        _idleTimer.Stop();
+
+        if (!_loaded
+            || !IsVisible
+            || _topmostSuppressed
+            || _menuOpen
+            || _agentFileDialogOpen
+            || _dragActive
+            || _dragOutActive
+            || _editingTodo
+            || IsTranslationTypingHoldActive
+            || IsAgentTypingHoldActive)
+        {
+            RestartIdleTimer();
+            return;
+        }
+
+        _idleActive = true;
+        AnimateWindowOpacity(
+            Math.Clamp(_settings.Opacity * IdleOpacityFactor, 0.15, 0.85),
+            animate: true,
+            durationMs: 650);
+    }
+
+    private void AnimateWindowOpacity(double target, bool animate, int durationMs = 220)
+    {
+        var clamped = Math.Clamp(target, 0.1, 1.0);
+        var from = Opacity;
+        BeginAnimation(OpacityProperty, null);
+
+        if (!animate || !_settings.AnimationsEnabled || !_loaded || Math.Abs(from - clamped) < 0.01)
+        {
+            Opacity = clamped;
+            return;
+        }
+
+        Opacity = clamped;
+        var animation = new DoubleAnimation(from, clamped, TimeSpan.FromMilliseconds(durationMs))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior = FillBehavior.Stop
+        };
+        Timeline.SetDesiredFrameRate(animation, 60);
+        BeginAnimation(OpacityProperty, animation);
     }
 
     private void Shell_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -1463,6 +1561,8 @@ public partial class IslandWindow : Window
 
     private void Window_PreviewMouseMove(object sender, MouseEventArgs e)
     {
+        RegisterInteraction();
+
         if (_fileDragCandidate is null || e.LeftButton != MouseButtonState.Pressed)
         {
             return;
@@ -1507,11 +1607,13 @@ public partial class IslandWindow : Window
 
     private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        RegisterInteraction();
         _fileDragCandidate = null;
     }
 
     private void Window_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        RegisterInteraction();
         _fileDragCandidate = null;
     }
 
@@ -1621,12 +1723,14 @@ public partial class IslandWindow : Window
     private void IslandMenu_Opened(object sender, RoutedEventArgs e)
     {
         _menuOpen = true;
+        RegisterInteraction();
         _collapseTimer.Stop();
     }
 
     private void IslandMenu_Closed(object sender, RoutedEventArgs e)
     {
         _menuOpen = false;
+        RegisterInteraction();
 
         if (!_hovering && !_pinned && !_agentFileDialogOpen && !_editingTodo && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive && _state == IslandVisualState.Expanded)
         {

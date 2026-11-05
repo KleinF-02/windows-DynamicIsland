@@ -20,7 +20,9 @@
         Deactivated="Window_Deactivated"
         PreviewMouseLeftButtonDown="Window_PreviewMouseLeftButtonDown"
         PreviewMouseMove="Window_PreviewMouseMove"
-        PreviewMouseLeftButtonUp="Window_PreviewMouseLeftButtonUp">
+        PreviewMouseLeftButtonUp="Window_PreviewMouseLeftButtonUp"
+        PreviewMouseWheel="Window_PreviewMouseWheel"
+        PreviewKeyDown="Window_PreviewKeyDown">
 
     <Grid x:Name="Root" Margin="14">
         <!-- Shadow is a separate layer so text is not rasterized by the effect. -->

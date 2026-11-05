@@ -1,6 +1,6 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.7.0-6FE7C8)
+![version](https://img.shields.io/badge/version-0.8.0-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -9,15 +9,15 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**当前版本 `v0.7.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+**当前版本 `v0.8.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析；窗口闲置 1 分钟后自动变为半透明，鼠标交互后恢复不透明。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.7.0 更新记录](docs/releases/v0.7.0.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.8.0 更新记录](docs/releases/v0.8.0.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.7.0-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.8.0-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
 3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
@@ -43,6 +43,7 @@
 - **待办事项**：在标签直接输入或修改，打勾后粒子散开、整行淡出并从列表删除；待办持久化到本机
 - **翻译**：第四个圆点；输入文字后调用本机 Ollama / LM Studio / llama.cpp 大模型，支持切换目标语言、Ctrl+Enter 翻译、复制结果；光标在功能区时保持展开，移出后按原有悬浮规则收起，翻译内容保留到下次展开
 - **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，支持上传图片、文本/代码和 Word/Excel/PPT 文件交给本地视觉/语言模型分析；聊天记录只显示文件名，图片以多模态输入发送，文本正文只进入本次模型请求；激活时放大为工作区，并和翻译共用同一套悬停策略
+- **闲置半透明**：60 秒没有鼠标/键盘交互后窗口平滑变为 45% 不透明度；鼠标进入、移动、点击、滚轮或键盘输入后恢复
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
 - 深色 / 浅色两套主题，自动跟随 Windows“应用模式”实时切换
 - 设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（默认 `0` = 贴顶）
@@ -162,8 +163,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.7.0-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.7.0-win-x64.zip
+artifacts/publish/DynamicIsland-0.8.0-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.8.0-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -194,6 +195,7 @@ artifacts/publish/DynamicIsland-0.7.0-win-x64.zip
 | 切到翻译 / AI Agent | 窗口放大为接近普通应用的 `720 × 560` 工作区 |
 | Agent 对话 | 输入后发送；`Ctrl+Enter` 也可发送；点回形针可附加文本、代码或 `.docx`，最多 3 个文件 |
 | 翻译 / Agent 移动鼠标 | 光标在功能区时保持展开；移出后收起，重新展开仍有上次输入和结果 |
+| 60 秒无交互 | 窗口变为 45% 不透明度；鼠标移动/进入/点击/滚轮或键盘输入恢复 |
 | 右键单击 | 打开菜单 |
 | 托盘图标双击 | 显示灵动岛 |
 | 托盘图标右键 | 显示、设置、演示通知、开机启动、退出 |
@@ -291,7 +293,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.7.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.8.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 
