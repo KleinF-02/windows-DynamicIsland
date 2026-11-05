@@ -11,17 +11,21 @@ public static class IslandMetrics
 {
     public const double ShadowPadding = 14.0;
 
-    public static IslandSize Content(IslandVisualState state) => state switch
+    /// <summary>Larger Expanded footprint used by the translation workspace.</summary>
+    public static IslandSize Translation { get; } = new(720, 560);
+
+    public static IslandSize Content(IslandVisualState state, bool translationWorkspace = false) => state switch
     {
         IslandVisualState.Compact => new IslandSize(248, 46),
+        IslandVisualState.Expanded when translationWorkspace => Translation,
         IslandVisualState.Expanded => new IslandSize(424, 284),
         IslandVisualState.Notification => new IslandSize(400, 118),
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
     };
 
-    public static IslandSize Outer(IslandVisualState state)
+    public static IslandSize Outer(IslandVisualState state, bool translationWorkspace = false)
     {
-        var content = Content(state);
+        var content = Content(state, translationWorkspace);
         return new IslandSize(
             content.Width + (ShadowPadding * 2),
             content.Height + (ShadowPadding * 2));

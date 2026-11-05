@@ -163,15 +163,26 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _translationInput, value ?? string.Empty))
             {
                 OnPropertyChanged(nameof(CanTranslate));
+                OnPropertyChanged(nameof(IsTranslationInputEmpty));
             }
         }
     }
 
+    public bool IsTranslationInputEmpty => string.IsNullOrWhiteSpace(TranslationInput);
+
     public string TranslationOutput
     {
         get => _translationOutput;
-        private set => SetProperty(ref _translationOutput, value);
+        private set
+        {
+            if (SetProperty(ref _translationOutput, value))
+            {
+                OnPropertyChanged(nameof(HasTranslationOutput));
+            }
+        }
     }
+
+    public bool HasTranslationOutput => !string.IsNullOrWhiteSpace(TranslationOutput);
 
     public string TranslationStatus
     {

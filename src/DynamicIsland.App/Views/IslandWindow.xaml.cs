@@ -786,7 +786,14 @@ public partial class IslandWindow : Window
 
     private void SelectFunction(FunctionTab function)
     {
+        var wasTranslating = _viewModel.IsTranslateActive;
         _viewModel.SelectFunction(function);
+
+        if (_state == IslandVisualState.Expanded
+            && wasTranslating != _viewModel.IsTranslateActive)
+        {
+            PositionWindow(animate: true);
+        }
     }
 
     private void CalendarTab_Click(object sender, RoutedEventArgs e)
@@ -1346,7 +1353,7 @@ public partial class IslandWindow : Window
     private void PositionWindow(bool animate)
     {
         var screen = ResolveScreen();
-        var outer = IslandMetrics.Outer(_state);
+        var outer = IslandMetrics.Outer(_state, _viewModel.IsTranslateActive);
         var source = PresentationSource.FromVisual(this);
         var fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
 
