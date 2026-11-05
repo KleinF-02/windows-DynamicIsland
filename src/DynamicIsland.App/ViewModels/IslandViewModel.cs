@@ -21,6 +21,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _powerTimer;
     private readonly OutlookCalendarService _calendarService = new();
+    private readonly LocalTranslationService _translationService = new();
     private readonly TodoStore _todoStore = new();
     private readonly ShortcutStore _shortcutStore = new();
     private IslandSettings _settings;
@@ -52,7 +53,16 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     private string _countdownText = "05:00";
     private string _countdownStartText = string.Empty;
     private Geometry? _countdownRingGeometry;
+    private string _translationInput = string.Empty;
+    private string _translationOutput = string.Empty;
+    private string _translationStatus = "本地模型 · 等待输入";
+    private string _translationTarget = "English";
+    private bool _isTranslating;
+    private int _translationRequestId;
+    private CancellationTokenSource? _translationCts;
     private string _newTodoText = string.Empty;
+
+    private static readonly string[] TranslationTargets = ["中文", "English", "日本語", "한국어"];
 
     public IslandViewModel(IslandSettings settings)
     {
@@ -145,6 +155,133 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public bool IsTodoInputEmpty => string.IsNullOrWhiteSpace(NewTodoText);
 
+    public string TranslationInput
+    {
+        get => _translationInput;
+        set
+        {
+            if (SetProperty(ref _translationInput, value ?? string.Empty))
+            {
+                OnPropertyChanged(nameof(CanTranslate));
+            }
+        }
+    }
+
+    public string TranslationOutput
+    {
+        get => _translationOutput;
+        private set => SetProperty(ref _translationOutput, value);
+    }
+
+    public string TranslationStatus
+    {
+        get => _translationStatus;
+        private set => SetProperty(ref _translationStatus, value);
+    }
+
+    public string TranslationTargetLabel => $"→ {_translationTarget}";
+
+    public bool IsTranslating => _isTranslating;
+
+    public bool CanTranslate => !_isTranslating && !string.IsNullOrWhiteSpace(TranslationInput);
+
+    public void CycleTranslationTarget()
+    {
+        var index = Array.IndexOf(TranslationTargets, _translationTarget);
+        _translationTarget = TranslationTargets[(index + 1) % TranslationTargets.Length];
+        OnPropertyChanged(nameof(TranslationTargetLabel));
+    }
+
+    public async Task TranslateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(TranslationInput))
+        {
+            TranslationStatus = "请输入要翻译的文字";
+            return;
+        }
+
+        var requestId = ++_translationRequestId;
+        _translationCts?.Cancel();
+        _translationCts?.Dispose();
+        var cts = new CancellationTokenSource();
+        _translationCts = cts;
+
+        _isTranslating = true;
+        OnPropertyChanged(nameof(IsTranslating));
+        OnPropertyChanged(nameof(CanTranslate));
+        TranslationOutput = string.Empty;
+        TranslationStatus = "正在调用本地模型…";
+
+        try
+        {
+            var result = await _translationService.TranslateAsync(
+                new TranslationRequest(
+                    TranslationInput,
+                    _translationTarget,
+                    _settings.LocalLlmEndpoint,
+                    _settings.LocalLlmModel),
+                cts.Token);
+
+            if (requestId != _translationRequestId)
+            {
+                return;
+            }
+
+            TranslationOutput = result.Text;
+            TranslationStatus = $"完成 · {result.Provider} · {result.Model}";
+        }
+        catch (OperationCanceledException) when (requestId == _translationRequestId)
+        {
+            TranslationStatus = "已取消";
+        }
+        catch (Exception ex) when (requestId == _translationRequestId)
+        {
+            TranslationStatus = ex.Message;
+        }
+        finally
+        {
+            if (requestId == _translationRequestId)
+            {
+                _isTranslating = false;
+                _translationCts = null;
+                cts.Dispose();
+                OnPropertyChanged(nameof(IsTranslating));
+                OnPropertyChanged(nameof(CanTranslate));
+            }
+        }
+    }
+
+    public bool TryCopyTranslation()
+    {
+        if (string.IsNullOrWhiteSpace(TranslationOutput))
+        {
+            return false;
+        }
+
+        try
+        {
+            System.Windows.Clipboard.SetText(TranslationOutput);
+            TranslationStatus = "已复制到剪贴板";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            TranslationStatus = $"复制失败：{ex.Message}";
+            return false;
+        }
+    }
+
+    public void CancelTranslation()
+    {
+        _translationRequestId++;
+        _translationCts?.Cancel();
+        _translationCts?.Dispose();
+        _translationCts = null;
+        _isTranslating = false;
+        OnPropertyChanged(nameof(IsTranslating));
+        OnPropertyChanged(nameof(CanTranslate));
+    }
+
     public FunctionTab ActiveFunction => _activeFunction;
 
     public bool IsShortcutsActive => _activeFunction == FunctionTab.Shortcuts;
@@ -153,11 +290,14 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public bool IsTodoActive => _activeFunction == FunctionTab.Todo;
 
+    public bool IsTranslateActive => _activeFunction == FunctionTab.Translate;
+
     public string ActiveFunctionTitle => _activeFunction switch
     {
         FunctionTab.Shortcuts => "常用软件",
         FunctionTab.Calendar => "Calendar",
         FunctionTab.Todo => "待办事项",
+        FunctionTab.Translate => "翻译",
         _ => "功能"
     };
 
@@ -166,6 +306,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         FunctionTab.Shortcuts => "拖入快捷方式 · 悬停选择 · 单击打开",
         FunctionTab.Calendar => "今日日程 · 点击圆点切换",
         FunctionTab.Todo => "输入待办 · 打勾完成 · 自动删除",
+        FunctionTab.Translate => "输入文字 · 选择目标语言 · 本地模型翻译",
         _ => "点击圆点切换"
     };
 
@@ -302,6 +443,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         _clockTimer.Stop();
         _powerTimer.Stop();
         _calendarCountdownTimer.Stop();
+        CancelTranslation();
     }
 
     /// <summary>
@@ -562,6 +704,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(IsShortcutsActive));
             OnPropertyChanged(nameof(IsCalendarActive));
             OnPropertyChanged(nameof(IsTodoActive));
+            OnPropertyChanged(nameof(IsTranslateActive));
             OnPropertyChanged(nameof(ActiveFunctionTitle));
             OnPropertyChanged(nameof(FooterHint));
         }

@@ -31,6 +31,18 @@ public sealed class IslandSettings
     public string WebCalendarUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// Base URL of a locally hosted model service. Ollama's default is
+    /// <c>http://127.0.0.1:11434</c>; OpenAI-compatible servers (LM Studio,
+    /// llama.cpp) can use their own port.
+    /// </summary>
+    public string LocalLlmEndpoint { get; set; } = "http://127.0.0.1:11434";
+
+    /// <summary>
+    /// Explicit model name. Empty asks the local service for its first model.
+    /// </summary>
+    public string LocalLlmModel { get; set; } = string.Empty;
+
+    /// <summary>
     /// Device name of the preferred monitor (for example <c>\\.\DISPLAY1</c>).
     /// Empty means the primary monitor.
     /// </summary>
@@ -63,6 +75,23 @@ public sealed class IslandSettings
         if (WebCalendarUrl.Length > 4096)
         {
             WebCalendarUrl = WebCalendarUrl[..4096];
+        }
+
+        LocalLlmEndpoint = (LocalLlmEndpoint ?? string.Empty).Trim();
+        if (LocalLlmEndpoint.Length == 0)
+        {
+            LocalLlmEndpoint = "http://127.0.0.1:11434";
+        }
+
+        if (LocalLlmEndpoint.Length > 2048)
+        {
+            LocalLlmEndpoint = LocalLlmEndpoint[..2048];
+        }
+
+        LocalLlmModel = (LocalLlmModel ?? string.Empty).Trim();
+        if (LocalLlmModel.Length > 256)
+        {
+            LocalLlmModel = LocalLlmModel[..256];
         }
     }
 }

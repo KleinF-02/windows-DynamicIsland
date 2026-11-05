@@ -191,6 +191,17 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 
 配置了网页 ICS 时，`Start()` 会后台预加载今日日历，因此不需要先打开 Calendar 标签；compact 胶囊和展开页绑定同一组 `IsMeetingCountdownActive / CountdownSubject / CountdownText / CountdownRingGeometry`，缩小后仍持续刷新。
 
+### Translation
+
+`LocalTranslationService` 只访问设置中的本机模型地址，不经过云端。
+
+1. 默认地址 `http://127.0.0.1:11434` 优先走 Ollama `/api/chat`；`/v1` 或其他端口优先走 OpenAI 兼容 `/v1/chat/completions`。
+2. 模型名留空时，Ollama 读取 `/api/tags`，OpenAI 兼容服务读取 `/v1/models`，取第一个可用模型。
+3. 提示词要求只返回译文，保留换行、Markdown、代码、URL 和专有名词；温度 0.2。
+4. 目标语言支持中文、English、日本語、한국어；UI 只保留输入/结果两个区域，Ctrl+Enter 触发，复制按钮写入剪贴板。
+5. 请求支持取消：切换目标语言后重新翻译会取消旧请求；窗口停止时也会取消。超时 90 秒。
+6. 常见失败包括服务未启动、没有加载模型、模型名错误和 HTTP 非 2xx；错误显示在翻译页状态文字中并写入本机日志。
+
 ### 开机启动
 
 `StartupService` 只写当前用户：

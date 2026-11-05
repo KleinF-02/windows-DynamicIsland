@@ -796,6 +796,41 @@ public partial class IslandWindow : Window
         e.Handled = true;
     }
 
+    private void TranslateTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.SelectFunction(FunctionTab.Translate);
+        e.Handled = true;
+    }
+
+    private void TranslationTarget_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.CycleTranslationTarget();
+        e.Handled = true;
+    }
+
+    private async void Translate_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        await _viewModel.TranslateAsync();
+    }
+
+    private void CopyTranslation_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.TryCopyTranslation();
+        e.Handled = true;
+    }
+
+    private async void TranslationInput_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        await _viewModel.TranslateAsync();
+    }
+
     private void AddTodo_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.AddTodo();

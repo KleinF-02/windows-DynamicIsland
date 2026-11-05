@@ -125,6 +125,36 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public string LocalLlmEndpoint
+    {
+        get => _draft.LocalLlmEndpoint;
+        set
+        {
+            if (string.Equals(_draft.LocalLlmEndpoint, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.LocalLlmEndpoint = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
+    public string LocalLlmModel
+    {
+        get => _draft.LocalLlmModel;
+        set
+        {
+            if (string.Equals(_draft.LocalLlmModel, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.LocalLlmModel = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
     public string VersionText
     {
         get

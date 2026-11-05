@@ -4,5 +4,6 @@ public enum FunctionTab
 {
     Shortcuts,
     Calendar,
-    Todo
+    Todo,
+    Translate
 }
