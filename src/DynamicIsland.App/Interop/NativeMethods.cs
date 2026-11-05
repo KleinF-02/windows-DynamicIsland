@@ -15,6 +15,7 @@ internal static class NativeMethods
     internal const int DwmwaWindowCornerPreference = 33;
     internal const int DwmwcpRound = 2;
 
+    internal const uint SwpNoSize = 0x0001;
     internal const uint SwpNoMove = 0x0002;
     internal const uint SwpNoZOrder = 0x0004;
     internal const uint SwpNoActivate = 0x0010;
@@ -45,6 +46,12 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetCursorPos(out Point point);
+
+    [DllImport("user32.dll")]
+    internal static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

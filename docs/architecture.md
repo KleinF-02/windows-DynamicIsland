@@ -94,6 +94,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 固定只能通过展开态右下角的 `PinButton` 切换，点击胶囊、添加待办或拖入文件都不会隐式固定。
 - `_pinned` 与 `IslandViewModel.IsPinned` 同步；固定时只改变按钮文案和收起条件。
 - 待办输入使用独立的 `_editingTodo` 状态：编辑期间鼠标移开不收起，但不会把窗口标记为固定。
+- 每 `200ms` 检查前台进程；检测到 `StartMenuExperienceHost` / `SearchHost` 时，把岛收成 compact 胶囊并用 `SetWindowPos(HWND_TOPMOST, SWP_NOACTIVATE)` 重新置顶，避免开始菜单盖住拖放目标。开始菜单关闭后，根据之前的固定/悬停状态恢复展开。
 - 右键菜单打开期间暂停收起计时，菜单关闭后重新判断。
 - 通知态优先于普通展开；通知可直接复用 `ShowNotification`，后续媒体 / 日程只需新增调用方。
 

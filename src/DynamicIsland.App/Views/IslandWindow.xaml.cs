@@ -39,6 +39,7 @@ public partial class IslandWindow : Window
     private readonly IslandViewModel _viewModel;
     private readonly DispatcherTimer _collapseTimer;
     private readonly DispatcherTimer _heightSyncTimer;
+    private readonly DispatcherTimer _startMenuGuardTimer;
     private int _boundsAnimationId;
     private DateTime _nativeHeightStart;
     private double _nativeHeightFrom;
@@ -60,6 +61,10 @@ public partial class IslandWindow : Window
     private bool _topmostSuppressed;
     private bool _dragActive;
     private bool _dragOutActive;
+    private bool _startMenuOpen;
+    private IslandVisualState _stateBeforeStartMenu = IslandVisualState.Compact;
+    private readonly HashSet<uint> _shellProcessIds = new();
+    private IntPtr _lastForegroundWindow;
     private Point _fileDragStart;
     private StagedFileViewModel? _fileDragCandidate;
     private readonly HashSet<string> _completingTodoIds = new(StringComparer.Ordinal);
@@ -87,6 +92,12 @@ public partial class IslandWindow : Window
             Interval = TimeSpan.FromMilliseconds(16)
         };
         _heightSyncTimer.Tick += (_, _) => ApplyNativeHeight();
+
+        _startMenuGuardTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        _startMenuGuardTimer.Tick += StartMenuGuard_Tick;
 
         _notificationTimer = new DispatcherTimer(DispatcherPriority.Background);
         _notificationTimer.Tick += NotificationTimer_Tick;
@@ -161,6 +172,122 @@ public partial class IslandWindow : Window
         }
     }
 
+    private void StartMenuGuard_Tick(object? sender, EventArgs e)
+    {
+        if (!_loaded || _hwndSource is null || !IsVisible
+            || _topmostSuppressed || !_settings.AlwaysOnTop)
+        {
+            if (_startMenuOpen)
+            {
+                LeaveStartMenu();
+            }
+
+            return;
+        }
+
+        if (IsStartMenuForeground())
+        {
+            if (!_startMenuOpen)
+            {
+                _startMenuOpen = true;
+                _stateBeforeStartMenu = _state;
+                _collapseTimer.Stop();
+            }
+
+            // Keep the island as a small top drop target instead of covering the
+            // Start menu. A drag started from Start can then enter it.
+            if (!_dragActive && _state != IslandVisualState.Compact)
+            {
+                SetState(IslandVisualState.Compact, animate: true);
+            }
+
+            ReassertTopmost();
+        }
+        else if (_startMenuOpen)
+        {
+            LeaveStartMenu();
+        }
+    }
+
+    private void LeaveStartMenu()
+    {
+        _startMenuOpen = false;
+
+        if (_dragActive)
+        {
+            ReassertTopmost();
+            return;
+        }
+
+        if (_stateBeforeStartMenu == IslandVisualState.Expanded
+            && (_pinned || _hovering))
+        {
+            SetState(IslandVisualState.Expanded, animate: true);
+        }
+        else if (!_pinned && !_hovering && _state == IslandVisualState.Compact)
+        {
+            // Already compact; nothing else to do.
+        }
+        else if (!_pinned && !_hovering)
+        {
+            ScheduleCollapse();
+        }
+    }
+
+    private bool IsStartMenuForeground()
+    {
+        var foreground = NativeMethods.GetForegroundWindow();
+        if (foreground == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        NativeMethods.GetWindowThreadProcessId(foreground, out var processId);
+        if (processId == 0)
+        {
+            return false;
+        }
+
+        if (foreground != _lastForegroundWindow)
+        {
+            _lastForegroundWindow = foreground;
+            RefreshShellProcessIds();
+        }
+
+        return _shellProcessIds.Contains(processId);
+    }
+
+    private void RefreshShellProcessIds()
+    {
+        _shellProcessIds.Clear();
+
+        foreach (var processName in new[] { "StartMenuExperienceHost", "SearchHost", "ShellExperienceHost" })
+        {
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                _shellProcessIds.Add((uint)process.Id);
+                process.Dispose();
+            }
+        }
+    }
+
+    private void ReassertTopmost()
+    {
+        if (_hwndSource is null || _topmostSuppressed || !_settings.AlwaysOnTop)
+        {
+            return;
+        }
+
+        NativeMethods.SetWindowPos(
+            _hwndSource.Handle,
+            new IntPtr(-1),
+            0,
+            0,
+            0,
+            0,
+            NativeMethods.SwpNoSize | NativeMethods.SwpNoMove | NativeMethods.SwpNoActivate);
+    }
+
     public void ShowFromTray()
     {
         if (!IsVisible)
@@ -225,12 +352,14 @@ public partial class IslandWindow : Window
         _loaded = true;
         _viewModel.Start();
         PositionWindow(animate: false);
+        _startMenuGuardTimer.Start();
     }
 
     private void Window_Closed(object? sender, EventArgs e)
     {
         _collapseTimer.Stop();
         _heightSyncTimer.Stop();
+        _startMenuGuardTimer.Stop();
         _notificationTimer.Stop();
         _viewModel.Dispose();
         _hwndSource?.RemoveHook(WindowProc);
