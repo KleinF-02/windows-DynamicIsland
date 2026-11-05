@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using DynamicIsland.App.Animations;
 using DynamicIsland.App.Interop;
 using DynamicIsland.App.Services;
 using DynamicIsland.App.ViewModels;
@@ -45,6 +46,11 @@ public partial class IslandWindow : Window
     private DateTime _nativeHeightStart;
     private BlurEffect? _transitionBlur;
     private int _transitionBlurId;
+    private double _cornerRadiusFrom;
+    private double _cornerRadiusTo;
+    private RectangleGeometry? _contentMaskGeometry;
+    private bool _contentMaskActive;
+    private bool _contentMaskExpanding;
     private double _nativeWidthFrom;
     private double _nativeWidthTo;
     private double _nativeHeightFrom;
@@ -1526,6 +1532,7 @@ public partial class IslandWindow : Window
 
     private void SetState(IslandVisualState state, bool animate)
     {
+        var previousState = _state;
         var changed = _state != state;
         _state = state;
 
@@ -1545,6 +1552,18 @@ public partial class IslandWindow : Window
 
         if (changed || _activeView != GetView(state))
         {
+            if (shouldAnimate
+                && changed
+                && state is IslandVisualState.Compact or IslandVisualState.Expanded
+                && previousState is IslandVisualState.Compact or IslandVisualState.Expanded)
+            {
+                BeginContentMask(expanding: state == IslandVisualState.Expanded);
+            }
+            else
+            {
+                EndContentMask();
+            }
+
             SwitchContent(state, shouldAnimate);
 
             if (shouldAnimate && changed)
@@ -1555,6 +1574,39 @@ public partial class IslandWindow : Window
                     beginMs: state == IslandVisualState.Compact ? 20 : 0);
             }
         }
+    }
+
+    private void BeginContentMask(bool expanding)
+    {
+        _contentMaskActive = true;
+        _contentMaskExpanding = expanding;
+        _contentMaskGeometry ??= new RectangleGeometry();
+        ContentRoot.Clip = _contentMaskGeometry;
+    }
+
+    private void EndContentMask()
+    {
+        _contentMaskActive = false;
+        ContentRoot.Clip = null;
+        _contentMaskGeometry = null;
+    }
+
+    private void ApplyContentMask(double width, double height, double progress)
+    {
+        if (!_contentMaskActive || _contentMaskGeometry is null)
+        {
+            return;
+        }
+
+        var eased = Math.Clamp(progress, 0.0, 1.0);
+        var reveal = _contentMaskExpanding
+            ? 0.16 + (0.84 * eased)
+            : 1.0 - (0.84 * eased);
+        var maskHeight = Math.Max(1.0, height * reveal);
+        var radius = Math.Min(22.0, maskHeight / 2.0);
+        _contentMaskGeometry.Rect = new Rect(0, 0, Math.Max(1.0, width), maskHeight);
+        _contentMaskGeometry.RadiusX = radius;
+        _contentMaskGeometry.RadiusY = radius;
     }
 
     private void PositionWindow(bool animate)
@@ -1595,11 +1647,16 @@ public partial class IslandWindow : Window
         var left = Math.Round(targetLeft);
         var top = Math.Round(targetTop);
 
+        var targetRadius = _state == IslandVisualState.Compact
+            ? 23.0
+            : _viewModel.IsWorkspaceActive ? 20.0 : 22.0;
+
         if (!animate || !_loaded)
         {
             _boundsAnimationId++;
             _heightSyncTimer.Stop();
             _nativeHeightEase = null;
+            EndContentMask();
             BeginAnimation(WidthProperty, null);
             BeginAnimation(HeightProperty, null);
             BeginAnimation(LeftProperty, null);
@@ -1607,6 +1664,9 @@ public partial class IslandWindow : Window
             Height = height;
             Left = left;
             Top = top;
+            _cornerRadiusFrom = targetRadius;
+            _cornerRadiusTo = targetRadius;
+            ApplyCornerRadius(targetRadius);
             ApplyNativeHeight();
             return;
         }
@@ -1627,15 +1687,15 @@ public partial class IslandWindow : Window
         var animationId = ++_boundsAnimationId;
         var collapsing = height < fromHeight - 1;
         EasingFunctionBase ease = collapsing
-            ? new CubicEase { EasingMode = EasingMode.EaseInOut }
-            : new QuinticEase { EasingMode = EasingMode.EaseOut };
+            ? new SpringEasingFunction { Damping = 1.0, Frequency = 1.7, EasingMode = EasingMode.EaseIn }
+            : new SpringEasingFunction { Damping = 0.9, Frequency = 1.45, EasingMode = EasingMode.EaseIn };
 
         // Larger state changes (compact -> workspace) need a little more time;
         // small hover transitions stay snappy.
         var distance = Math.Abs(width - fromWidth) + Math.Abs(height - fromHeight);
         var durationMs = collapsing
-            ? 360.0
-            : Math.Min(420.0, 300.0 + (distance * 0.08));
+            ? 380.0
+            : Math.Min(460.0, 340.0 + (distance * 0.08));
         var duration = TimeSpan.FromMilliseconds(durationMs);
 
         // The native HWND size does not follow Window.Width/Height reliably
@@ -1648,6 +1708,8 @@ public partial class IslandWindow : Window
         _nativeHeightTo = height;
         _nativeHeightDuration = duration;
         _nativeHeightEase = ease;
+        _cornerRadiusFrom = Shell.CornerRadius.TopLeft;
+        _cornerRadiusTo = targetRadius;
 
         var widthAnimation = new DoubleAnimation(fromWidth, width, duration)
         {
@@ -1674,6 +1736,7 @@ public partial class IslandWindow : Window
             _nativeHeightEase = null;
             BeginAnimation(HeightProperty, null);
             Height = height;
+            EndContentMask();
             ApplyNativeHeight();
         };
 
@@ -1713,6 +1776,9 @@ public partial class IslandWindow : Window
             var eased = _nativeHeightEase.Ease(progress);
             width = _nativeWidthFrom + ((_nativeWidthTo - _nativeWidthFrom) * eased);
             height = _nativeHeightFrom + ((_nativeHeightTo - _nativeHeightFrom) * eased);
+            ApplyCornerRadius(
+                _cornerRadiusFrom + ((_cornerRadiusTo - _cornerRadiusFrom) * eased));
+            ApplyContentMask(width, height, eased);
         }
 
         if (!double.IsFinite(width) || !double.IsFinite(height))
@@ -1740,6 +1806,14 @@ public partial class IslandWindow : Window
             nativeWidth,
             nativeHeight,
             NativeMethods.SwpNoMove | NativeMethods.SwpNoZOrder | NativeMethods.SwpNoActivate);
+    }
+
+    private void ApplyCornerRadius(double radius)
+    {
+        var clamped = Math.Clamp(radius, 16.0, 23.0);
+        var corner = new CornerRadius(clamped);
+        Shell.CornerRadius = corner;
+        ShadowBorder.CornerRadius = corner;
     }
 
     private void SwitchContent(IslandVisualState state, bool animate)
