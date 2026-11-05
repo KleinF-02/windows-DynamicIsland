@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
@@ -51,10 +53,37 @@ jobs:
           $zip = "artifacts/publish/DynamicIsland-$version-win-x64.zip"
           Compress-Archive -Path (Join-Path $source '*') -DestinationPath $zip -Force
 
+      - name: Compose release notes
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $tag = "v$version"
+          $previous = git tag --sort=-version:refname |
+            Where-Object { $_ -ne $tag -and $_ -notmatch '-dev\.' } |
+            Select-Object -First 1
+
+          $lines = Get-Content CHANGELOG.md
+          $notes = [System.Collections.Generic.List[string]]::new()
+          $capture = $false
+          foreach ($line in $lines) {
+            if ($line -match "^## \[$([regex]::Escape($version))\]") {
+              $capture = $true
+              continue
+            }
+            if ($capture -and $line -match '^## \[') { break }
+            if ($capture) { $notes.Add($line) }
+          }
+
+          $body = "## Dynamic Island $tag`n`n" + ($notes -join "`n")
+          if ($previous) {
+            $body += "`n`n**Full Changelog**: https://github.com/KleinF-02/windows-DynamicIsland/compare/$previous...$tag`n"
+          }
+          Set-Content -Path release-notes.md -Value $body -Encoding utf8
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           name: Dynamic Island v${{ steps.version.outputs.version }}
+          body_path: release-notes.md
           files: artifacts/publish/DynamicIsland-${{ steps.version.outputs.version }}-win-x64.zip
-          generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}

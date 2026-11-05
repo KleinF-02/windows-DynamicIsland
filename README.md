@@ -13,7 +13,7 @@
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.2.0 更新记录](docs/releases/v0.2.0.md) · [变更日志](CHANGELOG.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
