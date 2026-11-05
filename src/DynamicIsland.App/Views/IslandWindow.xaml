@@ -379,30 +379,6 @@
                                                     ToolTip="移除快捷方式"
                                                     Click="RemoveShortcutButton_Click" />
 
-                                            <Grid x:Name="ShortcutVinylHost"
-                                                  Width="48"
-                                                  Height="48"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Top"
-                                                  Margin="0,1,0,0"
-                                                  Opacity="0"
-                                                  IsHitTestVisible="False">
-                                                <Grid.RenderTransform>
-                                                    <TranslateTransform X="4" />
-                                                </Grid.RenderTransform>
-                                                <Grid x:Name="ShortcutVinyl"
-                                                      RenderTransformOrigin="0.5,0.5">
-                                                    <Grid.RenderTransform>
-                                                        <RotateTransform Angle="0" />
-                                                    </Grid.RenderTransform>
-                                                    <Ellipse Fill="#0A0C12" Stroke="#35FFFFFF" StrokeThickness="1" />
-                                                    <Ellipse Width="35" Height="35" Stroke="#18FFFFFF" StrokeThickness="0.8" />
-                                                    <Ellipse Width="25" Height="25" Stroke="#14FFFFFF" StrokeThickness="0.8" />
-                                                    <Ellipse Width="14" Height="14" Fill="{StaticResource AccentBrush}" Opacity="0.82" />
-                                                    <Ellipse Width="3" Height="3" Fill="#0A0C12" />
-                                                </Grid>
-                                            </Grid>
-
                                             <Grid x:Name="ShortcutFilled">
                                                 <Grid.Style>
                                                     <Style TargetType="{x:Type Grid}">
@@ -424,9 +400,6 @@
                                                         BorderBrush="#20FFFFFF"
                                                         BorderThickness="1"
                                                         CornerRadius="11">
-                                                    <Border.RenderTransform>
-                                                        <TranslateTransform X="0" />
-                                                    </Border.RenderTransform>
                                                     <Grid>
                                                         <TextBlock Text="{Binding Initial}"
                                                                    FontSize="18"

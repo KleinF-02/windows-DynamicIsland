@@ -434,43 +434,6 @@ public partial class IslandWindow : Window
         scale.BeginAnimation(
             ScaleTransform.ScaleYProperty,
             new DoubleAnimation(1.16, duration) { EasingFunction = ease });
-
-        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
-        {
-            var cardTransform = EnsureMutableTransform<TranslateTransform>(card);
-            cardTransform.BeginAnimation(
-                TranslateTransform.XProperty,
-                new DoubleAnimation(-5, TimeSpan.FromMilliseconds(180))
-                {
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
-        {
-            vinylHost.BeginAnimation(
-                OpacityProperty,
-                new DoubleAnimation(1, TimeSpan.FromMilliseconds(120)));
-
-            var vinylTranslate = EnsureMutableTransform<TranslateTransform>(vinylHost);
-            vinylTranslate.BeginAnimation(
-                TranslateTransform.XProperty,
-                new DoubleAnimation(22, TimeSpan.FromMilliseconds(240))
-                {
-                    EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
-                });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
-        {
-            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
-            rotate.BeginAnimation(
-                RotateTransform.AngleProperty,
-                new DoubleAnimation(0, 360, TimeSpan.FromMilliseconds(1400))
-                {
-                    RepeatBehavior = RepeatBehavior.Forever
-                });
-        }
     }
 
     private void ShortcutTile_MouseLeave(object sender, MouseEventArgs e)
@@ -496,39 +459,6 @@ public partial class IslandWindow : Window
         scale.BeginAnimation(
             ScaleTransform.ScaleYProperty,
             new DoubleAnimation(1, duration) { EasingFunction = ease });
-
-        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
-        {
-            var cardTransform = EnsureMutableTransform<TranslateTransform>(card);
-            cardTransform.BeginAnimation(
-                TranslateTransform.XProperty,
-                new DoubleAnimation(0, TimeSpan.FromMilliseconds(160))
-                {
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
-        {
-            vinylHost.BeginAnimation(
-                OpacityProperty,
-                new DoubleAnimation(0, TimeSpan.FromMilliseconds(120)));
-
-            var vinylTranslate = EnsureMutableTransform<TranslateTransform>(vinylHost);
-            vinylTranslate.BeginAnimation(
-                TranslateTransform.XProperty,
-                new DoubleAnimation(4, TimeSpan.FromMilliseconds(160))
-                {
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
-        {
-            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
-            rotate.BeginAnimation(RotateTransform.AngleProperty, null);
-            rotate.Angle = 0;
-        }
     }
 
     private void ShortcutTile_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -574,32 +504,6 @@ public partial class IslandWindow : Window
         scale.BeginAnimation(
             ScaleTransform.ScaleYProperty,
             new DoubleAnimation(1, duration) { EasingFunction = ease });
-
-        if (FindNamed<Border>(root, "ShortcutCard") is { } card)
-        {
-            EnsureMutableTransform<TranslateTransform>(card)
-                .BeginAnimation(
-                    TranslateTransform.XProperty,
-                    new DoubleAnimation(0, duration) { EasingFunction = ease });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinylHost") is { } vinylHost)
-        {
-            vinylHost.BeginAnimation(
-                OpacityProperty,
-                new DoubleAnimation(0, TimeSpan.FromMilliseconds(120)));
-            EnsureMutableTransform<TranslateTransform>(vinylHost)
-                .BeginAnimation(
-                    TranslateTransform.XProperty,
-                    new DoubleAnimation(4, duration) { EasingFunction = ease });
-        }
-
-        if (FindNamed<Grid>(root, "ShortcutVinyl") is { } vinyl)
-        {
-            var rotate = EnsureMutableTransform<RotateTransform>(vinyl);
-            rotate.BeginAnimation(RotateTransform.AngleProperty, null);
-            rotate.Angle = 0;
-        }
 
         if (FindNamed<Button>(root, "ShortcutRemove") is { } remove)
         {
