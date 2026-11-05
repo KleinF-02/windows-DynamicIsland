@@ -78,6 +78,16 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Width="16" Height="16" VerticalAlignment="Center">
+                        <Grid.Style>
+                            <Style TargetType="{x:Type Grid}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMeetingCountdownActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
                         <Ellipse Width="16" Height="16" Fill="#16FFFFFF" />
                         <Ellipse Width="7" Height="7" Fill="{StaticResource AccentGradientBrush}">
                             <Ellipse.Effect>
@@ -93,6 +103,16 @@
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center"
                                 Margin="9,0,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="{x:Type StackPanel}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMeetingCountdownActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Text="{Binding UserName}"
                                    FontSize="13"
                                    FontWeight="SemiBold"
@@ -107,6 +127,16 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="{x:Type StackPanel}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMeetingCountdownActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Text="{Binding TimeText}"
                                    FontSize="14.5"
                                    FontWeight="SemiBold"
@@ -118,6 +148,57 @@
                                    Typography.NumeralAlignment="Tabular"
                                    Visibility="{Binding ShowSeconds, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </StackPanel>
+
+                    <Grid Grid.Column="0"
+                          Grid.ColumnSpan="3"
+                          VerticalAlignment="Center">
+                        <Grid.Style>
+                            <Style TargetType="{x:Type Grid}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMeetingCountdownActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Viewbox Width="21" Height="21" VerticalAlignment="Center">
+                            <Grid Width="90" Height="90">
+                                <Ellipse Width="80"
+                                         Height="80"
+                                         Stroke="#2BFFFFFF"
+                                         StrokeThickness="6" />
+                                <Path Data="{Binding CountdownRingGeometry}"
+                                      Stroke="{StaticResource AccentBrush}"
+                                      StrokeThickness="6"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      Fill="Transparent" />
+                            </Grid>
+                        </Viewbox>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding CountdownSubject}"
+                                   FontSize="11.5"
+                                   FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,8,0"
+                                   ToolTip="{Binding CountdownSubject}" />
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding CountdownText}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Typography.NumeralAlignment="Tabular" />
+                    </Grid>
 
                     <Ellipse Grid.Column="3"
                              Width="5"

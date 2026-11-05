@@ -290,6 +290,11 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         _clockTimer.Start();
         _powerTimer.Start();
         _calendarCountdownTimer.Start();
+
+        if (!string.IsNullOrWhiteSpace(_settings.WebCalendarUrl))
+        {
+            _ = EnsureCalendarLoadedAsync();
+        }
     }
 
     public void Stop()

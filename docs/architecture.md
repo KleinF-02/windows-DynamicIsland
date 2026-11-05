@@ -178,6 +178,8 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 会议倒计时由 `IslandViewModel` 的 100ms `DispatcherTimer` 驱动：取今天最近一场未开始、非全天的会议，若距开始时间 ≤ 5 分钟则进入倒计时；`CountdownRingGeometry` 用 `ArcSegment` 生成圆环进度，`CountdownText` 显示 `m:ss`。会议开始后条件不再成立，倒计时视口隐藏，日程列表恢复。全部主题为空时状态栏显示“主题未公开”，提示重新发布日历并选择“可查看所有详细信息”。
 
+配置了网页 ICS 时，`Start()` 会后台预加载今日日历，因此不需要先打开 Calendar 标签；compact 胶囊和展开页绑定同一组 `IsMeetingCountdownActive / CountdownSubject / CountdownText / CountdownRingGeometry`，缩小后仍持续刷新。
+
 ### 开机启动
 
 `StartupService` 只写当前用户：
