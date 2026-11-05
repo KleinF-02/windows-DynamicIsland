@@ -56,6 +56,7 @@ public partial class IslandWindow : Window
     private bool _hovering;
     private bool _pinned;
     private bool _editingTodo;
+    private bool _editingAgent;
     private bool _menuOpen;
     private bool _allowClose;
     private bool _topmostSuppressed;
@@ -143,6 +144,7 @@ public partial class IslandWindow : Window
         _viewModel.NotificationMessage = message;
         _pinned = false;
         _editingTodo = false;
+        _editingAgent = false;
         _viewModel.IsPinned = false;
 
         SetState(IslandVisualState.Notification, animate: true);
@@ -165,10 +167,12 @@ public partial class IslandWindow : Window
 
     private void Window_Deactivated(object? sender, EventArgs e)
     {
+        // IME candidate windows can deactivate the WPF window while the Agent
+        // TextBox still owns keyboard focus. Do not collapse during that case.
         _editingTodo = false;
 
         if (_state == IslandVisualState.Expanded && !_pinned && !_hovering
-            && !_menuOpen && !_dragActive && !_dragOutActive)
+            && !_editingAgent && !_menuOpen && !_dragActive && !_dragOutActive)
         {
             ScheduleCollapse();
         }
@@ -311,6 +315,7 @@ public partial class IslandWindow : Window
         _collapseTimer.Stop();
         _pinned = false;
         _editingTodo = false;
+        _editingAgent = false;
         _viewModel.IsPinned = false;
         SetState(IslandVisualState.Compact, animate: false);
         _viewModel.Stop();
@@ -385,7 +390,7 @@ public partial class IslandWindow : Window
     {
         _hovering = false;
 
-        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo)
+        if (_state == IslandVisualState.Expanded && !_pinned && !_editingTodo && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -432,7 +437,7 @@ public partial class IslandWindow : Window
             {
                 _collapseTimer.Stop();
             }
-            else if (!_hovering && !_editingTodo)
+            else if (!_hovering && !_editingTodo && !_editingAgent)
             {
                 ScheduleCollapse();
             }
@@ -503,7 +508,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -688,7 +693,7 @@ public partial class IslandWindow : Window
     {
         _dragActive = false;
 
-        if (!_hovering && !_pinned && !_editingTodo)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
         {
             ScheduleCollapse();
         }
@@ -791,6 +796,12 @@ public partial class IslandWindow : Window
         // never pin state. Hovering the expanded window keeps it open; leaving
         // follows the normal collapse timer.
         var wasWorkspace = _viewModel.IsWorkspaceActive;
+
+        if (_viewModel.IsAgentActive && function != FunctionTab.Agent)
+        {
+            _editingAgent = false;
+        }
+
         _viewModel.SelectFunction(function);
 
         if (_state == IslandVisualState.Expanded
@@ -823,6 +834,22 @@ public partial class IslandWindow : Window
         SelectFunction(FunctionTab.Agent);
         AgentInputBox.Focus();
         e.Handled = true;
+    }
+
+    private void AgentInput_GotFocus(object sender, RoutedEventArgs e)
+    {
+        _editingAgent = true;
+        _collapseTimer.Stop();
+    }
+
+    private void AgentInput_LostFocus(object sender, RoutedEventArgs e)
+    {
+        _editingAgent = false;
+
+        if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_menuOpen)
+        {
+            ScheduleCollapse();
+        }
     }
 
     private void TranslationTarget_Click(object sender, RoutedEventArgs e)
@@ -1220,7 +1247,7 @@ public partial class IslandWindow : Window
         {
             _dragOutActive = false;
 
-            if (!_hovering && !_pinned && !_editingTodo)
+            if (!_hovering && !_pinned && !_editingTodo && !_editingAgent)
             {
                 ScheduleCollapse();
             }
@@ -1350,7 +1377,7 @@ public partial class IslandWindow : Window
     {
         _menuOpen = false;
 
-        if (!_hovering && !_pinned && !_editingTodo && _state == IslandVisualState.Expanded)
+        if (!_hovering && !_pinned && !_editingTodo && !_editingAgent && _state == IslandVisualState.Expanded)
         {
             ScheduleCollapse();
         }
@@ -1366,7 +1393,7 @@ public partial class IslandWindow : Window
     {
         _collapseTimer.Stop();
 
-        if (_hovering || _pinned || _editingTodo || _menuOpen || _dragActive || _dragOutActive
+        if (_hovering || _pinned || _editingTodo || _editingAgent || _menuOpen || _dragActive || _dragOutActive
             || _state != IslandVisualState.Expanded)
         {
             return;
@@ -1401,6 +1428,7 @@ public partial class IslandWindow : Window
         if (state != IslandVisualState.Expanded)
         {
             _editingTodo = false;
+            _editingAgent = false;
         }
 
         _viewModel.IsExpanded = state == IslandVisualState.Expanded;

@@ -1308,6 +1308,8 @@
                                                      FontSize="12"
                                                      Padding="4,4"
                                                      PreviewKeyDown="AgentInput_PreviewKeyDown"
+                                                     GotFocus="AgentInput_GotFocus"
+                                                     LostFocus="AgentInput_LostFocus"
                                                      AutomationProperties.Name="AI Agent 输入"
                                                      ToolTip="Ctrl+Enter 发送" />
                                             <TextBlock Text="向本地 AI Agent 提问…"
