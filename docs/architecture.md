@@ -106,7 +106,7 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 - 展开/收起：`Width`、`Height`、`Left` 和四角圆角统一使用 `CubicBezierEasingFunction(0.16, 1, 0.3, 1)`，时长 `560ms`。
 - 内容切换：展开内容延迟 `140ms`、`260ms` 淡入，并从 `-6px` 上移；紧凑内容延迟 `250ms` 出现；退出内容 `120ms` 淡出并上移。
 - 连续形变：`Shell` / `ShadowBorder` 四角圆角在紧凑 `19`（高度/2，真正胶囊）、工作区 `26`、常规展开 `30` 之间变化。
-- fly-island 的 `backdrop-filter` 玻璃折射在 WPF 中用渐变、网格纹理和短时内容模糊近似；不复制其字体/图片资产。
+- fly-island 的 `backdrop-filter` 玻璃折射在 WPF 中用表面渐变和短时内容模糊近似；不复制其字体/图片资产。
 - 透明分层窗口的 `Width` 和 `Height` 在动画期间通过 `16ms` 原生 `SetWindowPos` 同步，避免 WPF 只在动画结束时才更新 HWND 尺寸、造成横向跳变或末尾卡顿。
 - 状态/功能切换在内容层叠加短时 `BlurEffect`：峰值 2.4–2.8、约 320ms，结束后移除 Effect；胶囊背景、边框和阴影不模糊。渲染层级低于 2 时跳过模糊，只保留渐隐/缩放，优先保证 60fps。
 - 圆角、窗口宽高和原生 HWND 使用同一条 cubic-bezier 进度，避免尺寸和轮廓不同步。

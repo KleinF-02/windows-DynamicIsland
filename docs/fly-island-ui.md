@@ -32,7 +32,7 @@ fly-island 是 **Tauri 2 + React 19 + TypeScript + Vite** 应用，不是 WPF：
 | 顶部贴屏、底部圆角 | 本项目最终改为四角全圆角胶囊：Compact `19`，Workspace `26`，Expanded `30` |
 | 紧凑态 38px 高、宽 340 | `IslandMetrics` Compact `340 × 38` |
 | 展开态 560px 宽 | `IslandMetrics` Expanded `560 × 306` |
-| `#2F2F37` 深色表面、顶部高光、网格线 | 深色调色板 + `IslandGridBrush` + 垂直强调线 |
+| `#2F2F37` 深色表面、顶部高光 | 深色调色板 + 顶部高光渐变；不绘制背景横竖装饰线 |
 | 青色强调色、绿色 Agent 脉冲、彩色标签点 | `#74D6FF`、`PulseBrush`、五色 `DotTabButton` |
 | `cubic-bezier(0.16, 1, 0.3, 1)` | `CubicBezierEasingFunction` |
 | 尺寸/圆角过渡 560ms | 窗口宽高/圆角 560ms |
