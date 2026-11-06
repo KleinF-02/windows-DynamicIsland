@@ -72,6 +72,7 @@ public partial class App : Application
             _island.SettingsRequested += (_, _) => OpenSettings();
             _island.ExitRequested += (_, _) => ExitApplication();
             _island.AgentSettingsChanged += OnAgentSettingsChanged;
+            _island.LayoutSettingsChanged += OnAgentSettingsChanged;
 
             _trayIcon = new TrayIconService(_settings.StartWithWindows);
             _trayIcon.ShowRequested += (_, _) => _island?.ShowFromTray();

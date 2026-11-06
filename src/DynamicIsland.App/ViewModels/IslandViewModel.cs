@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DynamicIsland.App.Interop;
 using DynamicIsland.App.Services;
+using DynamicIsland.Core.Layout;
 using DynamicIsland.Core.Models;
 using Point = System.Windows.Point;
 using Screen = System.Windows.Forms.Screen;
@@ -338,6 +339,21 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
     public bool IsAgentBusy => _isAgentBusy;
 
     public event EventHandler<IslandSettings>? AgentSettingsChanged;
+
+    public event EventHandler<IslandSettings>? LayoutSettingsChanged;
+
+    public bool IsSideDocked => _settings.DockEdge is "left" or "right";
+
+    public void ApplyDockLayout(string edge, double offset, string screenDevice)
+    {
+        var normalized = IslandPlacement.ParseEdge(edge);
+        _settings.DockEdge = IslandPlacement.EdgeName(normalized);
+        _settings.DockOffset = double.IsFinite(offset) ? Math.Clamp(offset, 0.0, 1.0) : 0.5;
+        _settings.PreferredScreen = (screenDevice ?? string.Empty).Trim();
+
+        OnPropertyChanged(nameof(IsSideDocked));
+        LayoutSettingsChanged?.Invoke(this, _settings.Clone());
+    }
 
     public string AgentModelLabel => _settings.AgentApiProvider switch
     {
@@ -1302,6 +1318,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SecondsDisplay));
         OnPropertyChanged(nameof(ExpandedSeconds));
         OnPropertyChanged(nameof(AgentModelLabel));
+        OnPropertyChanged(nameof(IsSideDocked));
 
         if (!string.Equals(previousCalendarUrl, _settings.WebCalendarUrl, StringComparison.Ordinal))
         {

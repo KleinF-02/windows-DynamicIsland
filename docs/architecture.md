@@ -47,26 +47,37 @@ Core 不引用 WPF、WinForms 或任何窗口概念，因此几何和配置可�
 
 `IslandMetrics` 是几何的唯一来源（单位 DIP）：
 
-| 状态 | 内容尺寸 | 外窗尺寸（含阴影留白） |
+| 状态 | 横向内容 / 外窗 | 竖向（左右吸附）内容 / 外窗 |
 | --- | --- | --- |
-| Compact | `340 × 38` | `368 × 66` |
-| Expanded | `560 × 306` | `588 × 334` |
-| Expanded + 工作区（翻译 / AI Agent） | `720 × 560` | `748 × 588` |
-| Notification | `400 × 118` | `428 × 146` |
+| Compact | `340 × 38` / `368 × 66` | `58 × 340` / `86 × 368` |
+| Expanded | `560 × 306` / `588 × 334` | `420 × 720` / `448 × 748` |
+| Expanded + 工作区（翻译 / AI Agent） | `720 × 560` / `748 × 588` | `560 × 720` / `588 × 748` |
+| Notification | `400 × 118` / `428 × 146` | `400 × 118` / `428 × 146` |
 
 外窗四周各留 `14 DIP` 给 WPF 阴影。窗口本身是 `AllowsTransparency=True` 的透明分层窗口，视觉上只有胶囊本体是实心。
 
 ### 定位
 
-`IslandPlacement.TopCenter` 根据显示器工作区（`Screen.WorkingArea`）计算水平居中位置。通过 `CompositionTarget.TransformFromDevice` 把物理像素转换成 DIP，兼容 Per-Monitor V2。
+`IslandPlacement.Place` 根据 `Screen.WorkingArea`、吸附边缘和 `DockOffset` 计算外窗位置。`DockOffset` 是可见内容**中心**沿边缘的归一化位置（0–1），因此切换横向/竖向尺寸时中心不会漂移；`TopCenter` 保留为兼容入口。
 
-窗口顶部有 14 DIP 的透明阴影留白。`IslandWindow.PositionWindow` 会把窗口整体上移这段留白，因此 `TopMargin = 0` 时**胶囊视觉顶边正好贴住工作区顶部**，窗口的 `Top` 会是 `-14` 左右，顶部阴影被屏幕边缘裁掉。这是有意为之；否则会出现一条 14px 的视觉缝隙。
+窗口四周有 14 DIP 透明阴影。定位以可见内容边缘为基准，再减去阴影留白，因此上边缘 `TopMargin=0` 时胶囊视觉顶边正好贴住工作区顶部，窗口 `Top` 约 `-14`。左/右边缘同理。
 
-`TopMargin` 的语义是“到胶囊可见顶边的距离”，默认 `0`。设置页可调到 `0–40 DIP`，向右拉才会出现缝隙。
+`TopMargin` 只影响上边缘，默认 `0`；左右/下边缘忽略。
 
-`PositionWindow` 会在工作区尺寸不足时调用 `IslandMetrics.FitWithin`，等比缩小超过 `工作区宽度 - 24 DIP` 或 `工作区高度 - TopMargin - 8 DIP` 的窗口。常规 1920×1080 / 2560×1440 不缩放；200% 缩放或小屏时，大工作区会自适应缩小而不会超出屏幕。
+`PositionWindow` 会在工作区尺寸不足时调用 `IslandMetrics.FitWithin`，等比缩小超过 `工作区宽度 - 24 DIP` 或 `工作区高度 - TopMargin - 8 DIP` 的窗口。
 
-当前默认使用主屏。`IslandSettings.PreferredScreen` 已经存在，`ResolveScreen()` 也已按设备名匹配，只差设置页中的显示器下拉框。
+### 拖动与吸附
+
+`IslandWindow` 在 `Shell` 上处理鼠标拖动：
+
+- 按钮、输入框、滚动区域、菜单等交互源不触发窗口拖动；
+- 按住空白区域后捕获鼠标，用 `GetCursorPos` + `SetWindowPos` 按物理像素移动，兼容混合 DPI；
+- 拖动期间限制在虚拟屏幕内，并暂停悬停收起和自动定位；
+- 松手后用 `GetWindowRect` 计算最近边缘和沿边中心，写入 `DockEdge` / `DockOffset` / `PreferredScreen`；
+- 左右边缘调用 `IsSideDocked`，切换 `SideCompactView` 和竖向窗口尺寸；
+- 布局变化通过 `LayoutSettingsChanged` 原子写回设置文件。
+
+`ResolveScreen()` 优先使用保存的 `PreferredScreen`，重启后恢复原显示器。
 
 ### 点击穿透边距
 

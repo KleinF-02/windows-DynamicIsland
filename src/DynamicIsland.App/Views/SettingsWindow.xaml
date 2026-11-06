@@ -377,8 +377,8 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="顶部距离" FontSize="13" FontWeight="SemiBold" />
-                                <TextBlock Text="0 表示紧贴屏幕顶端，向右可留出间隙"
+                                <TextBlock Text="顶部距离（仅顶边）" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="拖动胶囊可吸附屏幕四边；左右吸附时切换竖向布局。此项只影响顶边距离。"
                                            Style="{StaticResource CaptionText}"
                                            Margin="0,3,0,0" />
                             </StackPanel>

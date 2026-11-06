@@ -14,18 +14,41 @@ public static class IslandMetrics
     /// <summary>Larger Expanded footprint used by the translation workspace.</summary>
     public static IslandSize Translation { get; } = new(720, 560);
 
-    public static IslandSize Content(IslandVisualState state, bool workspace = false) => state switch
+    public static IslandSize Content(
+        IslandVisualState state,
+        bool workspace = false,
+        bool verticalDock = false)
     {
-        IslandVisualState.Compact => new IslandSize(340, 38),
-        IslandVisualState.Expanded when workspace => Translation,
-        IslandVisualState.Expanded => new IslandSize(560, 306),
-        IslandVisualState.Notification => new IslandSize(400, 118),
-        _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
-    };
+        if (verticalDock)
+        {
+            return state switch
+            {
+                // A true vertical pill. Height stays fixed so the rail can dock
+                // on either side without occupying desktop width.
+                IslandVisualState.Compact => new IslandSize(58, 340),
+                IslandVisualState.Expanded when workspace => new IslandSize(560, 720),
+                IslandVisualState.Expanded => new IslandSize(420, 720),
+                IslandVisualState.Notification => new IslandSize(400, 118),
+                _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
+            };
+        }
 
-    public static IslandSize Outer(IslandVisualState state, bool workspace = false)
+        return state switch
+        {
+            IslandVisualState.Compact => new IslandSize(340, 38),
+            IslandVisualState.Expanded when workspace => Translation,
+            IslandVisualState.Expanded => new IslandSize(560, 306),
+            IslandVisualState.Notification => new IslandSize(400, 118),
+            _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
+        };
+    }
+
+    public static IslandSize Outer(
+        IslandVisualState state,
+        bool workspace = false,
+        bool verticalDock = false)
     {
-        var content = Content(state, workspace);
+        var content = Content(state, workspace, verticalDock);
         return new IslandSize(
             content.Width + (ShadowPadding * 2),
             content.Height + (ShadowPadding * 2));

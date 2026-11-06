@@ -48,6 +48,9 @@
                 MouseEnter="Window_MouseEnter"
                 MouseLeave="Window_MouseLeave"
                 MouseLeftButtonUp="Shell_MouseLeftButtonUp"
+                PreviewMouseLeftButtonDown="Shell_PreviewMouseLeftButtonDown"
+                PreviewMouseMove="Shell_PreviewMouseMove"
+                PreviewMouseLeftButtonUp="Shell_PreviewMouseLeftButtonUp"
                 DragEnter="Shell_DragEnter"
                 DragOver="Shell_DragOver"
                 DragLeave="Shell_DragLeave"
@@ -214,6 +217,78 @@
                 </Grid>
 
                 <!-- Expanded -->
+                <!-- Vertical rail used when docked to the left/right edge. -->
+                <Grid x:Name="SideCompactView"
+                      Margin="4,12"
+                      Opacity="0"
+                      Visibility="Collapsed"
+                      IsHitTestVisible="False"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="SideCompactScale" ScaleX="1" ScaleY="1" />
+                            <TranslateTransform x:Name="SideCompactTranslate" />
+                        </TransformGroup>
+                    </Grid.RenderTransform>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Ellipse Width="13" Height="13" Fill="{DynamicResource CompactDotBrush}" />
+                        <Ellipse Width="5"
+                                 Height="5"
+                                 Margin="0,5,0,0"
+                                 Fill="{DynamicResource PulseBrush}">
+                            <Ellipse.Effect>
+                                <DropShadowEffect BlurRadius="9"
+                                                  ShadowDepth="0"
+                                                  Color="{DynamicResource PulseColor}"
+                                                  Opacity="0.9" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+
+                        <TextBlock Text="{Binding TimeText}"
+                                   Margin="0,14,0,0"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   TextAlignment="Center"
+                                   Typography.NumeralAlignment="Tabular" />
+                        <TextBlock Text="{Binding SecondsDisplay}"
+                                   FontSize="9"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextAlignment="Center"
+                                   Typography.NumeralAlignment="Tabular"
+                                   Visibility="{Binding ShowSeconds, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Text="{Binding DateText}"
+                                   Width="48"
+                                   Margin="0,7,0,0"
+                                   FontSize="8"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding CountdownText}"
+                                   Margin="0,6,0,0"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   TextAlignment="Center"
+                                   Visibility="{Binding IsMeetingCountdownActive, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                        <Border Width="18"
+                                Height="1"
+                                Margin="0,12,0,10"
+                                Background="{DynamicResource CompactSeparatorBrush}" />
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <Ellipse Width="4" Height="4" Fill="{DynamicResource AccentBrush}" Margin="0,2" />
+                            <Ellipse Width="4" Height="4" Fill="#74D6FF" Margin="0,2" />
+                            <Ellipse Width="4" Height="4" Fill="#35E985" Margin="0,2" />
+                            <Ellipse Width="4" Height="4" Fill="#B69CFF" Margin="0,2" />
+                            <Ellipse Width="4" Height="4" Fill="#FFD166" Margin="0,2" />
+                        </StackPanel>
+                        <Ellipse Width="5"
+                                 Height="5"
+                                 Margin="0,10,0,0"
+                                 Fill="{DynamicResource AccentBrush}"
+                                 Visibility="{Binding IsPinned, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </StackPanel>
+                </Grid>
+
                 <Grid x:Name="ExpandedView"
                       Margin="22,14,22,12"
                       Opacity="0"

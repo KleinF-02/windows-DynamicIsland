@@ -1,32 +1,37 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.12.1-6FE7C8)
+![version](https://img.shields.io/badge/version-0.13.0-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-> 一颗停在桌面顶部的胶囊。悬停展开，常用软件、日程、待办、翻译和本地 AI Agent 都在这里完成。
+> 一颗可以拖到屏幕任意边缘的胶囊。悬停展开，常用软件、日程、待办、翻译和 AI Agent 都在这里完成。
 
 ![灵动岛](docs/images/hero.png)
 
-**当前版本 `v0.12.1`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析；窗口闲置 1 分钟后自动变为半透明，鼠标交互后恢复不透明。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+| 左右吸附：竖向胶囊 | 左右吸附：Agent |
+| --- | --- |
+| ![竖向胶囊](docs/images/side-compact.png) | ![竖向 Agent](docs/images/side-agent.png) |
+
+**当前版本 `v0.13.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析；窗口闲置 1 分钟后自动变为半透明，鼠标交互后恢复不透明。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [fly-island UI 适配说明](docs/fly-island-ui.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.12.1 更新记录](docs/releases/v0.12.1.md) · [变更日志](CHANGELOG.md) · [第三方许可](THIRD_PARTY_NOTICES.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [fly-island UI 适配说明](docs/fly-island-ui.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.13.0 更新记录](docs/releases/v0.13.0.md) · [变更日志](CHANGELOG.md) · [第三方许可](THIRD_PARTY_NOTICES.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.12.1-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.13.0-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
-3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
+3. 拖住胶囊可移到任意屏幕边缘；吸附左右边缘时自动切换竖向 UI。鼠标移到胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
 
 自包含发布包不需要预装 .NET。翻译 / AI Agent 需要本机运行 Ollama 或 LM Studio，并在设置中填写模型地址。
 
 ## 现在能做什么
 
-- 紧贴屏幕顶部的无边框透明胶囊，始终置顶，不占用任务栏
+- 无边框透明胶囊，可拖动并吸附屏幕四边；左右吸附自动切换竖向布局，不强制居中
+- 记住吸附边缘和沿边位置，重启后保持
 - 胶囊主标签显示当前 Windows 登录名（本机为 `klein`）
 - 悬停自动放大展开，移开自动收起；右下角独立按钮固定 / 取消固定
 - 展开 `300ms`、收起 `360ms` 弹性尺寸动画 + 顶部中心缩放 + 内容错峰交叉淡化
@@ -47,7 +52,7 @@
 - **闲置半透明**：60 秒没有鼠标/键盘交互后窗口平滑变为 45% 不透明度；鼠标进入、移动、点击、滚轮或键盘输入后恢复
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
 - 深色 / 浅色两套主题，自动跟随 Windows“应用模式”实时切换
-- 设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（默认 `0` = 贴顶）
+- 设置页：置顶、动画、秒数、开机启动、不透明度、顶部距离（仅顶边，默认 `0` = 贴顶）
 - 系统托盘图标与右键菜单
 - 右键菜单：设置、演示通知、隐藏到托盘、退出
 - 单实例运行；Alt+F4 默认隐藏到托盘而不是退出
@@ -62,7 +67,7 @@
 | 系统集成 | Win32 P/Invoke + WinForms `NotifyIcon` | 托盘、电源状态、点击穿透边距，不引入第三方 UI 包 |
 | 日历 | Outlook 网页 ICS + `Ical.Net` 4.3.1；桌面 COM 回退 | 不依赖 Azure 应用注册；`Ical.Net` 负责 RFC 5545 重复日程展开 |
 | 配置 | `System.Text.Json` + Core 层 | UI 无关、可单测、原子写入 |
-| 测试 | xUnit | Core 层 11 个单元测试 |
+| 测试 | xUnit | Core 层 17 个单元测试 |
 
 运行时第三方依赖仅有 `Ical.Net` 4.3.1（MIT）及其 `NodaTime` 3.2.0（Apache-2.0），用于解析 ICS；详见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
@@ -164,8 +169,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.12.1-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.12.1-win-x64.zip
+artifacts/publish/DynamicIsland-0.13.0-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.13.0-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -184,6 +189,7 @@ artifacts/publish/DynamicIsland-0.12.1-win-x64.zip
 | 左键单击胶囊 | 展开；不改变固定状态 |
 | 点击右下角“固定窗口” | 固定 / 取消固定；这是唯一的固定入口 |
 | 编辑待办时鼠标移开 | 暂时保持展开，焦点离开后再收起 |
+| 拖动胶囊 | 自由移动，松手吸附最近屏幕边缘；左右边缘切换竖向 UI，位置会保存 |
 | 点击下方圆点 | 切换「常用软件」「Calendar」「待办事项」「翻译」和「AI Agent」 |
 | Agent 模型切换 | Agent 面板右上角按钮可切换本地模型、DeepSeek、Kimi、GLM、自定义 API，并立即持久化 |
 | 点击空快捷方式格子 | 打开开始菜单应用选择器；也可点“浏览文件…”选择本地 `.html` 或快捷方式 |
@@ -295,7 +301,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.12.1`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.13.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 
@@ -311,4 +317,4 @@ dynamic-island/
 - 真实 Microsoft 365 发布链接需要你自己的账号链接做最终联调；桌面版 Outlook COM 未在本机实测
 - 常用软件已用 6 个真实 `.lnk` 验证图标、悬停放大动画、单击启动、移除和重启持久化
 - 待办已实测键盘输入、行内修改、打勾删除、粒子动画和重启持久化
-- `dotnet build` 0 警告 0 错误；`dotnet test` 11/11 通过
+- `dotnet build` 0 警告 0 错误；`dotnet test` 17/17 通过

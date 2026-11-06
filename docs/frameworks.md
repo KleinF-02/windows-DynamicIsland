@@ -56,7 +56,7 @@
 ## 数据与测试
 
 - `SettingsStore` / `ShortcutStore` / `TodoStore` 使用临时文件 + 原子替换，避免写坏 JSON。
-- Core 层测试覆盖状态、尺寸、定位、序列化和小屏自适应用例，当前总计 11 个测试。
+- Core 层测试覆盖状态、尺寸、四边定位、序列化和小屏自适应用例，当前总计 17 个测试。
 - GitHub Actions 在 `windows-latest` 上 restore/build/test，并在 tag 上构建自包含 zip。
 
 ## 依赖许可

@@ -25,6 +25,18 @@ public sealed class IslandSettings
     public double TopMargin { get; set; } = 0.0;
 
     /// <summary>
+    /// Edge the island is docked to after dragging: top, bottom, left or right.
+    /// </summary>
+    public string DockEdge { get; set; } = "top";
+
+    /// <summary>
+    /// Normalized center of the island along the docked edge, 0 = start,
+    /// 1 = end. 0.5 is the initial top-center position; dragging preserves
+    /// the offset instead of forcing the island back to the center.
+    /// </summary>
+    public double DockOffset { get; set; } = 0.5;
+
+    /// <summary>
     /// Published Outlook web calendar (ICS) URL. Empty means "try desktop Outlook".
     /// The URL contains a private access token; it is stored only in local settings.
     /// </summary>
@@ -89,6 +101,19 @@ public sealed class IslandSettings
         }
 
         TopMargin = Math.Clamp(TopMargin, 0.0, 80.0);
+
+        DockEdge = (DockEdge ?? "top").Trim().ToLowerInvariant();
+        if (DockEdge is not ("top" or "bottom" or "left" or "right"))
+        {
+            DockEdge = "top";
+        }
+
+        if (!double.IsFinite(DockOffset))
+        {
+            DockOffset = 0.5;
+        }
+
+        DockOffset = Math.Clamp(DockOffset, 0.0, 1.0);
         PreferredScreen ??= string.Empty;
         WebCalendarUrl = (WebCalendarUrl ?? string.Empty).Trim();
         if (WebCalendarUrl.Length > 4096)

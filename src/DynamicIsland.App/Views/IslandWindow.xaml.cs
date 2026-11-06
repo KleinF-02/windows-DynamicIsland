@@ -80,6 +80,16 @@ public partial class IslandWindow : Window
     private bool _topmostSuppressed;
     private bool _dragActive;
     private bool _dragOutActive;
+    private bool _windowDragging;
+    private bool _windowDragCandidate;
+    private bool _suppressShellClick;
+    private Point _windowDragStart;
+    private int _windowDragStartCursorX;
+    private int _windowDragStartCursorY;
+    private int _windowDragStartWindowX;
+    private int _windowDragStartWindowY;
+    private int _windowDragWidth;
+    private int _windowDragHeight;
     private bool _startMenuOpen;
     private DateTime _startMenuDragGraceUntil;
     private IslandVisualState _stateBeforeStartMenu = IslandVisualState.Compact;
@@ -100,6 +110,8 @@ public partial class IslandWindow : Window
         _viewModel.AgentMessages.CollectionChanged += AgentMessages_CollectionChanged;
         _viewModel.AgentSettingsChanged += (_, settings) =>
             AgentSettingsChanged?.Invoke(this, settings);
+        _viewModel.LayoutSettingsChanged += (_, settings) =>
+            LayoutSettingsChanged?.Invoke(this, settings);
         AgentInputBox.AddHandler(
             TextCompositionManager.TextInputStartEvent,
             new TextCompositionEventHandler(AgentInput_TextInputStart),
@@ -152,6 +164,8 @@ public partial class IslandWindow : Window
 
     public event EventHandler<IslandSettings>? AgentSettingsChanged;
 
+    public event EventHandler<IslandSettings>? LayoutSettingsChanged;
+
     public void ApplySettings(IslandSettings settings)
     {
         _settings = settings.Clone();
@@ -161,6 +175,11 @@ public partial class IslandWindow : Window
         AnimateWindowOpacity(_settings.Opacity, animate: false);
         RestartIdleTimer();
         PositionWindow(animate: false);
+
+        if (_state == IslandVisualState.Compact)
+        {
+            SwitchContent(_state, animate: false);
+        }
     }
 
     /// <summary>
@@ -222,7 +241,8 @@ public partial class IslandWindow : Window
 
         if (_state == IslandVisualState.Expanded && !_pinned && !_agentFileDialogOpen && !_hovering
             && !IsTranslationTypingHoldActive && !IsAgentTypingHoldActive
-            && !_menuOpen && !_dragActive && !_dragOutActive)
+            && !_menuOpen && !_dragActive && !_dragOutActive
+            && !_windowDragCandidate && !_windowDragging)
         {
             ScheduleCollapse();
         }
@@ -417,6 +437,7 @@ public partial class IslandWindow : Window
         _loaded = true;
         _viewModel.Start();
         PositionWindow(animate: false);
+        SwitchContent(_state, animate: false);
         _startMenuGuardTimer.Start();
         RestartIdleTimer();
     }
@@ -536,8 +557,230 @@ public partial class IslandWindow : Window
         BeginAnimation(OpacityProperty, animation);
     }
 
+    private void Shell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _suppressShellClick = false;
+        _windowDragCandidate = false;
+
+        if (e.ChangedButton != MouseButton.Left
+            || _state == IslandVisualState.Notification
+            || IsWindowDragBlockedSource(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
+        _windowDragCandidate = true;
+        _windowDragStart = GetScreenPoint(e);
+        if (_hwndSource is null
+            || !NativeMethods.GetCursorPos(out var cursor)
+            || !NativeMethods.GetWindowRect(_hwndSource.Handle, out var windowRect))
+        {
+            _windowDragCandidate = false;
+            return;
+        }
+
+        _windowDragStartCursorX = cursor.X;
+        _windowDragStartCursorY = cursor.Y;
+        _windowDragStartWindowX = windowRect.Left;
+        _windowDragStartWindowY = windowRect.Top;
+        _windowDragWidth = Math.Max(1, windowRect.Right - windowRect.Left);
+        _windowDragHeight = Math.Max(1, windowRect.Bottom - windowRect.Top);
+        Shell.CaptureMouse();
+    }
+
+    private void Shell_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_windowDragCandidate || e.LeftButton != MouseButtonState.Pressed)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed)
+            {
+                _windowDragCandidate = false;
+            }
+
+            return;
+        }
+
+        var current = GetScreenPoint(e);
+        var dx = current.X - _windowDragStart.X;
+        var dy = current.Y - _windowDragStart.Y;
+
+        if (!_windowDragging)
+        {
+            if (Math.Abs(dx) < SystemParameters.MinimumHorizontalDragDistance
+                && Math.Abs(dy) < SystemParameters.MinimumVerticalDragDistance)
+            {
+                return;
+            }
+
+            _windowDragging = true;
+            _suppressShellClick = true;
+        }
+
+        if (_hwndSource is not null
+            && NativeMethods.GetCursorPos(out var cursor))
+        {
+            var virtualScreen = System.Windows.Forms.SystemInformation.VirtualScreen;
+            var targetX = _windowDragStartWindowX + cursor.X - _windowDragStartCursorX;
+            var targetY = _windowDragStartWindowY + cursor.Y - _windowDragStartCursorY;
+
+            // Keep the whole island reachable while dragging. Without this a
+            // wide expanded panel can be dragged mostly off-screen and its
+            // nearest-edge calculation becomes misleading.
+            targetX = Math.Clamp(
+                targetX,
+                virtualScreen.Left,
+                Math.Max(virtualScreen.Left, virtualScreen.Right - _windowDragWidth));
+            targetY = Math.Clamp(
+                targetY,
+                virtualScreen.Top,
+                Math.Max(virtualScreen.Top, virtualScreen.Bottom - _windowDragHeight));
+
+            NativeMethods.SetWindowPos(
+                _hwndSource.Handle,
+                IntPtr.Zero,
+                targetX,
+                targetY,
+                0,
+                0,
+                NativeMethods.SwpNoSize | NativeMethods.SwpNoZOrder | NativeMethods.SwpNoActivate);
+        }
+
+        e.Handled = true;
+    }
+
+    private void Shell_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_windowDragging)
+        {
+            var wasCandidate = _windowDragCandidate;
+            _windowDragCandidate = false;
+            Shell.ReleaseMouseCapture();
+
+            // Capturing the mouse for a potential drag can consume the normal
+            // bubble click. Preserve the compact click-to-expand behavior.
+            if (wasCandidate && _state == IslandVisualState.Compact)
+            {
+                e.Handled = true;
+                SetState(IslandVisualState.Expanded, animate: true);
+            }
+
+            return;
+        }
+
+        _windowDragging = false;
+        _windowDragCandidate = false;
+        Shell.ReleaseMouseCapture();
+        e.Handled = true;
+        SnapToNearestEdge();
+    }
+
+    private Point GetScreenPoint(MouseEventArgs e)
+    {
+        var device = PointToScreen(e.GetPosition(this));
+        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice;
+        return transform?.Transform(device) ?? device;
+    }
+
+    private static bool IsWindowDragBlockedSource(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is System.Windows.Controls.Primitives.ButtonBase
+                or System.Windows.Controls.Primitives.TextBoxBase
+                or System.Windows.Controls.PasswordBox
+                or System.Windows.Controls.ComboBox
+                or System.Windows.Controls.Slider
+                or System.Windows.Controls.Primitives.ScrollBar
+                or System.Windows.Controls.ScrollViewer
+                or System.Windows.Controls.ListBoxItem
+                or System.Windows.Controls.MenuItem)
+            {
+                return true;
+            }
+
+            source = source is Visual
+                ? VisualTreeHelper.GetParent(source)
+                : LogicalTreeHelper.GetParent(source);
+        }
+
+        return false;
+    }
+
+    private void SnapToNearestEdge()
+    {
+        if (_hwndSource is null
+            || !NativeMethods.GetWindowRect(_hwndSource.Handle, out var windowRect))
+        {
+            return;
+        }
+
+        var screen = Screen.FromPoint(new System.Drawing.Point(
+            windowRect.Left + ((windowRect.Right - windowRect.Left) / 2),
+            windowRect.Top + ((windowRect.Bottom - windowRect.Top) / 2)));
+        var work = screen.WorkingArea;
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var paddingX = (int)Math.Round(IslandMetrics.ShadowPadding * dpi.DpiScaleX);
+        var paddingY = (int)Math.Round(IslandMetrics.ShadowPadding * dpi.DpiScaleY);
+        var contentWidth = Math.Max(1, windowRect.Right - windowRect.Left - (paddingX * 2));
+        var contentHeight = Math.Max(1, windowRect.Bottom - windowRect.Top - (paddingY * 2));
+        var visibleLeft = windowRect.Left + paddingX;
+        var visibleTop = windowRect.Top + paddingY;
+
+        var edge = IslandPlacement.NearestEdge(
+            work.Left,
+            work.Top,
+            work.Width,
+            work.Height,
+            visibleLeft,
+            visibleTop,
+            contentWidth,
+            contentHeight);
+
+        var offset = IslandPlacement.OffsetAlongEdge(
+            work.Left,
+            work.Top,
+            work.Width,
+            work.Height,
+            visibleLeft,
+            visibleTop,
+            contentWidth,
+            contentHeight,
+            edge);
+
+        // Mirror the native position into WPF before animating so the snap
+        // animation starts from where the user released the window.
+        var fromDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformFromDevice
+            ?? Matrix.Identity;
+        var dip = fromDevice.Transform(new Point(windowRect.Left, windowRect.Top));
+        Left = dip.X;
+        Top = dip.Y;
+
+        ApplyDockLayout(edge, offset, screen.DeviceName);
+        if (_state == IslandVisualState.Compact)
+        {
+            SwitchContent(_state, animate: false);
+        }
+
+        PositionWindow(animate: _settings.AnimationsEnabled);
+    }
+
+    private void ApplyDockLayout(IslandDockEdge edge, double offset, string screenDevice)
+    {
+        _settings.DockEdge = IslandPlacement.EdgeName(edge);
+        _settings.DockOffset = offset;
+        _settings.PreferredScreen = screenDevice;
+        _viewModel.ApplyDockLayout(_settings.DockEdge, _settings.DockOffset, screenDevice);
+    }
+
     private void Shell_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        if (_suppressShellClick)
+        {
+            _suppressShellClick = false;
+            e.Handled = true;
+            return;
+        }
+
         if (e.ChangedButton != MouseButton.Left)
         {
             return;
@@ -1135,7 +1378,9 @@ public partial class IslandWindow : Window
             && !_editingTodo
             && !_menuOpen
             && !_dragActive
-            && !_dragOutActive)
+            && !_dragOutActive
+            && !_windowDragCandidate
+            && !_windowDragging)
         {
             ScheduleCollapse();
         }
@@ -1808,6 +2053,7 @@ public partial class IslandWindow : Window
         _collapseTimer.Stop();
 
         if (_agentFileDialogOpen || _hovering || _pinned || _editingTodo || IsTranslationTypingHoldActive || IsAgentTypingHoldActive || _menuOpen || _dragActive || _dragOutActive
+            || _windowDragCandidate || _windowDragging
             || _state != IslandVisualState.Expanded)
         {
             return;
@@ -1878,6 +2124,11 @@ public partial class IslandWindow : Window
 
     private void PositionWindow(bool animate)
     {
+        if (_windowDragging)
+        {
+            return;
+        }
+
         var screen = ResolveScreen();
         var source = PresentationSource.FromVisual(this);
         var fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
@@ -1887,24 +2138,26 @@ public partial class IslandWindow : Window
         var workWidth = Math.Max(1.0, bottomRight.X - topLeft.X);
         var workHeight = Math.Max(1.0, bottomRight.Y - topLeft.Y);
 
-        var outer = IslandMetrics.Outer(_state, _viewModel.IsWorkspaceActive);
+        var edge = IslandPlacement.ParseEdge(_settings.DockEdge);
+        var sideDocked = IslandPlacement.IsSideEdge(edge);
+        var outer = IslandMetrics.Outer(_state, _viewModel.IsWorkspaceActive, sideDocked);
         outer = IslandMetrics.FitWithin(
             outer,
             workWidth - 24.0,
-            workHeight - _settings.TopMargin - 8.0);
+            workHeight - (edge == IslandDockEdge.Top ? _settings.TopMargin : 0.0) - 8.0);
 
-        var placement = IslandPlacement.TopCenter(
+        var placement = IslandPlacement.Place(
             topLeft.X,
             topLeft.Y,
             workWidth,
+            workHeight,
             outer.Width,
-            topMargin: 0);
+            outer.Height,
+            edge,
+            _settings.DockOffset,
+            _settings.TopMargin);
 
-        // TopMargin is measured to the visible capsule, not to the transparent
-        // window. Pull the window upward by the shadow padding so 0 means flush.
-        var windowTop = placement.Top + _settings.TopMargin - IslandMetrics.ShadowPadding;
-
-        AnimateBounds(outer, placement.Left, windowTop, animate);
+        AnimateBounds(outer, placement.Left, placement.Top, animate);
     }
 
     private void AnimateBounds(IslandSize target, double targetLeft, double targetTop, bool animate)
@@ -1914,8 +2167,12 @@ public partial class IslandWindow : Window
         var left = Math.Round(targetLeft);
         var top = Math.Round(targetTop);
 
+        var compact = IslandMetrics.Content(
+            IslandVisualState.Compact,
+            workspace: false,
+            verticalDock: _viewModel.IsSideDocked);
         var targetRadius = _state == IslandVisualState.Compact
-            ? 19.0
+            ? Math.Clamp(Math.Min(compact.Width, compact.Height) / 2.0, 8.0, 30.0)
             : _viewModel.IsWorkspaceActive ? 26.0 : 30.0;
 
         if (!animate || !_loaded)
@@ -2224,10 +2481,11 @@ public partial class IslandWindow : Window
 
     private FrameworkElement GetView(IslandVisualState state) => state switch
     {
+        IslandVisualState.Compact when _viewModel.IsSideDocked => SideCompactView,
         IslandVisualState.Compact => CompactView,
         IslandVisualState.Expanded => ExpandedView,
         IslandVisualState.Notification => NotificationView,
-        _ => CompactView
+        _ => _viewModel.IsSideDocked ? SideCompactView : CompactView
     };
 
     private (ScaleTransform Scale, TranslateTransform Translate) GetContentTransforms(FrameworkElement view)
@@ -2235,6 +2493,11 @@ public partial class IslandWindow : Window
         if (ReferenceEquals(view, CompactView))
         {
             return (CompactScale, CompactTranslate);
+        }
+
+        if (ReferenceEquals(view, SideCompactView))
+        {
+            return (SideCompactScale, SideCompactTranslate);
         }
 
         if (ReferenceEquals(view, ExpandedView))
@@ -2248,6 +2511,7 @@ public partial class IslandWindow : Window
     private IEnumerable<FrameworkElement> ContentViews()
     {
         yield return CompactView;
+        yield return SideCompactView;
         yield return ExpandedView;
         yield return NotificationView;
     }

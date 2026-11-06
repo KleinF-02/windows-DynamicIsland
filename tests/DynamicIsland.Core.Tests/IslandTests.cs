@@ -147,6 +147,78 @@ public sealed class SettingsStoreTests : IDisposable
     }
 }
 
+public sealed class IslandPlacementTests
+{
+    [Fact]
+    public void Place_LeftEdgeKeepsVerticalCenter()
+    {
+        var position = IslandPlacement.Place(
+            0,
+            0,
+            1920,
+            1080,
+            outerWidth: 448,
+            outerHeight: 748,
+            IslandDockEdge.Left,
+            offset: 0.5,
+            topMargin: 0);
+
+        Assert.Equal(-14, position.Left, 3);
+        Assert.Equal(166, position.Top, 3);
+    }
+
+    [Fact]
+    public void Place_BottomEdgeKeepsHorizontalOffset()
+    {
+        var position = IslandPlacement.Place(
+            0,
+            0,
+            1920,
+            1080,
+            outerWidth: 588,
+            outerHeight: 334,
+            IslandDockEdge.Bottom,
+            offset: 0.25,
+            topMargin: 0);
+
+        Assert.Equal(186, position.Left, 3);
+        Assert.Equal(760, position.Top, 3);
+    }
+
+    [Fact]
+    public void NearestEdge_PrefersLeftOverNearbyBottom()
+    {
+        var edge = IslandPlacement.NearestEdge(
+            0,
+            0,
+            1920,
+            1080,
+            visibleLeft: 18,
+            visibleTop: 400,
+            contentWidth: 699,
+            contentHeight: 382);
+
+        Assert.Equal(IslandDockEdge.Left, edge);
+    }
+
+    [Fact]
+    public void OffsetAlongEdge_UsesVisibleCenter()
+    {
+        var offset = IslandPlacement.OffsetAlongEdge(
+            0,
+            0,
+            1920,
+            1080,
+            visibleLeft: 200,
+            visibleTop: 0,
+            contentWidth: 400,
+            contentHeight: 118,
+            IslandDockEdge.Top);
+
+        Assert.Equal(0.2083333, offset, 5);
+    }
+}
+
 public sealed class IslandSettingsTests
 {
     [Fact]
@@ -162,6 +234,35 @@ public sealed class IslandSettingsTests
 
         Assert.Equal(1.0, settings.Opacity, 3);
         Assert.Equal(0.0, settings.TopMargin, 3);
+    }
+
+    [Fact]
+    public void Normalize_ValidatesDockEdgeAndOffset()
+    {
+        var settings = new IslandSettings
+        {
+            DockEdge = "diagonal",
+            DockOffset = 4.2
+        };
+
+        settings.Normalize();
+
+        Assert.Equal("top", settings.DockEdge);
+        Assert.Equal(1.0, settings.DockOffset, 3);
+    }
+
+    [Fact]
+    public void Normalize_PromotesLegacyLocalAgentApiToCustom()
+    {
+        var settings = new IslandSettings
+        {
+            AgentApiProvider = "local",
+            AgentApiEndpoint = "https://api.example.com"
+        };
+
+        settings.Normalize();
+
+        Assert.Equal("custom", settings.AgentApiProvider);
     }
 
     [Fact]
