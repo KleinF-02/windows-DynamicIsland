@@ -1250,6 +1250,39 @@
                                     <StackPanel Orientation="Horizontal"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center">
+                                        <Button Content="{Binding AgentModelLabel}"
+                                                Style="{StaticResource GhostButton}"
+                                                Height="26"
+                                                Padding="9,2"
+                                                FontSize="10"
+                                                Margin="0,0,6,0"
+                                                ToolTip="切换 Agent 模型"
+                                                AutomationProperties.Name="切换 Agent 模型"
+                                                Click="AgentModelButton_Click">
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="本地模型"
+                                                              Tag="local"
+                                                              Click="AgentModelMenuItem_Click" />
+                                                    <MenuItem Header="自定义 API"
+                                                              Tag="custom"
+                                                              Click="AgentModelMenuItem_Click" />
+                                                    <Separator />
+                                                    <MenuItem Header="DeepSeek"
+                                                              Tag="deepseek"
+                                                              Click="AgentModelMenuItem_Click" />
+                                                    <MenuItem Header="Kimi"
+                                                              Tag="kimi"
+                                                              Click="AgentModelMenuItem_Click" />
+                                                    <MenuItem Header="GLM"
+                                                              Tag="glm"
+                                                              Click="AgentModelMenuItem_Click" />
+                                                    <Separator />
+                                                    <MenuItem Header="打开 API 设置…"
+                                                              Click="AgentOpenApiSettings_Click" />
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                        </Button>
                                         <Button Content="粘贴"
                                                 Style="{StaticResource GhostButton}"
                                                 Height="26"

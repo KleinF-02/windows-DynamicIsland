@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.11.0-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.12.0-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -125,6 +125,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 
 | 供应商 | 预设地址 | 默认模型 | 协议 |
 | --- | --- | --- | --- |
+| 本地模型 | 上方本地模型地址 | 上方本地模型名 | 自动 |
 | 自定义 / OpenAI 兼容 | 手动填写 | 手动填写 | 自动 |
 | DeepSeek | `https://api.deepseek.com` | `deepseek-chat` | OpenAI |
 | Kimi（Moonshot） | `https://api.moonshot.cn/v1` | `kimi-latest` | OpenAI |
@@ -133,6 +134,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 选择预设会填入地址和默认模型，仍可手动修改：
 
 - **API Key**：以 `Authorization: Bearer <key>` 发送，可留空
+- Agent 面板右上角的模型按钮可在不打开设置的情况下切换供应商，默认本地模型
 - 供应商预设会强制使用 OpenAI-compatible 协议，避免 GLM 的 `/api/paas/v4` 被误判为 Ollama
 - 留空 API 地址/模型名时，Agent 自动回退到上方本地模型配置
 - 需求中写作 `gml` 的供应商按 **GLM（智谱）** 实现；如果你的服务不是 GLM，请选择“自定义”
@@ -151,6 +153,7 @@ API Key 只保存在本机 `settings.json`，不会写入日志；共享电脑�
 ![AI Agent 视觉输入](images/agent-vision.png)
 
 - 多轮对话，自动携带最近 18 条上下文。
+- 右上角模型按钮默认显示“本地模型”，点击可切换本地模型 / 自定义 API / DeepSeek / Kimi / GLM；切换后立即生效并保存。
 - 输入后按 **Enter 发送**，**Shift+Enter 换行**；`Ctrl+Enter` 仍然可用。中文输入法确认候选词时不会误发送。
 - 支持粘贴剪贴板、复制最后回复、清空对话。
 - 点击输入框左侧的回形针上传文件；支持 PNG/JPG/WEBP/GIF/BMP 图片、txt、md、代码、json、csv、log 等文本格式，以及 `.docx`、`.xlsx`、`.pptx`。

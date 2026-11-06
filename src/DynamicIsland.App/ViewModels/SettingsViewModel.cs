@@ -174,6 +174,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     public string AgentProviderLabel => AgentApiProvider switch
     {
+        "local" => "本地模型",
         "deepseek" => "DeepSeek",
         "kimi" => "Kimi（Moonshot）",
         "glm" => "GLM（智谱）",
@@ -186,6 +187,9 @@ public sealed class SettingsViewModel : ObservableObject
 
         switch (AgentApiProvider)
         {
+            case "local":
+                // Uses the shared local model fields.
+                break;
             case "deepseek":
                 AgentApiEndpoint = "https://api.deepseek.com";
                 AgentApiModel = "deepseek-chat";

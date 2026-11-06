@@ -46,7 +46,7 @@ public sealed class IslandSettings
     /// Optional AI Agent-only API endpoint. Empty falls back to
     /// <see cref="LocalLlmEndpoint"/>.
     /// </summary>
-    public string AgentApiProvider { get; set; } = "custom";
+    public string AgentApiProvider { get; set; } = "local";
 
     public string AgentApiEndpoint { get; set; } = string.Empty;
 
@@ -113,10 +113,10 @@ public sealed class IslandSettings
             LocalLlmModel = LocalLlmModel[..256];
         }
 
-        AgentApiProvider = (AgentApiProvider ?? "custom").Trim().ToLowerInvariant();
-        if (AgentApiProvider is not ("custom" or "deepseek" or "kimi" or "glm"))
+        AgentApiProvider = (AgentApiProvider ?? "local").Trim().ToLowerInvariant();
+        if (AgentApiProvider is not ("local" or "custom" or "deepseek" or "kimi" or "glm"))
         {
-            AgentApiProvider = "custom";
+            AgentApiProvider = "local";
         }
 
         AgentApiEndpoint = (AgentApiEndpoint ?? string.Empty).Trim();

@@ -71,6 +71,7 @@ public partial class App : Application
             _island = new IslandWindow(_settings);
             _island.SettingsRequested += (_, _) => OpenSettings();
             _island.ExitRequested += (_, _) => ExitApplication();
+            _island.AgentSettingsChanged += OnAgentSettingsChanged;
 
             _trayIcon = new TrayIconService(_settings.StartWithWindows);
             _trayIcon.ShowRequested += (_, _) => _island?.ShowFromTray();
@@ -170,6 +171,15 @@ public partial class App : Application
         };
         window.Show();
         window.Activate();
+    }
+
+    private void OnAgentSettingsChanged(object? sender, IslandSettings settings)
+    {
+        _settings = settings.Clone();
+        if (_settingsStore?.TrySave(_settings, out var saveError) == false)
+        {
+            AppLogger.Error($"Unable to persist Agent model selection: {saveError}");
+        }
     }
 
     private void OnSettingsSaved(IslandSettings settings)

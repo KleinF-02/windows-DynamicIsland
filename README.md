@@ -1,6 +1,6 @@
 # 灵动岛 · Dynamic Island for Windows 11
 
-![version](https://img.shields.io/badge/version-0.11.0-6FE7C8)
+![version](https://img.shields.io/badge/version-0.12.0-6FE7C8)
 ![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -9,15 +9,15 @@
 
 ![灵动岛](docs/images/hero.png)
 
-**当前版本 `v0.11.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析；窗口闲置 1 分钟后自动变为半透明，鼠标交互后恢复不透明。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
+**当前版本 `v0.12.0`**（首个公开版本为 `v0.1.0`）。包含五个功能区、深/浅色双主题、会议倒计时，以及接入本机 Ollama / OpenAI-compatible 模型的翻译与 AI Agent。AI Agent 支持上传图片、文本/代码、Word/Excel/PPT 文件进行分析；窗口闲置 1 分钟后自动变为半透明，鼠标交互后恢复不透明。日历支持 Microsoft 365 发布 ICS，也保留桌面版 Outlook COM 回退。
 
 仓库：[github.com/KleinF-02/windows-DynamicIsland](https://github.com/KleinF-02/windows-DynamicIsland) · 发布页：[Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases)
 
-**文档导航：** [软件设计思路](docs/design.md) · [fly-island UI 适配说明](docs/fly-island-ui.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.11.0 更新记录](docs/releases/v0.11.0.md) · [变更日志](CHANGELOG.md) · [第三方许可](THIRD_PARTY_NOTICES.md) · [开发说明](docs/development.md)
+**文档导航：** [软件设计思路](docs/design.md) · [fly-island UI 适配说明](docs/fly-island-ui.md) · [框架与技术选型](docs/frameworks.md) · [使用说明](docs/usage.md) · [架构](docs/architecture.md) · [版本管理](docs/versioning.md) · [v0.12.0 更新记录](docs/releases/v0.12.0.md) · [变更日志](CHANGELOG.md) · [第三方许可](THIRD_PARTY_NOTICES.md) · [开发说明](docs/development.md)
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.11.0-win-x64.zip`。
+1. 从 [GitHub Releases](https://github.com/KleinF-02/windows-DynamicIsland/releases) 下载 `DynamicIsland-0.12.0-win-x64.zip`。
 2. 解压后运行 `DynamicIsland.exe`。
 3. 鼠标移到顶部胶囊展开；点击底部圆点切换功能。
 4. 需要固定时点右下角“固定窗口”；右键托盘图标打开设置。
@@ -42,7 +42,7 @@
 - 日历支持加载中、无日程、链接失效、未配置来源、重试和手动刷新
 - **待办事项**：在标签直接输入或修改，打勾后粒子散开、整行淡出并从列表删除；待办持久化到本机
 - **翻译**：第四个圆点；输入文字后调用本机 Ollama / LM Studio / llama.cpp 大模型，支持切换目标语言、Ctrl+Enter 翻译、复制结果；光标在功能区时保持展开，移出后按原有悬浮规则收起，翻译内容保留到下次展开
-- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，支持上传图片、文本/代码和 Word/Excel/PPT 文件交给本地视觉/语言模型分析；内置 DeepSeek / Kimi / GLM 供应商预设，可单独配置 API 地址/模型/API Key；Enter 发送、Shift+Enter 换行；聊天记录只显示文件名，图片以多模态输入发送，文本正文只进入本次模型请求
+- **AI Agent**：第五个圆点；多轮对话、保留上下文、粘贴/复制/清空，支持上传图片、文本/代码和 Word/Excel/PPT 文件交给本地视觉/语言模型分析；Agent 面板内置模型切换按钮，默认本地模型，可切 DeepSeek / Kimi / GLM / 自定义 API；支持 Enter 发送、Shift+Enter 换行；聊天记录只显示文件名，图片以多模态输入发送，文本正文只进入本次模型请求
 - **fly-island 风格 UI**：四角全圆角胶囊、深色半透明表面、青色/绿色强调色与彩色功能圆点
 - **闲置半透明**：60 秒没有鼠标/键盘交互后窗口平滑变为 45% 不透明度；鼠标进入、移动、点击、滚轮或键盘输入后恢复
 - 通知胶囊：标题 + 正文 + 自动消失 / 点击关闭（当前由托盘和右键菜单触发演示）
@@ -164,8 +164,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish.ps1
 默认产出 **win-x64、self-contained、single-file**：
 
 ```text
-artifacts/publish/DynamicIsland-0.11.0-win-x64/DynamicIsland.exe
-artifacts/publish/DynamicIsland-0.11.0-win-x64.zip
+artifacts/publish/DynamicIsland-0.12.0-win-x64/DynamicIsland.exe
+artifacts/publish/DynamicIsland-0.12.0-win-x64.zip
 ```
 
 目标机器不需要安装 .NET。ARM64：
@@ -185,7 +185,7 @@ artifacts/publish/DynamicIsland-0.11.0-win-x64.zip
 | 点击右下角“固定窗口” | 固定 / 取消固定；这是唯一的固定入口 |
 | 编辑待办时鼠标移开 | 暂时保持展开，焦点离开后再收起 |
 | 点击下方圆点 | 切换「常用软件」「Calendar」「待办事项」「翻译」和「AI Agent」 |
-| Agent API 配置 | 设置中可选择 DeepSeek / Kimi / GLM 或自定义；可单独填写 API 地址、模型名和 API Key |
+| Agent 模型切换 | Agent 面板右上角按钮可切换本地模型、DeepSeek、Kimi、GLM、自定义 API，并立即持久化 |
 | 点击空快捷方式格子 | 打开开始菜单应用选择器；也可点“浏览文件…”选择本地 `.html` 或快捷方式 |
 | 把快捷方式拖到岛上 | 支持资源管理器 / 桌面拖入；拖到已有格子可替换 |
 | 鼠标滑过快捷方式 | 格子平滑放大，松开鼠标即恢复 |
@@ -295,7 +295,7 @@ dynamic-island/
 
 ## 版本
 
-当前版本 `0.11.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
+当前版本 `0.12.0`。版本号在 [`VERSION`](VERSION) 中维护；每次用户可见迭代都会递增版本号并创建新标签，历史标签与 Release 保持不删不改。历史检查点见 [版本管理](docs/versioning.md)，发布包通过 GitHub Releases 分发。
 
 ## License
 

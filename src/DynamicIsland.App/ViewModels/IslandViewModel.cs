@@ -337,6 +337,56 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
     public bool IsAgentBusy => _isAgentBusy;
 
+    public event EventHandler<IslandSettings>? AgentSettingsChanged;
+
+    public string AgentModelLabel => _settings.AgentApiProvider switch
+    {
+        "deepseek" => "DeepSeek",
+        "kimi" => "Kimi",
+        "glm" => "GLM",
+        "custom" => "自定义 API",
+        _ => "本地模型"
+    };
+
+    public void SelectAgentProvider(string provider)
+    {
+        var normalized = (provider ?? "local").Trim().ToLowerInvariant();
+        if (normalized is not ("local" or "custom" or "deepseek" or "kimi" or "glm"))
+        {
+            normalized = "local";
+        }
+
+        _settings.AgentApiProvider = normalized;
+        switch (normalized)
+        {
+            case "deepseek":
+                _settings.AgentApiEndpoint = "https://api.deepseek.com";
+                _settings.AgentApiModel = "deepseek-chat";
+                break;
+            case "kimi":
+                _settings.AgentApiEndpoint = "https://api.moonshot.cn/v1";
+                _settings.AgentApiModel = "kimi-latest";
+                break;
+            case "glm":
+                _settings.AgentApiEndpoint = "https://open.bigmodel.cn/api/paas/v4";
+                _settings.AgentApiModel = "glm-4-flash";
+                break;
+            case "local":
+            case "custom":
+                // Keep the user's current endpoint/model for custom; local
+                // always uses the shared local model fields at send time.
+                break;
+        }
+
+        OnPropertyChanged(nameof(AgentModelLabel));
+        if (!_isAgentBusy)
+        {
+            AgentStatus = $"模型：{AgentModelLabel}";
+        }
+
+        AgentSettingsChanged?.Invoke(this, _settings.Clone());
+    }
+
     public bool CanSendAgent => !_isAgentBusy
                                 && (!string.IsNullOrWhiteSpace(AgentInput)
                                     || AgentAttachments.Count > 0);
@@ -512,19 +562,25 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
             messages.Add(new LocalChatMessage("user", modelText, images.Count > 0 ? images : null));
 
-            var endpoint = string.IsNullOrWhiteSpace(_settings.AgentApiEndpoint)
+            var useLocal = _settings.AgentApiProvider == "local";
+            var endpoint = useLocal
                 ? _settings.LocalLlmEndpoint
-                : _settings.AgentApiEndpoint;
-            var model = string.IsNullOrWhiteSpace(_settings.AgentApiModel)
+                : string.IsNullOrWhiteSpace(_settings.AgentApiEndpoint)
+                    ? _settings.LocalLlmEndpoint
+                    : _settings.AgentApiEndpoint;
+            var model = useLocal
                 ? _settings.LocalLlmModel
-                : _settings.AgentApiModel;
+                : string.IsNullOrWhiteSpace(_settings.AgentApiModel)
+                    ? _settings.LocalLlmModel
+                    : _settings.AgentApiModel;
+            var apiKey = useLocal ? null : _settings.AgentApiKey;
 
             var result = await _localModelService.CompleteAsync(
                 messages,
                 endpoint,
                 model,
                 cts.Token,
-                _settings.AgentApiKey,
+                apiKey,
                 forceOpenAiCompatible: _settings.AgentApiProvider
                     is "deepseek" or "kimi" or "glm");
 
@@ -1241,6 +1297,7 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(TopmostLabel));
         OnPropertyChanged(nameof(SecondsDisplay));
         OnPropertyChanged(nameof(ExpandedSeconds));
+        OnPropertyChanged(nameof(AgentModelLabel));
 
         if (!string.Equals(previousCalendarUrl, _settings.WebCalendarUrl, StringComparison.Ordinal))
         {

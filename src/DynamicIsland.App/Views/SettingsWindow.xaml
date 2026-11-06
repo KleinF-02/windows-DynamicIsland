@@ -231,6 +231,14 @@
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    Margin="0,10,0,4" />
                         <WrapPanel>
+                            <Button Content="本地模型"
+                                    Tag="local"
+                                    Style="{StaticResource GhostButton}"
+                                    Height="26"
+                                    Padding="8,2"
+                                    Margin="0,0,5,4"
+                                    FontSize="10"
+                                    Click="AgentProvider_Click" />
                             <Button Content="自定义"
                                     Tag="custom"
                                     Style="{StaticResource GhostButton}"

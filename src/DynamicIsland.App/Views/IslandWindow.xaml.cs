@@ -23,6 +23,7 @@ using CheckBox = System.Windows.Controls.CheckBox;
 using Ellipse = System.Windows.Shapes.Ellipse;
 using Grid = System.Windows.Controls.Grid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MenuItem = System.Windows.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
 using DataFormats = System.Windows.DataFormats;
 using DataObject = System.Windows.DataObject;
@@ -97,6 +98,8 @@ public partial class IslandWindow : Window
         DataContext = _viewModel;
         _activeView = CompactView;
         _viewModel.AgentMessages.CollectionChanged += AgentMessages_CollectionChanged;
+        _viewModel.AgentSettingsChanged += (_, settings) =>
+            AgentSettingsChanged?.Invoke(this, settings);
         AgentInputBox.AddHandler(
             TextCompositionManager.TextInputStartEvent,
             new TextCompositionEventHandler(AgentInput_TextInputStart),
@@ -146,6 +149,8 @@ public partial class IslandWindow : Window
     public event EventHandler? SettingsRequested;
 
     public event EventHandler? ExitRequested;
+
+    public event EventHandler<IslandSettings>? AgentSettingsChanged;
 
     public void ApplySettings(IslandSettings settings)
     {
@@ -1283,6 +1288,35 @@ public partial class IslandWindow : Window
             _viewModel.RemoveAgentAttachment(attachment);
             AgentInputBox.Focus();
         }
+    }
+
+    private void AgentModelButton_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is Button { ContextMenu: { } menu } button)
+        {
+            menu.PlacementTarget = button;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+        }
+    }
+
+    private void AgentModelMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is MenuItem { Tag: string provider })
+        {
+            _viewModel.SelectAgentProvider(provider);
+            AgentInputBox.Focus();
+        }
+    }
+
+    private void AgentOpenApiSettings_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        SettingsRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void AgentCopy_Click(object sender, RoutedEventArgs e)
