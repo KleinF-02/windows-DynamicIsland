@@ -21,7 +21,7 @@ fly-island 是 **Tauri 2 + React 19 + TypeScript + Vite** 应用，不是 WPF：
 - `IslandShell.css` / `IslandHeader.css` / `tokens.css`：设计令牌和过渡曲线
 - `src-tauri/src/island/`：原生窗口几何、玻璃、穿透和状态
 
-它通过 Tauri 动态调整窗口尺寸，React 负责内容切换；默认外观使用 `#2F2F37` 深色、顶部齐平、底部圆角、青色强调色和绿色脉冲。
+它通过 Tauri 动态调整窗口尺寸，React 负责内容切换；默认外观使用 `#2F2F37` 深色、顶部贴屏、胶囊/圆角轮廓、青色强调色和绿色脉冲。
 
 ## 已移植到本项目的部分
 
@@ -29,7 +29,7 @@ fly-island 是 **Tauri 2 + React 19 + TypeScript + Vite** 应用，不是 WPF：
 
 | fly-island | 本软件 |
 | --- | --- |
-| 顶部齐平、底部圆角 | `Shell` / `ShadowBorder` 使用 `0,0,22,22` → `0,0,30,30` |
+| 顶部贴屏、底部圆角 | 本项目最终改为四角全圆角胶囊：Compact `19`，Workspace `26`，Expanded `30` |
 | 紧凑态 38px 高、宽 340 | `IslandMetrics` Compact `340 × 38` |
 | 展开态 560px 宽 | `IslandMetrics` Expanded `560 × 306` |
 | `#2F2F37` 深色表面、顶部高光、网格线 | 深色调色板 + `IslandGridBrush` + 垂直强调线 |

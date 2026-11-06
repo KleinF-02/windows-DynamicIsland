@@ -1853,7 +1853,7 @@ public partial class IslandWindow : Window
         var top = Math.Round(targetTop);
 
         var targetRadius = _state == IslandVisualState.Compact
-            ? 22.0
+            ? 19.0
             : _viewModel.IsWorkspaceActive ? 26.0 : 30.0;
 
         if (!animate || !_loaded)
@@ -2015,10 +2015,10 @@ public partial class IslandWindow : Window
 
     private void ApplyCornerRadius(double radius)
     {
-        // fly-island is docked to the top edge: square top corners, rounded
-        // bottom corners that grow from 22 to 30 in the expanded state.
+        // Capsule silhouette: all four corners share the same radius. Compact
+        // is a true pill (38 / 2 = 19); expanded/workspace use a softer radius.
         var clamped = Math.Clamp(radius, 16.0, 30.0);
-        var corner = new CornerRadius(0, 0, clamped, clamped);
+        var corner = new CornerRadius(clamped);
         Shell.CornerRadius = corner;
         ShadowBorder.CornerRadius = corner;
     }

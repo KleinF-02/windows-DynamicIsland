@@ -83,7 +83,7 @@ Core 层不引用 WPF；窗口只负责动画、尺寸、原生句柄和事件�
 
 - 透明分层窗口 + `WS_EX_TOOLWINDOW`，不占任务栏。
 - 宽度、高度和左侧位置用 WPF 动画；同时用 16ms 原生定时器同步 HWND 高度，避免 WPF 高度动画在收起时“先裁后缩”。
-- 展开/收起 560ms，使用 fly-island 的 `cubic-bezier(0.16, 1, 0.3, 1)` 曲线；窗口宽高、底部圆角一起变化。
+- 展开/收起 560ms，使用 fly-island 的 `cubic-bezier(0.16, 1, 0.3, 1)` 曲线；窗口宽高、四角圆角一起变化。
 - 内容 opacity/transform 280ms，展开内容延迟 140ms 从 `-6px` 上移淡入，收起内容延迟 250ms 出现。
 - 功能/状态切换时内容层保留短时动态模糊与渐隐；GPU 层级不足时自动降级为渐隐，避免牺牲 60fps。
 - UI 形状、配色、尺寸比例和过渡曲线参考 MIT 许可的 [fly-island](https://github.com/flyl1u/fly-island)，WPF 侧为独立重实现。

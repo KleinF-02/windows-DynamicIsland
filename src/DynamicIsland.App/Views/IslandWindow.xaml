@@ -27,7 +27,7 @@
     <Grid x:Name="Root" Margin="14">
         <!-- Shadow is a separate layer so text is not rasterized by the effect. -->
         <Border x:Name="ShadowBorder"
-                CornerRadius="0,0,22,22"
+                CornerRadius="19"
                 Background="{DynamicResource WindowShadowBrush}">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="24"
@@ -39,7 +39,7 @@
         </Border>
 
         <Border x:Name="Shell"
-                CornerRadius="0,0,22,22"
+                CornerRadius="19"
                 Background="{DynamicResource IslandSurfaceBrush}"
                 BorderBrush="{DynamicResource IslandEdgeBrush}"
                 BorderThickness="1"
