@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.10.0-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.11.0-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -121,13 +121,23 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 
 ### AI Agent API（可选）
 
-打开 **设置 → AI Agent API**：
+打开 **设置 → AI Agent API**，先选供应商：
 
-- **API 地址**：例如 `https://api.example.com/v1` 或 `http://127.0.0.1:11434`
-- **模型名**：例如 `qwen3.6-27b-awq` 或服务商要求的模型 ID
+| 供应商 | 预设地址 | 默认模型 | 协议 |
+| --- | --- | --- | --- |
+| 自定义 / OpenAI 兼容 | 手动填写 | 手动填写 | 自动 |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-chat` | OpenAI |
+| Kimi（Moonshot） | `https://api.moonshot.cn/v1` | `kimi-latest` | OpenAI |
+| GLM（智谱） | `https://open.bigmodel.cn/api/paas/v4` | `glm-4-flash` | OpenAI |
+
+选择预设会填入地址和默认模型，仍可手动修改：
+
 - **API Key**：以 `Authorization: Bearer <key>` 发送，可留空
+- 供应商预设会强制使用 OpenAI-compatible 协议，避免 GLM 的 `/api/paas/v4` 被误判为 Ollama
+- 留空 API 地址/模型名时，Agent 自动回退到上方本地模型配置
+- 需求中写作 `gml` 的供应商按 **GLM（智谱）** 实现；如果你的服务不是 GLM，请选择“自定义”
 
-留空 API 地址/模型名时，Agent 自动回退到上方本地模型配置。API Key 只保存在本机 `settings.json`，不会写入日志；共享电脑上建议不要保存长期密钥。
+API Key 只保存在本机 `settings.json`，不会写入日志；共享电脑上建议不要保存长期密钥。
 
 ### 翻译
 
@@ -171,7 +181,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 - 顶部距离
 - Outlook 网页日历链接
 - 本地模型地址 / 模型名
-- AI Agent 独立 API 地址 / 模型名 / API Key
+- AI Agent 供应商（自定义 / DeepSeek / Kimi / GLM）及独立 API 地址 / 模型名 / API Key
 
 设置保存在 `%LOCALAPPDATA%\DynamicIsland\settings.json`。
 

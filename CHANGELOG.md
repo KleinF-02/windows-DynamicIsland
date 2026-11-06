@@ -10,6 +10,22 @@
 - AI Agent 的安全工具调用（白名单 + 用户确认）
 - 多显示器选择与按显示器记忆位置
 
+## [0.11.0] - 2026-11-06
+
+### Added
+
+- AI Agent 内置 DeepSeek、Kimi（Moonshot）、GLM（智谱）供应商预设
+- 选择预设自动填入 API 地址和默认模型，仍可手动修改
+- 预设强制 OpenAI-compatible 协议，修复 GLM `/api/paas/v4` 被误判为 Ollama
+- 自定义供应商保留手填 endpoint/model，并自动识别协议
+
+### Changed
+
+- OpenAI-compatible URL 构造支持带任意 base path 的服务：
+  - 根地址补 `/v1/chat/completions`
+  - `/v1`、`/api/paas/v4` 等已有路径只补 `/chat/completions`
+- 模型列表请求同理支持 `/models`
+
 ## [0.10.0] - 2026-11-06
 
 ### Added

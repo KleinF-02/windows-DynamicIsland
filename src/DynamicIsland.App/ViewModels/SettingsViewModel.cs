@@ -155,6 +155,55 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public string AgentApiProvider
+    {
+        get => _draft.AgentApiProvider;
+        set
+        {
+            var provider = (value ?? "custom").Trim().ToLowerInvariant();
+            if (string.Equals(_draft.AgentApiProvider, provider, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.AgentApiProvider = provider;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(AgentProviderLabel));
+        }
+    }
+
+    public string AgentProviderLabel => AgentApiProvider switch
+    {
+        "deepseek" => "DeepSeek",
+        "kimi" => "Kimi（Moonshot）",
+        "glm" => "GLM（智谱）",
+        _ => "自定义 / OpenAI 兼容"
+    };
+
+    public void SelectAgentProvider(string provider)
+    {
+        AgentApiProvider = provider;
+
+        switch (AgentApiProvider)
+        {
+            case "deepseek":
+                AgentApiEndpoint = "https://api.deepseek.com";
+                AgentApiModel = "deepseek-chat";
+                break;
+            case "kimi":
+                AgentApiEndpoint = "https://api.moonshot.cn/v1";
+                AgentApiModel = "kimi-latest";
+                break;
+            case "glm":
+                AgentApiEndpoint = "https://open.bigmodel.cn/api/paas/v4";
+                AgentApiModel = "glm-4-flash";
+                break;
+            default:
+                // Custom keeps the user's current endpoint/model.
+                break;
+        }
+    }
+
     public string AgentApiEndpoint
     {
         get => _draft.AgentApiEndpoint;

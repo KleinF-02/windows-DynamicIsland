@@ -80,7 +80,8 @@ public sealed class LocalTranslationService
         string endpointValue,
         string modelValue,
         CancellationToken cancellationToken = default,
-        string? apiKey = null)
+        string? apiKey = null,
+        bool forceOpenAiCompatible = false)
     {
         if (messages.Count == 0)
         {
@@ -98,7 +99,7 @@ public sealed class LocalTranslationService
         }
 
         var model = modelValue.Trim();
-        var attempts = BuildAttempts(baseUri);
+        var attempts = BuildAttempts(baseUri, forceOpenAiCompatible);
         var failures = new List<string>();
 
         foreach (var provider in attempts)
@@ -148,8 +149,13 @@ public sealed class LocalTranslationService
                 : "本地模型没有返回内容。请确认服务已启动，且模型名称填写正确。");
     }
 
-    private static IReadOnlyList<Provider> BuildAttempts(Uri endpoint)
+    private static IReadOnlyList<Provider> BuildAttempts(Uri endpoint, bool forceOpenAiCompatible)
     {
+        if (forceOpenAiCompatible)
+        {
+            return [Provider.OpenAiCompatible];
+        }
+
         var path = endpoint.AbsolutePath.TrimEnd('/');
 
         if (path.Contains("/api/", StringComparison.OrdinalIgnoreCase)
@@ -365,7 +371,10 @@ public sealed class LocalTranslationService
             path = path.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase)
                 ? path[..^"/chat/completions".Length]
                 : path;
-            path = path.EndsWith("/v1", StringComparison.OrdinalIgnoreCase)
+
+            // DeepSeek uses /v1/models; Moonshot uses /v1/models; GLM uses
+            // /api/paas/v4/models. A non-root base path already names the API.
+            path = path.Length > 0 && path != "/"
                 ? path + "/models"
                 : path + "/v1/models";
         }
@@ -398,12 +407,15 @@ public sealed class LocalTranslationService
             {
                 // Already an explicit chat endpoint.
             }
-            else if (path.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+            else if (path.Length > 0 && path != "/")
             {
+                // Kimi: /v1 + /chat/completions
+                // GLM : /api/paas/v4 + /chat/completions
                 path += "/chat/completions";
             }
             else
             {
+                // DeepSeek: root + /v1/chat/completions
                 path += "/v1/chat/completions";
             }
         }

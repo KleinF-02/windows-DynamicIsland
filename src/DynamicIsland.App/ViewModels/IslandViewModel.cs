@@ -524,7 +524,9 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
                 endpoint,
                 model,
                 cts.Token,
-                _settings.AgentApiKey);
+                _settings.AgentApiKey,
+                forceOpenAiCompatible: _settings.AgentApiProvider
+                    is "deepseek" or "kimi" or "glm");
 
             if (requestId != _agentRequestId)
             {

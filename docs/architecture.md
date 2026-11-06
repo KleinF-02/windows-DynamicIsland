@@ -224,9 +224,10 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 6. 聊天记录只保存“问题 + 文件名”，文件正文和图片只进入当前模型请求，避免后续 18 条上下文反复膨胀。
 7. 回复追加为 assistant 气泡；`CollectionChanged` 触发滚动到底部；附件在发送后清空。
 8. 支持粘贴剪贴板、复制最后一条回复和清空对话；取消 / 清空 / 窗口停止都会取消未完成请求。
-9. Agent 可独立配置 API 地址、模型名和 Bearer API Key；留空时回退到翻译使用的本地模型配置。请求头只向配置的 endpoint 发送 `Authorization: Bearer`，未配置 Key 时不发送该头。
-10. Agent 与翻译共用本地模型配置作为默认值；对话、附件文字和图片不写入磁盘，重启后清空。
-11. 常见失败包括服务未启动、没有加载模型、模型名错误、API Key 无效、模型不支持视觉输入和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
+9. Agent 可选择自定义 / DeepSeek / Kimi / GLM 供应商，并独立配置 API 地址、模型名和 Bearer API Key；预设强制 OpenAI-compatible 协议，留空时回退到翻译使用的本地模型配置。请求头只向配置的 endpoint 发送 `Authorization: Bearer`，未配置 Key 时不发送该头。
+10. OpenAI-compatible URL 规则：根地址补 `/v1/chat/completions`；已有路径（`/v1`、GLM `/api/paas/v4`）只补 `/chat/completions`；模型列表同理补 `/models`。
+11. Agent 与翻译共用本地模型配置作为默认值；对话、附件文字和图片不写入磁盘，重启后清空。
+12. 常见失败包括服务未启动、没有加载模型、模型名错误、API Key 无效、模型不支持视觉输入和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
 
 ### 开机启动
 

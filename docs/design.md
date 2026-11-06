@@ -122,7 +122,8 @@ Core 层不引用 WPF；窗口只负责动画、尺寸、原生句柄和事件�
 ### AI Agent
 
 - 多轮对话，携带最近 18 条上下文。
-- 默认与翻译共用模型地址和模型名；可在设置中为 Agent 单独配置 API 地址、模型名和 Bearer API Key。
+- 默认与翻译共用模型地址和模型名；可在设置中为 Agent 单独配置供应商、API 地址、模型名和 Bearer API Key。
+- 内置 DeepSeek、Kimi（Moonshot）、GLM（智谱）预设；预设强制 OpenAI-compatible 协议，GLM 的 `/api/paas/v4` 不会被误判为 Ollama。
 - Enter 发送、Shift+Enter 换行、Ctrl+Enter 也可发送；IME 候选确认不会误发送。
 - 粘贴、复制最后回复、清空、自动滚动。
 - 支持文件上传：图片以多模态输入发送；文本/代码、`.docx`、`.xlsx`、`.pptx` 在本地提取文字后随当前问题发送；聊天记录只显示文件名。

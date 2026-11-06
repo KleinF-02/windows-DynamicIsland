@@ -44,6 +44,15 @@ public partial class SettingsWindow : Window
         _viewModel.AgentApiKey = AgentApiKeyBox.Password;
     }
 
+    private void AgentProvider_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string provider })
+        {
+            _viewModel.SelectAgentProvider(provider);
+            e.Handled = true;
+        }
+    }
+
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
