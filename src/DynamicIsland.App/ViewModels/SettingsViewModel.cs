@@ -188,7 +188,10 @@ public sealed class SettingsViewModel : ObservableObject
         switch (AgentApiProvider)
         {
             case "local":
-                // Uses the shared local model fields.
+                // Use the shared local model fields; clear stale API fields so
+                // saving cannot silently promote this back to a custom API.
+                AgentApiEndpoint = string.Empty;
+                AgentApiModel = string.Empty;
                 break;
             case "deepseek":
                 AgentApiEndpoint = "https://api.deepseek.com";
@@ -219,6 +222,14 @@ public sealed class SettingsViewModel : ObservableObject
             }
 
             _draft.AgentApiEndpoint = value ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(_draft.AgentApiEndpoint)
+                && _draft.AgentApiProvider == "local")
+            {
+                _draft.AgentApiProvider = "custom";
+                OnPropertyChanged(nameof(AgentApiProvider));
+                OnPropertyChanged(nameof(AgentProviderLabel));
+            }
+
             OnPropertyChanged();
         }
     }
@@ -234,6 +245,14 @@ public sealed class SettingsViewModel : ObservableObject
             }
 
             _draft.AgentApiModel = value ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(_draft.AgentApiModel)
+                && _draft.AgentApiProvider == "local")
+            {
+                _draft.AgentApiProvider = "custom";
+                OnPropertyChanged(nameof(AgentApiProvider));
+                OnPropertyChanged(nameof(AgentProviderLabel));
+            }
+
             OnPropertyChanged();
         }
     }

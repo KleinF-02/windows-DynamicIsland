@@ -10,6 +10,15 @@
 - AI Agent 的安全工具调用（白名单 + 用户确认）
 - 多显示器选择与按显示器记忆位置
 
+## [0.12.1] - 2026-11-06
+
+### Fixed
+
+- 修复已配置 Agent API 地址/模型，但 provider 仍是 `local` 时请求被强制走本地模型
+- `Normalize` 自动把“local + 非空 Agent API 地址/模型”的旧配置升级为 `custom`
+- 设置页编辑 Agent API 地址/模型时自动从本地模型切换到自定义 API
+- 选择“本地模型”时清理旧的 Agent endpoint/model，避免保存后又被识别为 remote
+
 ## [0.12.0] - 2026-11-06
 
 ### Added

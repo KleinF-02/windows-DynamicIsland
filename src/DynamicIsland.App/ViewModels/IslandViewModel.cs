@@ -372,9 +372,13 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
                 _settings.AgentApiModel = "glm-4-flash";
                 break;
             case "local":
+                // Clear stale API fields so the next send cannot be mistaken
+                // for a custom/remote configuration.
+                _settings.AgentApiEndpoint = string.Empty;
+                _settings.AgentApiModel = string.Empty;
+                break;
             case "custom":
-                // Keep the user's current endpoint/model for custom; local
-                // always uses the shared local model fields at send time.
+                // Keep the user's current endpoint/model for custom.
                 break;
         }
 

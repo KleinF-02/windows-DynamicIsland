@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.12.0-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.12.1-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -136,7 +136,8 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 - **API Key**：以 `Authorization: Bearer <key>` 发送，可留空
 - Agent 面板右上角的模型按钮可在不打开设置的情况下切换供应商，默认本地模型
 - 供应商预设会强制使用 OpenAI-compatible 协议，避免 GLM 的 `/api/paas/v4` 被误判为 Ollama
-- 留空 API 地址/模型名时，Agent 自动回退到上方本地模型配置
+- 手动填写 API 地址或模型名时，会自动从“本地模型”切到“自定义 API”，不会继续走本地
+- 留空 API 地址/模型名并选择本地模型时，Agent 自动回退到上方本地模型配置
 - 需求中写作 `gml` 的供应商按 **GLM（智谱）** 实现；如果你的服务不是 GLM，请选择“自定义”
 
 API Key 只保存在本机 `settings.json`，不会写入日志；共享电脑上建议不要保存长期密钥。

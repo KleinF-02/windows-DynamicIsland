@@ -136,5 +136,13 @@ public sealed class IslandSettings
         {
             AgentApiKey = AgentApiKey[..4096];
         }
+
+        // Upgrade path from versions before the provider selector: a saved
+        // custom endpoint/model must not be silently ignored by "local".
+        if (AgentApiProvider == "local"
+            && (AgentApiEndpoint.Length > 0 || AgentApiModel.Length > 0))
+        {
+            AgentApiProvider = "custom";
+        }
     }
 }
