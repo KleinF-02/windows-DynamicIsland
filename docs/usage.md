@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.8.0-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.9.0-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -28,6 +28,8 @@ dotnet run --project .\src\DynamicIsland.App
 要求 Windows 11 + .NET 10 SDK。
 
 ## 2. 基本交互
+
+![fly-island 风格界面](images/fly-ui.png)
 
 | 操作 | 效果 |
 | --- | --- |

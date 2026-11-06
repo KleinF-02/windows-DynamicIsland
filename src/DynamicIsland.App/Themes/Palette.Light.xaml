@@ -2,11 +2,12 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Light palette -->
-    <Color x:Key="AccentColor">#0B8A72</Color>
-    <Color x:Key="AccentBlueColor">#3D6FD8</Color>
-    <Color x:Key="TextPrimaryColor">#111722</Color>
-    <Color x:Key="TextSecondaryColor">#505A68</Color>
-    <Color x:Key="TextMutedColor">#7A8492</Color>
+    <Color x:Key="AccentColor">#0E7C9A</Color>
+    <Color x:Key="PulseColor">#1E9D63</Color>
+    <Color x:Key="AccentBlueColor">#6C55C7</Color>
+    <Color x:Key="TextPrimaryColor">#1F1B16</Color>
+    <Color x:Key="TextSecondaryColor">#5A554E</Color>
+    <Color x:Key="TextMutedColor">#847F77</Color>
 
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlueColor}" />
@@ -85,13 +86,13 @@
     <SolidColorBrush x:Key="GhostButtonPressedBrush" Color="#08000000" />
     <SolidColorBrush x:Key="IconButtonHoverBrush" Color="#10000000" />
     <SolidColorBrush x:Key="TabDotBrush" Color="#66000000" />
-    <SolidColorBrush x:Key="SelectionBrush" Color="#550B8A72" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#550E7C9A" />
     <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#1AB34157" />
 
     <LinearGradientBrush x:Key="IslandSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#FFF8FAFC" />
-        <GradientStop Offset="0.52" Color="#FFF1F5FA" />
-        <GradientStop Offset="1" Color="#FFE7EDF5" />
+        <GradientStop Offset="0" Color="#FFFFFDF8" />
+        <GradientStop Offset="0.52" Color="#FFF8F6F0" />
+        <GradientStop Offset="1" Color="#FFEDE9DF" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="IslandEdgeBrush" StartPoint="0,0" EndPoint="0,1">
@@ -101,12 +102,32 @@
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#0B8A72" />
-        <GradientStop Offset="1" Color="#3D6FD8" />
+        <GradientStop Offset="0" Color="#0E7C9A" />
+        <GradientStop Offset="1" Color="#6C55C7" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="SettingsBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Offset="0" Color="#FFF4F7FB" />
         <GradientStop Offset="1" Color="#FFE7EDF4" />
     </LinearGradientBrush>
+    <SolidColorBrush x:Key="PulseBrush" Color="#1E9D63" />
+    <SolidColorBrush x:Key="IslandAccentLineBrush" Color="#3A0E7C9A" />
+
+    <DrawingBrush x:Key="IslandGridBrush"
+                  TileMode="Tile"
+                  Viewport="0,0,100,42"
+                  ViewportUnits="Absolute"
+                  Stretch="None"
+                  Opacity="0.65">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#0D000000" Thickness="1" />
+                </GeometryDrawing.Pen>
+                <GeometryDrawing.Geometry>
+                    <LineGeometry StartPoint="0,41.5" EndPoint="100,41.5" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
 </ResourceDictionary>

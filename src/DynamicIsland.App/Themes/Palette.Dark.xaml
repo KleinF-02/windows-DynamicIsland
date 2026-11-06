@@ -2,18 +2,19 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Dark palette -->
-    <Color x:Key="AccentColor">#6FE7C8</Color>
-    <Color x:Key="AccentBlueColor">#7CA8FF</Color>
-    <Color x:Key="TextPrimaryColor">#F6F7FB</Color>
-    <Color x:Key="TextSecondaryColor">#A3A9B8</Color>
-    <Color x:Key="TextMutedColor">#717889</Color>
+    <Color x:Key="AccentColor">#74D6FF</Color>
+    <Color x:Key="PulseColor">#35E985</Color>
+    <Color x:Key="AccentBlueColor">#B69CFF</Color>
+    <Color x:Key="TextPrimaryColor">#F8F6F0</Color>
+    <Color x:Key="TextSecondaryColor">#B9B5AC</Color>
+    <Color x:Key="TextMutedColor">#85827B</Color>
 
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlueColor}" />
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
     <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
-    <SolidColorBrush x:Key="PanelBrush" Color="#FF12151D" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#FF2F2F37" />
     <SolidColorBrush x:Key="PanelStrokeBrush" Color="#18FFFFFF" />
     <SolidColorBrush x:Key="HairlineBrush" Color="#14FFFFFF" />
     <SolidColorBrush x:Key="DangerBrush" Color="#FF7A8C" />
@@ -73,7 +74,7 @@
     <SolidColorBrush x:Key="SwitchKnobBrush" Color="#FFB8BDC9" />
     <SolidColorBrush x:Key="SwitchKnobCheckedBrush" Color="#FF09130F" />
     <SolidColorBrush x:Key="SliderTrackBrush" Color="#22FFFFFF" />
-    <SolidColorBrush x:Key="SliderThumbHaloBrush" Color="#66FFFFFF" />
+    <SolidColorBrush x:Key="SliderThumbHaloBrush" Color="#8A8A93" />
     <SolidColorBrush x:Key="TodoCheckRingBrush" Color="#55FFFFFF" />
     <SolidColorBrush x:Key="TodoCheckMarkBrush" Color="#FF081018" />
     <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#FF8FF2D9" />
@@ -84,14 +85,14 @@
     <SolidColorBrush x:Key="GhostButtonHoverBrush" Color="#22FFFFFF" />
     <SolidColorBrush x:Key="GhostButtonPressedBrush" Color="#0DFFFFFF" />
     <SolidColorBrush x:Key="IconButtonHoverBrush" Color="#18FFFFFF" />
-    <SolidColorBrush x:Key="TabDotBrush" Color="#66FFFFFF" />
-    <SolidColorBrush x:Key="SelectionBrush" Color="#556FE7C8" />
+    <SolidColorBrush x:Key="TabDotBrush" Color="#8A8A93" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#5574D6FF" />
     <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#1AFF7A8C" />
 
     <LinearGradientBrush x:Key="IslandSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#FF12161F" />
-        <GradientStop Offset="0.52" Color="#FF090B11" />
-        <GradientStop Offset="1" Color="#FF050609" />
+        <GradientStop Offset="0" Color="#FF3B3B44" />
+        <GradientStop Offset="0.52" Color="#FF2F2F37" />
+        <GradientStop Offset="1" Color="#FF27272E" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="IslandEdgeBrush" StartPoint="0,0" EndPoint="0,1">
@@ -101,12 +102,32 @@
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#6FE7C8" />
-        <GradientStop Offset="1" Color="#7CA8FF" />
+        <GradientStop Offset="0" Color="#74D6FF" />
+        <GradientStop Offset="1" Color="#B69CFF" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="SettingsBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Offset="0" Color="#FF0E1118" />
         <GradientStop Offset="1" Color="#FF080A0F" />
     </LinearGradientBrush>
+    <SolidColorBrush x:Key="PulseBrush" Color="#35E985" />
+    <SolidColorBrush x:Key="IslandAccentLineBrush" Color="#3A74D6FF" />
+
+    <DrawingBrush x:Key="IslandGridBrush"
+                  TileMode="Tile"
+                  Viewport="0,0,100,42"
+                  ViewportUnits="Absolute"
+                  Stretch="None"
+                  Opacity="0.65">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#0DFFFFFF" Thickness="1" />
+                </GeometryDrawing.Pen>
+                <GeometryDrawing.Geometry>
+                    <LineGeometry StartPoint="0,41.5" EndPoint="100,41.5" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
 </ResourceDictionary>

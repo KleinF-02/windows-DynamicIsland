@@ -52,9 +52,6 @@ public partial class IslandWindow : Window
     private int _transitionBlurId;
     private double _cornerRadiusFrom;
     private double _cornerRadiusTo;
-    private RectangleGeometry? _contentMaskGeometry;
-    private bool _contentMaskActive;
-    private bool _contentMaskExpanding;
     private double _nativeWidthFrom;
     private double _nativeWidthTo;
     private double _nativeHeightFrom;
@@ -1777,7 +1774,6 @@ public partial class IslandWindow : Window
 
     private void SetState(IslandVisualState state, bool animate)
     {
-        var previousState = _state;
         var changed = _state != state;
         _state = state;
 
@@ -1800,61 +1796,22 @@ public partial class IslandWindow : Window
 
         if (changed || _activeView != GetView(state))
         {
-            if (shouldAnimate
-                && changed
-                && state is IslandVisualState.Compact or IslandVisualState.Expanded
-                && previousState is IslandVisualState.Compact or IslandVisualState.Expanded)
-            {
-                BeginContentMask(expanding: state == IslandVisualState.Expanded);
-            }
-            else
-            {
-                EndContentMask();
-            }
-
+            EndContentMask();
             SwitchContent(state, shouldAnimate);
 
             if (shouldAnimate && changed)
             {
                 StartTransitionBlur(
-                    peakRadius: state == IslandVisualState.Compact ? 4.5 : 3.5,
-                    durationMs: 260,
+                    peakRadius: state == IslandVisualState.Compact ? 2.8 : 2.4,
+                    durationMs: 320,
                     beginMs: state == IslandVisualState.Compact ? 20 : 0);
             }
         }
     }
 
-    private void BeginContentMask(bool expanding)
-    {
-        _contentMaskActive = true;
-        _contentMaskExpanding = expanding;
-        _contentMaskGeometry ??= new RectangleGeometry();
-        ContentRoot.Clip = _contentMaskGeometry;
-    }
-
     private void EndContentMask()
     {
-        _contentMaskActive = false;
         ContentRoot.Clip = null;
-        _contentMaskGeometry = null;
-    }
-
-    private void ApplyContentMask(double width, double height, double progress)
-    {
-        if (!_contentMaskActive || _contentMaskGeometry is null)
-        {
-            return;
-        }
-
-        var eased = Math.Clamp(progress, 0.0, 1.0);
-        var reveal = _contentMaskExpanding
-            ? 0.16 + (0.84 * eased)
-            : 1.0 - (0.84 * eased);
-        var maskHeight = Math.Max(1.0, height * reveal);
-        var radius = Math.Min(22.0, maskHeight / 2.0);
-        _contentMaskGeometry.Rect = new Rect(0, 0, Math.Max(1.0, width), maskHeight);
-        _contentMaskGeometry.RadiusX = radius;
-        _contentMaskGeometry.RadiusY = radius;
     }
 
     private void PositionWindow(bool animate)
@@ -1896,8 +1853,8 @@ public partial class IslandWindow : Window
         var top = Math.Round(targetTop);
 
         var targetRadius = _state == IslandVisualState.Compact
-            ? 23.0
-            : _viewModel.IsWorkspaceActive ? 20.0 : 22.0;
+            ? 22.0
+            : _viewModel.IsWorkspaceActive ? 26.0 : 30.0;
 
         if (!animate || !_loaded)
         {
@@ -1934,17 +1891,18 @@ public partial class IslandWindow : Window
 
         var animationId = ++_boundsAnimationId;
         var collapsing = height < fromHeight - 1;
-        EasingFunctionBase ease = collapsing
-            ? new SpringEasingFunction { Damping = 1.0, Frequency = 1.7, EasingMode = EasingMode.EaseIn }
-            : new SpringEasingFunction { Damping = 0.9, Frequency = 1.45, EasingMode = EasingMode.EaseIn };
+        EasingFunctionBase ease = new CubicBezierEasingFunction
+        {
+            EasingMode = EasingMode.EaseIn,
+            X1 = 0.16,
+            Y1 = 1.0,
+            X2 = 0.3,
+            Y2 = 1.0
+        };
 
-        // Larger state changes (compact -> workspace) need a little more time;
-        // small hover transitions stay snappy.
-        var distance = Math.Abs(width - fromWidth) + Math.Abs(height - fromHeight);
-        var durationMs = collapsing
-            ? 380.0
-            : Math.Min(460.0, 340.0 + (distance * 0.08));
-        var duration = TimeSpan.FromMilliseconds(durationMs);
+        // fly-island animates width, height and radius with the same
+        // cubic-bezier(0.16, 1, 0.3, 1) curve.
+        var duration = TimeSpan.FromMilliseconds(560);
 
         // The native HWND size does not follow Window.Width/Height reliably
         // while those properties are animated on a transparent window, so
@@ -1956,7 +1914,7 @@ public partial class IslandWindow : Window
         _nativeHeightTo = height;
         _nativeHeightDuration = duration;
         _nativeHeightEase = ease;
-        _cornerRadiusFrom = Shell.CornerRadius.TopLeft;
+        _cornerRadiusFrom = Shell.CornerRadius.BottomLeft;
         _cornerRadiusTo = targetRadius;
 
         var widthAnimation = new DoubleAnimation(fromWidth, width, duration)
@@ -2026,7 +1984,6 @@ public partial class IslandWindow : Window
             height = _nativeHeightFrom + ((_nativeHeightTo - _nativeHeightFrom) * eased);
             ApplyCornerRadius(
                 _cornerRadiusFrom + ((_cornerRadiusTo - _cornerRadiusFrom) * eased));
-            ApplyContentMask(width, height, eased);
         }
 
         if (!double.IsFinite(width) || !double.IsFinite(height))
@@ -2058,8 +2015,10 @@ public partial class IslandWindow : Window
 
     private void ApplyCornerRadius(double radius)
     {
-        var clamped = Math.Clamp(radius, 16.0, 23.0);
-        var corner = new CornerRadius(clamped);
+        // fly-island is docked to the top edge: square top corners, rounded
+        // bottom corners that grow from 22 to 30 in the expanded state.
+        var clamped = Math.Clamp(radius, 16.0, 30.0);
+        var corner = new CornerRadius(0, 0, clamped, clamped);
         Shell.CornerRadius = corner;
         ShadowBorder.CornerRadius = corner;
     }
@@ -2086,26 +2045,30 @@ public partial class IslandWindow : Window
 
         if (animate)
         {
+            var targetExpanded = ReferenceEquals(target, ExpandedView);
+            var contentEase = new CubicBezierEasingFunction
+            {
+                EasingMode = EasingMode.EaseIn,
+                X1 = 0.16,
+                Y1 = 1.0,
+                X2 = 0.3,
+                Y2 = 1.0
+            };
+
             target.Opacity = 0;
             target.BeginAnimation(
                 OpacityProperty,
-                new DoubleAnimation(1, TimeSpan.FromMilliseconds(collapsing ? 110 : 190))
+                new DoubleAnimation(1, TimeSpan.FromMilliseconds(targetExpanded ? 260 : 120))
                 {
-                    // Wait for the expanded content to finish fading before the
-                    // compact clock appears; otherwise both layouts overlap.
-                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 250 : 40),
+                    // fly-island cross-fades collapsed content out first, then
+                    // brings the expanded panel in from -6px.
+                    BeginTime = TimeSpan.FromMilliseconds(targetExpanded ? 140 : 250),
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 });
 
-            // Zoom out of the top edge: the island grows from the screen edge
-            // instead of merely re-laying out at the new size. On collapse the
-            // compact content arrives a little later so the expanded content
-            // has time to fade instead of being clipped abruptly.
-            var scaleFrom = ReferenceEquals(target, ExpandedView)
-                ? 0.92
-                : collapsing ? 0.94 : 0.95;
-            var scaleEase = new QuinticEase { EasingMode = EasingMode.EaseOut };
-            var scaleDuration = TimeSpan.FromMilliseconds(collapsing ? 120 : 300);
+            var scaleFrom = targetExpanded ? 0.92 : collapsing ? 0.94 : 0.95;
+            var scaleDuration = TimeSpan.FromMilliseconds(280);
+            var scaleDelay = TimeSpan.FromMilliseconds(targetExpanded ? 140 : 240);
 
             scale.ScaleX = 1;
             scale.ScaleY = 1;
@@ -2113,24 +2076,24 @@ public partial class IslandWindow : Window
                 ScaleTransform.ScaleXProperty,
                 new DoubleAnimation(scaleFrom, 1, scaleDuration)
                 {
-                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
-                    EasingFunction = scaleEase
+                    BeginTime = scaleDelay,
+                    EasingFunction = contentEase
                 });
             scale.BeginAnimation(
                 ScaleTransform.ScaleYProperty,
                 new DoubleAnimation(scaleFrom, 1, scaleDuration)
                 {
-                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
-                    EasingFunction = scaleEase
+                    BeginTime = scaleDelay,
+                    EasingFunction = contentEase
                 });
 
-            transform.Y = collapsing ? 4 : 6;
+            transform.Y = -6;
             transform.BeginAnimation(
                 TranslateTransform.YProperty,
-                new DoubleAnimation(0, TimeSpan.FromMilliseconds(collapsing ? 140 : 240))
+                new DoubleAnimation(0, scaleDuration)
                 {
-                    BeginTime = TimeSpan.FromMilliseconds(collapsing ? 240 : 0),
-                    EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
+                    BeginTime = scaleDelay,
+                    EasingFunction = contentEase
                 });
         }
         else
@@ -2156,26 +2119,30 @@ public partial class IslandWindow : Window
                 continue;
             }
 
-            if (collapsing)
+            var (previousScale, previousTranslate) = GetContentTransforms(view);
+            var exitDuration = TimeSpan.FromMilliseconds(280);
+            var exitEase = new CubicBezierEasingFunction
             {
-                var (previousScale, previousTranslate) = GetContentTransforms(view);
-                var exitDuration = TimeSpan.FromMilliseconds(220);
-                var exitEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+                EasingMode = EasingMode.EaseIn,
+                X1 = 0.16,
+                Y1 = 1.0,
+                X2 = 0.3,
+                Y2 = 1.0
+            };
 
-                previousScale.BeginAnimation(
-                    ScaleTransform.ScaleXProperty,
-                    new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
-                previousScale.BeginAnimation(
-                    ScaleTransform.ScaleYProperty,
-                    new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
-                previousTranslate.BeginAnimation(
-                    TranslateTransform.YProperty,
-                    new DoubleAnimation(0, -4, exitDuration) { EasingFunction = exitEase });
-            }
+            previousScale.BeginAnimation(
+                ScaleTransform.ScaleXProperty,
+                new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
+            previousScale.BeginAnimation(
+                ScaleTransform.ScaleYProperty,
+                new DoubleAnimation(1, 0.985, exitDuration) { EasingFunction = exitEase });
+            previousTranslate.BeginAnimation(
+                TranslateTransform.YProperty,
+                new DoubleAnimation(0, -6, exitDuration) { EasingFunction = exitEase });
 
-            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(collapsing ? 230 : 140))
+            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(120))
             {
-                BeginTime = TimeSpan.FromMilliseconds(collapsing ? 10 : 0),
+                BeginTime = TimeSpan.Zero,
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
             };
 

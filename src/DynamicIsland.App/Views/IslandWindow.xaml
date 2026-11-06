@@ -27,7 +27,7 @@
     <Grid x:Name="Root" Margin="14">
         <!-- Shadow is a separate layer so text is not rasterized by the effect. -->
         <Border x:Name="ShadowBorder"
-                CornerRadius="23"
+                CornerRadius="0,0,22,22"
                 Background="{DynamicResource WindowShadowBrush}">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="24"
@@ -39,7 +39,7 @@
         </Border>
 
         <Border x:Name="Shell"
-                CornerRadius="23"
+                CornerRadius="0,0,22,22"
                 Background="{DynamicResource IslandSurfaceBrush}"
                 BorderBrush="{DynamicResource IslandEdgeBrush}"
                 BorderThickness="1"
@@ -63,6 +63,14 @@
             </Border.ContextMenu>
 
             <Grid x:Name="ContentRoot">
+                <Rectangle Fill="{DynamicResource IslandGridBrush}"
+                           IsHitTestVisible="False" />
+                <Rectangle Width="1"
+                           HorizontalAlignment="Left"
+                           Margin="86,0,0,0"
+                           Fill="{DynamicResource IslandAccentLineBrush}"
+                           IsHitTestVisible="False" />
+
                 <!-- Compact -->
                 <Grid x:Name="CompactView"
                       Margin="18,0"
@@ -93,12 +101,12 @@
                             </Style>
                         </Grid.Style>
                         <Ellipse Width="16" Height="16" Fill="{DynamicResource CompactDotBrush}" />
-                        <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentGradientBrush}">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource PulseBrush}">
                             <Ellipse.Effect>
-                                <DropShadowEffect BlurRadius="8"
+                                <DropShadowEffect BlurRadius="10"
                                                   ShadowDepth="0"
-                                                  Color="{DynamicResource AccentColor}"
-                                                  Opacity="0.8" />
+                                                  Color="{DynamicResource PulseColor}"
+                                                  Opacity="0.9" />
                             </Ellipse.Effect>
                         </Ellipse>
                     </Grid>
@@ -229,7 +237,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
-                        <RowDefinition Height="20" />
+                        <RowDefinition Height="26" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -240,7 +248,32 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,3">
+                                <Ellipse Width="7"
+                                         Height="7"
+                                         Fill="{DynamicResource PulseBrush}"
+                                         VerticalAlignment="Center">
+                                    <Ellipse.Effect>
+                                        <DropShadowEffect BlurRadius="10"
+                                                          ShadowDepth="0"
+                                                          Color="{DynamicResource PulseColor}"
+                                                          Opacity="0.9" />
+                                    </Ellipse.Effect>
+                                </Ellipse>
+                                <TextBlock Text="灵动岛"
+                                           FontSize="10.5"
+                                           FontWeight="SemiBold"
+                                           Margin="7,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock Text="LOCAL-FIRST"
+                                           FontFamily="{StaticResource MonoFont}"
+                                           FontSize="8.5"
+                                           Margin="8,1,0,0"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                            </StackPanel>
                             <TextBlock FontSize="34"
+                                       FontFamily="{StaticResource MonoFont}"
                                        FontWeight="SemiBold"
                                        LineHeight="38"
                                        Typography.NumeralAlignment="Tabular"><Run Text="{Binding TimeText, Mode=OneWay}" /><Run Text="{Binding ExpandedSeconds, Mode=OneWay}"
@@ -1432,6 +1465,7 @@
                                 VerticalAlignment="Center">
                         <Button Click="ShortcutsTab_Click"
                                 Tag="{Binding IsShortcutsActive}"
+                                Foreground="#8A8A93"
                                 ToolTip="常用软件"
                                 AutomationProperties.Name="常用软件">
                             <Button.Style>
@@ -1446,6 +1480,7 @@
                         </Button>
                         <Button Click="CalendarTab_Click"
                                 Tag="{Binding IsCalendarActive}"
+                                Foreground="#74D6FF"
                                 ToolTip="Calendar"
                                 AutomationProperties.Name="Calendar">
                             <Button.Style>
@@ -1460,6 +1495,7 @@
                         </Button>
                         <Button Click="TodoTab_Click"
                                 Tag="{Binding IsTodoActive}"
+                                Foreground="#35E985"
                                 ToolTip="待办事项"
                                 AutomationProperties.Name="待办事项">
                             <Button.Style>
@@ -1474,6 +1510,7 @@
                         </Button>
                         <Button Click="TranslateTab_Click"
                                 Tag="{Binding IsTranslateActive}"
+                                Foreground="#B69CFF"
                                 ToolTip="翻译"
                                 AutomationProperties.Name="翻译">
                             <Button.Style>
@@ -1488,6 +1525,7 @@
                         </Button>
                         <Button Click="AgentTab_Click"
                                 Tag="{Binding IsAgentActive}"
+                                Foreground="#FFD166"
                                 ToolTip="AI Agent"
                                 AutomationProperties.Name="AI Agent">
                             <Button.Style>

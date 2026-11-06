@@ -32,7 +32,7 @@
         <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource PanelStrokeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="CornerRadius" Value="18" />
         <Setter Property="Padding" Value="14" />
     </Style>
 
@@ -51,7 +51,7 @@
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Border x:Name="Chrome"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="9"
+                            CornerRadius="18"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -86,7 +86,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{DynamicResource GhostButtonBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="9"
+                            CornerRadius="18"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -113,7 +113,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="8">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="17">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -284,8 +284,8 @@
     </Style>
 
     <Style x:Key="DotTabButton" TargetType="{x:Type Button}">
-        <Setter Property="Width" Value="24" />
-        <Setter Property="Height" Value="18" />
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="22" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource TabDotBrush}" />
         <Setter Property="Cursor" Value="Hand" />
@@ -293,21 +293,29 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Grid Width="24" Height="18" Background="Transparent">
-                        <Ellipse Width="12" Height="12" Fill="{TemplateBinding Foreground}" Opacity="0.12" />
-                        <Ellipse x:Name="Dot" Width="5" Height="5" Fill="{TemplateBinding Foreground}" />
+                    <Grid Width="26" Height="22" Background="Transparent">
+                        <Ellipse Width="15" Height="15" Fill="{TemplateBinding Foreground}" Opacity="0.1" />
+                        <Ellipse x:Name="Ring"
+                                 Width="15"
+                                 Height="15"
+                                 Stroke="#5AFFFFFF"
+                                 StrokeThickness="1"
+                                 Opacity="0" />
+                        <Ellipse x:Name="Dot" Width="6" Height="6" Fill="{TemplateBinding Foreground}" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Tag" Value="True">
-                            <Setter TargetName="Dot" Property="Width" Value="7" />
-                            <Setter TargetName="Dot" Property="Height" Value="7" />
+                            <Setter TargetName="Dot" Property="Width" Value="8" />
+                            <Setter TargetName="Dot" Property="Height" Value="8" />
+                            <Setter TargetName="Ring" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Dot" Property="Width" Value="8" />
                             <Setter TargetName="Dot" Property="Height" Value="8" />
+                            <Setter TargetName="Ring" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Dot" Property="Opacity" Value="0.6" />
+                            <Setter TargetName="Dot" Property="Opacity" Value="0.65" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
