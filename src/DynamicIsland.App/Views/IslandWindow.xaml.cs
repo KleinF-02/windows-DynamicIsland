@@ -71,6 +71,7 @@ public partial class IslandWindow : Window
     private bool _editingTranslation;
     private bool _editingAgent;
     private bool _agentFileDialogOpen;
+    private bool _agentImeComposing;
     private DateTime _translationTypingHoldUntil;
     private DateTime _agentTypingHoldUntil;
     private bool _menuOpen;
@@ -96,6 +97,14 @@ public partial class IslandWindow : Window
         DataContext = _viewModel;
         _activeView = CompactView;
         _viewModel.AgentMessages.CollectionChanged += AgentMessages_CollectionChanged;
+        AgentInputBox.AddHandler(
+            TextCompositionManager.TextInputStartEvent,
+            new TextCompositionEventHandler(AgentInput_TextInputStart),
+            handledEventsToo: true);
+        AgentInputBox.AddHandler(
+            TextCompositionManager.TextInputEvent,
+            new TextCompositionEventHandler(AgentInput_TextInput),
+            handledEventsToo: true);
 
         Topmost = _settings.AlwaysOnTop;
         Opacity = _settings.Opacity;
@@ -1130,6 +1139,7 @@ public partial class IslandWindow : Window
     private void AgentInput_GotFocus(object sender, RoutedEventArgs e)
     {
         _editingAgent = true;
+        _agentImeComposing = false;
         _agentTypingHoldUntil = DateTime.MinValue;
         _collapseTimer.Stop();
     }
@@ -1137,6 +1147,7 @@ public partial class IslandWindow : Window
     private void AgentInput_LostFocus(object sender, RoutedEventArgs e)
     {
         _editingAgent = false;
+        _agentImeComposing = false;
         _agentTypingHoldUntil = DateTime.MinValue;
 
         if (_state == IslandVisualState.Expanded && !_hovering && !_pinned && !_agentFileDialogOpen && !_menuOpen)
@@ -1186,13 +1197,30 @@ public partial class IslandWindow : Window
     {
         ExtendAgentTypingHold();
 
-        if (e.Key != Key.Enter || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        // Shift+Enter inserts a newline. Ctrl+Enter remains supported, and a
+        // plain Enter sends once the IME has committed its candidate.
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) || _agentImeComposing)
         {
             return;
         }
 
         e.Handled = true;
         await SendAgentMessageAsync();
+    }
+
+    private void AgentInput_TextInputStart(object sender, TextCompositionEventArgs e)
+    {
+        _agentImeComposing = true;
+    }
+
+    private void AgentInput_TextInput(object sender, TextCompositionEventArgs e)
+    {
+        _agentImeComposing = false;
     }
 
     private async Task SendAgentMessageAsync()

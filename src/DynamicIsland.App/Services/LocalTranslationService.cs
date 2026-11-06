@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -78,7 +79,8 @@ public sealed class LocalTranslationService
         IReadOnlyList<LocalChatMessage> messages,
         string endpointValue,
         string modelValue,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? apiKey = null)
     {
         if (messages.Count == 0)
         {
@@ -104,7 +106,7 @@ public sealed class LocalTranslationService
             try
             {
                 var resolvedModel = string.IsNullOrWhiteSpace(model)
-                    ? await ResolveModelAsync(provider, baseUri, cancellationToken)
+                    ? await ResolveModelAsync(provider, baseUri, cancellationToken, apiKey)
                     : model;
 
                 var content = await SendChatAsync(
@@ -112,7 +114,8 @@ public sealed class LocalTranslationService
                     baseUri,
                     resolvedModel,
                     messages,
-                    cancellationToken);
+                    cancellationToken,
+                    apiKey);
 
                 if (!string.IsNullOrWhiteSpace(content))
                 {
@@ -169,10 +172,12 @@ public sealed class LocalTranslationService
     private static async Task<string> ResolveModelAsync(
         Provider provider,
         Uri endpoint,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? apiKey)
     {
         var modelsUri = BuildModelsUri(provider, endpoint);
-        using var response = await Http.GetAsync(modelsUri, cancellationToken);
+        using var request = CreateRequest(HttpMethod.Get, modelsUri, apiKey);
+        using var response = await Http.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             throw new LocalTranslationException(
@@ -224,7 +229,8 @@ public sealed class LocalTranslationService
         Uri endpoint,
         string model,
         IReadOnlyList<LocalChatMessage> messages,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? apiKey)
     {
         var payloadMessages = messages
             .Select(message =>
@@ -298,10 +304,9 @@ public sealed class LocalTranslationService
 
         var json = JsonSerializer.Serialize(payload);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var response = await Http.PostAsync(
-            BuildChatUri(provider, endpoint),
-            content,
-            cancellationToken);
+        using var request = CreateRequest(HttpMethod.Post, BuildChatUri(provider, endpoint), apiKey);
+        request.Content = content;
+        using var response = await Http.SendAsync(request, cancellationToken);
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -421,6 +426,17 @@ public sealed class LocalTranslationService
     {
         var message = exception.Message.ReplaceLineEndings(" ").Trim();
         return message.Length > 180 ? message[..180] + "…" : message;
+    }
+
+    private static HttpRequestMessage CreateRequest(HttpMethod method, Uri uri, string? apiKey)
+    {
+        var request = new HttpRequestMessage(method, uri);
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey.Trim());
+        }
+
+        return request;
     }
 
     private static string Truncate(string value, int max)

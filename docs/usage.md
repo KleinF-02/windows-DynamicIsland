@@ -4,7 +4,7 @@
 
 ### 直接使用发布包
 
-1. 从 GitHub Releases 下载 `DynamicIsland-0.9.2-win-x64.zip`。
+1. 从 GitHub Releases 下载 `DynamicIsland-0.10.0-win-x64.zip`。
 2. 解压到任意目录。
 3. 双击 `DynamicIsland.exe`。
 4. 首次运行会在桌面顶部出现胶囊，并在系统托盘创建图标。
@@ -93,9 +93,9 @@ dotnet run --project .\src\DynamicIsland.App
 - 点左侧圆圈打勾：粒子散开、整行淡出，并从列表和本地文件删除。
 - 最多 20 条，每条最多 120 字。
 
-## 6. 本地模型：翻译与 AI Agent
+## 6. 模型：翻译与 AI Agent
 
-两者共用同一份本地模型配置。
+翻译和 AI Agent 默认共用同一份本地模型配置；AI Agent 可以在设置里单独覆盖 API 地址、模型名和 API Key。
 
 ### Ollama（推荐）
 
@@ -119,6 +119,16 @@ http://127.0.0.1:1234
 
 OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认使用 `/api/chat`。
 
+### AI Agent API（可选）
+
+打开 **设置 → AI Agent API**：
+
+- **API 地址**：例如 `https://api.example.com/v1` 或 `http://127.0.0.1:11434`
+- **模型名**：例如 `qwen3.6-27b-awq` 或服务商要求的模型 ID
+- **API Key**：以 `Authorization: Bearer <key>` 发送，可留空
+
+留空 API 地址/模型名时，Agent 自动回退到上方本地模型配置。API Key 只保存在本机 `settings.json`，不会写入日志；共享电脑上建议不要保存长期密钥。
+
 ### 翻译
 
 - 输入文字，选择目标语言（中文 / English / 日本語 / 한국어）。
@@ -131,6 +141,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 ![AI Agent 视觉输入](images/agent-vision.png)
 
 - 多轮对话，自动携带最近 18 条上下文。
+- 输入后按 **Enter 发送**，**Shift+Enter 换行**；`Ctrl+Enter` 仍然可用。中文输入法确认候选词时不会误发送。
 - 支持粘贴剪贴板、复制最后回复、清空对话。
 - 点击输入框左侧的回形针上传文件；支持 PNG/JPG/WEBP/GIF/BMP 图片、txt、md、代码、json、csv、log 等文本格式，以及 `.docx`、`.xlsx`、`.pptx`。
 - 图片会等比缩小到最长边 1600px 并转为 PNG，再作为多模态输入发送；需要模型本身支持视觉输入。
@@ -160,6 +171,7 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 - 顶部距离
 - Outlook 网页日历链接
 - 本地模型地址 / 模型名
+- AI Agent 独立 API 地址 / 模型名 / API Key
 
 设置保存在 `%LOCALAPPDATA%\DynamicIsland\settings.json`。
 
@@ -171,6 +183,8 @@ OpenAI-compatible 服务会自动使用 `/v1/chat/completions`；Ollama 默认�
 | 快捷方式 | `%LOCALAPPDATA%\DynamicIsland\shortcuts.json` |
 | 待办 | `%LOCALAPPDATA%\DynamicIsland\todos.json` |
 | 日志 | `%LOCALAPPDATA%\DynamicIsland\logs\app.log` |
+
+> Agent API Key 保存在 `settings.json` 中，不会写入日志；请勿分享该文件。
 | 开机启动 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DynamicIsland` |
 
 - 不包含云端账号体系。

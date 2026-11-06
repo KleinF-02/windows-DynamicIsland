@@ -216,7 +216,7 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 
 `AgentMessageViewModel` 保存角色、文本、时间和左右对齐；`AgentMessages` 是当前运行期的会话集合，首条是本地 Agent 的固定问候。Agent 和翻译共用 `IsWorkspaceActive` 与普通悬停收起规则，不自动改写固定状态；收起或切换标签不会清空会话。
 
-1. 发送时把用户消息加入集合，状态变为“正在思考”，请求期间禁用发送。
+1. Enter 发送（Shift+Enter 换行，Ctrl+Enter 兼容）；IME 组合期间按 Enter 只提交候选词。发送时把用户消息加入集合，状态变为“正在思考”，请求期间禁用发送。
 2. 发给本地模型的 system prompt 说明当前时间、回答语言，以及不能执行系统命令或控制应用；附件文字被明确标记为不可信数据。
 3. 上下文由 system + 最近 18 条 user/assistant 消息组成，当前问题单独追加；输入上限 4000 字；请求复用 `LocalTranslationService.CompleteAsync` 的 Ollama / OpenAI 兼容双协议。
 4. 文件按钮打开 `OpenFileDialog`，`AgentFileReader` 读取文本/代码、解压 Office Open XML 文档的 XML，或把图片等比缩到最长边 1600px 后转为 PNG；最多 3 个，文本 4 MB、图片 12 MB、Office 16 MB，单文件 24000 字、合计 48000 字，超出截断。
@@ -224,8 +224,9 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 6. 聊天记录只保存“问题 + 文件名”，文件正文和图片只进入当前模型请求，避免后续 18 条上下文反复膨胀。
 7. 回复追加为 assistant 气泡；`CollectionChanged` 触发滚动到底部；附件在发送后清空。
 8. 支持粘贴剪贴板、复制最后一条回复和清空对话；取消 / 清空 / 窗口停止都会取消未完成请求。
-9. Agent 与翻译共用设置里的本地模型地址和模型名；对话、附件文字和图片不写入磁盘，重启后清空。
-10. 常见失败包括服务未启动、没有加载模型、模型名错误、模型不支持视觉输入和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
+9. Agent 可独立配置 API 地址、模型名和 Bearer API Key；留空时回退到翻译使用的本地模型配置。请求头只向配置的 endpoint 发送 `Authorization: Bearer`，未配置 Key 时不发送该头。
+10. Agent 与翻译共用本地模型配置作为默认值；对话、附件文字和图片不写入磁盘，重启后清空。
+11. 常见失败包括服务未启动、没有加载模型、模型名错误、API Key 无效、模型不支持视觉输入和 HTTP 非 2xx；错误显示在 Agent 状态文字中并写入本机日志。
 
 ### 开机启动
 

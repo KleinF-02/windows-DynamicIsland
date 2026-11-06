@@ -20,6 +20,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _viewModel = new SettingsViewModel(settings);
         DataContext = _viewModel;
+        AgentApiKeyBox.Password = _viewModel.AgentApiKey;
     }
 
     public event Action<IslandSettings>? SettingsSaved;
@@ -37,6 +38,11 @@ public partial class SettingsWindow : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void AgentApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        _viewModel.AgentApiKey = AgentApiKeyBox.Password;
+    }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 

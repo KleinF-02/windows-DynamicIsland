@@ -43,6 +43,23 @@ public sealed class IslandSettings
     public string LocalLlmModel { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional AI Agent-only API endpoint. Empty falls back to
+    /// <see cref="LocalLlmEndpoint"/>.
+    /// </summary>
+    public string AgentApiEndpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional AI Agent-only model name. Empty falls back to
+    /// <see cref="LocalLlmModel"/>.
+    /// </summary>
+    public string AgentApiModel { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional bearer token for the Agent API. Stored in local settings only.
+    /// </summary>
+    public string AgentApiKey { get; set; } = string.Empty;
+
+    /// <summary>
     /// Device name of the preferred monitor (for example <c>\\.\DISPLAY1</c>).
     /// Empty means the primary monitor.
     /// </summary>
@@ -92,6 +109,24 @@ public sealed class IslandSettings
         if (LocalLlmModel.Length > 256)
         {
             LocalLlmModel = LocalLlmModel[..256];
+        }
+
+        AgentApiEndpoint = (AgentApiEndpoint ?? string.Empty).Trim();
+        if (AgentApiEndpoint.Length > 2048)
+        {
+            AgentApiEndpoint = AgentApiEndpoint[..2048];
+        }
+
+        AgentApiModel = (AgentApiModel ?? string.Empty).Trim();
+        if (AgentApiModel.Length > 256)
+        {
+            AgentApiModel = AgentApiModel[..256];
+        }
+
+        AgentApiKey = (AgentApiKey ?? string.Empty).Trim();
+        if (AgentApiKey.Length > 4096)
+        {
+            AgentApiKey = AgentApiKey[..4096];
         }
     }
 }

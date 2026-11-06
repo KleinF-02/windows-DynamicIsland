@@ -10,6 +10,22 @@
 - AI Agent 的安全工具调用（白名单 + 用户确认）
 - 多显示器选择与按显示器记忆位置
 
+## [0.10.0] - 2026-11-06
+
+### Added
+
+- AI Agent 独立 API 配置：API 地址、模型名、Bearer API Key
+- Agent API 留空时自动回退到翻译使用的本地模型配置
+- 设置页新增“AI Agent API（可选）”配置卡片，API Key 使用密码框
+- Agent 输入框支持 **Enter 发送**、**Shift+Enter 换行**，保留 Ctrl+Enter
+- 中文 IME 组合输入期间按 Enter 不会误发送消息
+
+### Security
+
+- API Key 仅保存在本机 `settings.json`，不会写入日志
+- 请求头只向配置的 endpoint 发送 `Authorization: Bearer`
+- 未配置 API Key 时不发送 Authorization 头
+
 ## [0.9.2] - 2026-11-06
 
 ### Changed

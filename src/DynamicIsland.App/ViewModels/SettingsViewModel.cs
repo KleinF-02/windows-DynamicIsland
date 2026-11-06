@@ -155,6 +155,51 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public string AgentApiEndpoint
+    {
+        get => _draft.AgentApiEndpoint;
+        set
+        {
+            if (string.Equals(_draft.AgentApiEndpoint, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.AgentApiEndpoint = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
+    public string AgentApiModel
+    {
+        get => _draft.AgentApiModel;
+        set
+        {
+            if (string.Equals(_draft.AgentApiModel, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.AgentApiModel = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
+    public string AgentApiKey
+    {
+        get => _draft.AgentApiKey;
+        set
+        {
+            if (string.Equals(_draft.AgentApiKey, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _draft.AgentApiKey = value ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
     public string VersionText
     {
         get

@@ -1416,7 +1416,7 @@
                                                      GotFocus="AgentInput_GotFocus"
                                                      LostFocus="AgentInput_LostFocus"
                                                      AutomationProperties.Name="AI Agent 输入"
-                                                     ToolTip="Ctrl+Enter 发送" />
+                                                     ToolTip="Enter 发送 · Shift+Enter 换行" />
                                             <TextBlock Text="向本地 AI Agent 提问…"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextMutedBrush}"

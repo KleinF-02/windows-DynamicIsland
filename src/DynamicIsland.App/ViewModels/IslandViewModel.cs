@@ -512,11 +512,19 @@ public sealed class IslandViewModel : ObservableObject, IDisposable
 
             messages.Add(new LocalChatMessage("user", modelText, images.Count > 0 ? images : null));
 
+            var endpoint = string.IsNullOrWhiteSpace(_settings.AgentApiEndpoint)
+                ? _settings.LocalLlmEndpoint
+                : _settings.AgentApiEndpoint;
+            var model = string.IsNullOrWhiteSpace(_settings.AgentApiModel)
+                ? _settings.LocalLlmModel
+                : _settings.AgentApiModel;
+
             var result = await _localModelService.CompleteAsync(
                 messages,
-                _settings.LocalLlmEndpoint,
-                _settings.LocalLlmModel,
-                cts.Token);
+                endpoint,
+                model,
+                cts.Token,
+                _settings.AgentApiKey);
 
             if (requestId != _agentRequestId)
             {
